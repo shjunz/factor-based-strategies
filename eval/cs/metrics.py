@@ -450,6 +450,33 @@ def quantile_turnover(signal, n_quantiles=5):
 
     return turnover.dropna()
 
+
+# Summary statistics for quantile turnover
+def summary_turnover(turnover):
+    """
+    Summary statistics for quantile turnover.
+
+    Parameters
+    ----------
+    turnover : pd.DataFrame
+        Turnover of the top and bottom buckets. Index = timestamp,
+        columns = top, bottom.
+
+    Returns
+    -------
+    summary : pd.DataFrame
+        Summary statistics.
+    """
+    top, bottom = turnover["top"].mean(), turnover["bottom"].mean()
+    summary = pd.DataFrame(
+        {
+            "top": [top],
+            "bottom": [bottom],
+            "mean": [(top + bottom) / 2],
+        }
+    )
+    return summary
+
 # %%
 # Quantile Equity
 
