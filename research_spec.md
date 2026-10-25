@@ -13,60 +13,144 @@
          <th nowrap>模块</th>
          <th nowrap>名称</th>
          <th nowrap>小节</th>
+         <th nowrap>子小节</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td nowrap><a href="#m1-数据etl">M1</a></td>
-         <td nowrap><a href="#m1-数据etl">数据ETL</a></td>
-         <td nowrap><a href="#m11-原始数据">原始数据</a> · <a href="#m12-数据源登记">数据源登记</a> · <a href="#m13-数据集构建">数据集构建</a>（<a href="#m131-原始数据形态归类">原始数据形态归类</a> · <a href="#m132-数据清洗">数据清洗</a> · <a href="#m133-数据对齐">数据对齐</a> · <a href="#m134-研究样本划分is--oos">研究样本划分（IS + OOS）</a> · <a href="#m135-数据存储">数据存储</a>）</td>
+         <td nowrap rowspan="3"><a href="#m1-数据etl">M1</a></td>
+         <td nowrap rowspan="3"><a href="#m1-数据etl">数据ETL</a></td>
+         <td nowrap><a href="#m11-数据提取extraction">M1.1 数据提取（Extraction）</a></td>
+         <td nowrap><a href="#m111-原始数据">M1.1.1 原始数据</a><br><a href="#m112-数据源">M1.1.2 数据源</a></td>
       </tr>
       <tr>
-         <td nowrap><a href="#m2-因子公式构建与入库">M2</a></td>
-         <td nowrap><a href="#m2-因子公式构建与入库">因子公式构建与入库</a></td>
-         <td nowrap><a href="#m21-因子库分类">因子库分类</a> · <a href="#m22-因子公式构建">因子公式构建</a> · <a href="#m23-因子入库规范">因子入库规范</a>（<a href="#m231-因子库位置">因子库位置</a> · <a href="#m232-因子主题代码">因子主题代码</a> · <a href="#m233-因子卡片必填信息">因子卡片必填信息</a>）</td>
+         <td nowrap><a href="#m12-数据变换transform">M1.2 数据变换（Transform）</a></td>
+         <td nowrap><a href="#m121-标准化">M1.2.1 标准化</a><br><a href="#m122-标识符">M1.2.2 标识符</a>（<a href="#m1221-标识符定义">M1.2.2.1</a> · <a href="#m1222-映射表">M1.2.2.2</a> · <a href="#m1223-标识符设置">M1.2.2.3</a>）<br><a href="#m123-形态特有处理">M1.2.3 形态特有处理</a><br><a href="#m124-数据对齐">M1.2.4 数据对齐</a>（<a href="#m1241-数据修订">M1.2.4.1</a> · <a href="#m1242-收盘价次日才可知">M1.2.4.2</a> · <a href="#m1243-参考期与发布日不同">M1.2.4.3</a>）<br><a href="#m125-去重">M1.2.5 去重</a></td>
       </tr>
       <tr>
-         <td nowrap><a href="#m3-因子研究与因子评价">M3</a></td>
-         <td nowrap><a href="#m3-因子研究与因子评价">因子研究与因子评价</a></td>
-         <td nowrap><a href="#m31-基础频率">基础频率</a> · <a href="#m32-因子值">因子值</a> · <a href="#m33-未来收益率">未来收益率</a> · <a href="#m34-因子评价指标">因子评价指标</a> · <a href="#m35-样本内划分">样本内划分</a> · <a href="#m36-指标范围">指标范围</a></td>
+         <td nowrap><a href="#m13-数据存储loading">M1.3 数据存储（Loading）</a></td>
+         <td nowrap><a href="#m131-本地云端存储">M1.3.1 本地/云端存储</a><br><a href="#m132-loading-文件格式">M1.3.2 Loading 文件格式</a><br><a href="#m133-数据字典格式">M1.3.3 数据字典格式</a><br><a href="#m134-研究样本划分is--oos">M1.3.4 研究样本划分（IS + OOS）</a></td>
       </tr>
       <tr>
-         <td nowrap><a href="#m4-因子组合">M4</a></td>
-         <td nowrap><a href="#m4-因子组合">因子组合</a></td>
-         <td nowrap><a href="#m41-因子综合评分">因子综合评分</a> · <a href="#m42-因子选择">因子选择</a> · <a href="#m43-因子值标准化">因子值标准化</a> · <a href="#m44-未来收益率调整">未来收益率调整</a> · <a href="#m45-模型选择">模型选择</a> · <a href="#m46-数据处理">数据处理</a> · <a href="#m47-模型训练">模型训练</a> · <a href="#m48-模型检验">模型检验</a></td>
+         <td nowrap rowspan="3"><a href="#m2-因子公式构建与入库">M2</a></td>
+         <td nowrap rowspan="3"><a href="#m2-因子公式构建与入库">因子公式构建与入库</a></td>
+         <td nowrap><a href="#m21-因子库分类">M2.1 因子库分类</a></td>
+         <td nowrap>—</td>
       </tr>
       <tr>
-         <td nowrap><a href="#m5-策略与仓位">M5</a></td>
-         <td nowrap><a href="#m5-策略与仓位">策略与仓位</a></td>
-         <td nowrap><a href="#m51-目标持仓构建">目标持仓构建</a> · <a href="#m52-组合中性">组合中性</a></td>
+         <td nowrap><a href="#m22-因子公式构建">M2.2 因子公式构建</a></td>
+         <td nowrap>—</td>
       </tr>
       <tr>
-         <td nowrap><a href="#m6-风险与成本">M6</a></td>
-         <td nowrap><a href="#m6-风险与成本">风险与成本</a></td>
-         <td nowrap><a href="#m61-交易成本">交易成本</a> · <a href="#m62-风险控制">风险控制</a></td>
+         <td nowrap><a href="#m23-因子入库规范">M2.3 因子入库规范</a></td>
+         <td nowrap><a href="#m231-因子库位置">M2.3.1 因子库位置</a><br><a href="#m232-因子主题代码">M2.3.2 因子主题代码</a><br><a href="#m233-因子卡片必填信息">M2.3.3 因子卡片必填信息</a></td>
       </tr>
       <tr>
-         <td nowrap><a href="#m7-回测与执行">M7</a></td>
-         <td nowrap><a href="#m7-回测与执行">回测与执行</a></td>
-         <td nowrap><a href="#m71-执行假设">执行假设</a> · <a href="#m72-策略回测与评价">策略回测与评价</a></td>
+         <td nowrap rowspan="6"><a href="#m3-因子研究与因子评价">M3</a></td>
+         <td nowrap rowspan="6"><a href="#m3-因子研究与因子评价">因子研究与因子评价</a></td>
+         <td nowrap><a href="#m31-基础频率">M3.1 基础频率</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m32-因子值">M3.2 因子值</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m33-未来收益率">M3.3 未来收益率</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m34-因子评价指标">M3.4 因子评价指标</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m35-样本内划分">M3.5 样本内划分</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m36-指标范围">M3.6 指标范围</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap rowspan="8"><a href="#m4-因子组合">M4</a></td>
+         <td nowrap rowspan="8"><a href="#m4-因子组合">因子组合</a></td>
+         <td nowrap><a href="#m41-因子综合评分">M4.1 因子综合评分</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m42-因子选择">M4.2 因子选择</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m43-因子值标准化">M4.3 因子值标准化</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m44-未来收益率调整">M4.4 未来收益率调整</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m45-模型选择">M4.5 模型选择</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m46-数据处理">M4.6 数据处理</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m47-模型训练">M4.7 模型训练</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m48-模型检验">M4.8 模型检验</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap rowspan="2"><a href="#m5-策略与仓位">M5</a></td>
+         <td nowrap rowspan="2"><a href="#m5-策略与仓位">策略与仓位</a></td>
+         <td nowrap><a href="#m51-目标持仓构建">M5.1 目标持仓构建</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m52-组合中性">M5.2 组合中性</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap rowspan="2"><a href="#m6-风险与成本">M6</a></td>
+         <td nowrap rowspan="2"><a href="#m6-风险与成本">风险与成本</a></td>
+         <td nowrap><a href="#m61-交易成本">M6.1 交易成本</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m62-风险控制">M6.2 风险控制</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap rowspan="2"><a href="#m7-回测与执行">M7</a></td>
+         <td nowrap rowspan="2"><a href="#m7-回测与执行">回测与执行</a></td>
+         <td nowrap><a href="#m71-执行假设">M7.1 执行假设</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m72-策略回测与评价">M7.2 策略回测与评价</a></td>
+         <td nowrap>—</td>
       </tr>
       <tr>
          <td nowrap><a href="#m8-实盘模拟">M8</a></td>
          <td nowrap><a href="#m8-实盘模拟">实盘模拟</a></td>
-         <td nowrap><a href="#m81-滚动训练">滚动训练</a></td>
+         <td nowrap><a href="#m81-滚动训练">M8.1 滚动训练</a></td>
+         <td nowrap>—</td>
       </tr>
       <tr>
          <td nowrap><a href="#m9-已知局限和待解决问题">M9</a></td>
          <td nowrap><a href="#m9-已知局限和待解决问题">已知局限和待解决问题</a></td>
          <td nowrap>—</td>
+         <td nowrap>—</td>
       </tr>
    </tbody>
 </table>
 </div>
-
 产出一套截面因子策略研究工作流：从确认资产集，到因子发现与评价，再到因子建模，最终将因子变成可交易的策略。
-
 尽可能回答以下研究问题：
 - 哪些因子在目标市场对未来横截面收益率有预测性？
 
@@ -78,7 +162,7 @@
 
 
 > 写作约定：
-> - **表格**：属性统一、每格一个短语、用于查找和对照的信息，如资产类别与数据、样本分区及用途。比如 M1.3.1 的 类型 形态 数据归类，但是像形态特有处理的信息我觉得可以尝试不在表格里呈现
+> - **表格**：属性统一、每格一个短语、用于查找和对照的信息，如资产类别与数据、样本分区及用途。比如 <a href="#m131-本地云端存储">M1.3.1</a> 的 类型 形态 数据归类，但是像形态特有处理的信息我觉得可以尝试不在表格里呈现
 
 > - **分点**：带条件、步骤或原因的规则与方法
 
@@ -90,12 +174,18 @@
 
 ---
 ## M1. 数据ETL
-本节分为三部分：
-M1.1 定义原始数据的范围；
-M1.2 定义数据源录入格式；
-M1.3 定义资产数据与信号数据的构建流程（归类、清洗、对齐、划分、存储）。
+本节按 ETL 定义从原始数据到研究数据集的完整流程，分为三部分：
 
-### M1.1 原始数据
+- **<a href="#m11-数据提取extraction">M1.1</a> 数据提取（Extraction）**：原始数据的分类、形态与数据源登记
+- **<a href="#m12-数据变换transform">M1.2</a> 数据变换（Transform）**：标准化、标识符、形态特有处理、数据对齐、去重
+- **<a href="#m13-数据存储loading">M1.3</a> 数据存储（Loading）**：各阶段数据的存储架构、命名与字段，以及研究样本划分
+
+### M1.1 数据提取（Extraction）
+
+#### M1.1.1 原始数据
+
+- **收益数据**：**能由它计算 `ret`**
+- **特征数据**：**不能由它计算 `ret`**
 
 <div style="overflow-x: auto;">
 <table>
@@ -103,261 +193,626 @@ M1.3 定义资产数据与信号数据的构建流程（归类、清洗、对齐
       <tr>
          <th nowrap>一级资产类别</th>
          <th nowrap>二级业务类别</th>
-         <th nowrap>资产交易数据(计算可交易收益)</th>
-         <th nowrap>信号数据(用于构建/评价因子)</th>
+         <th nowrap>数据类型</th>
+         <th nowrap>形态(<a href="#m123-形态特有处理">M1.2.3</a>)</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td nowrap rowspan="2">股票</td>
-         <td nowrap>现货</td>
-         <td nowrap>上市普通股</td>
-         <td nowrap>基本面（财报、估值）、分析师预期、指数成分与权重、公司行为（分红、拆股、回购）、融券 / 做空余额、资金流、新闻情绪</td>
+         <td nowrap rowspan="4">股票(EQ)</td>
+         <td nowrap rowspan="2">现货</td>
+         <td nowrap>收益数据</td>
+         <td nowrap></td>
       </tr>
       <tr>
-         <td nowrap>衍生品</td>
-         <td nowrap>期货：股指期货；期权：个股期权、股指期权</td>
-         <td nowrap>期货基差与期限结构、持仓量、CFTC COT 持仓报告、期权隐含波动率曲面、偏度、Put/Call 比、VIX</td>
+         <td nowrap>特征数据</td>
+         <td nowrap></td>
       </tr>
       <tr>
-         <td nowrap rowspan="2">固定收益</td>
-         <td nowrap>现货</td>
-         <td nowrap>债券：国债（含短期国库券）、公司债；回购：国债回购、标准化回购工具</td>
-         <td nowrap>国债收益率曲线、信用利差、信用评级、发行与到期日历、回购 / 资金利率</td>
+         <td nowrap rowspan="2">衍生品</td>
+         <td nowrap>收益数据</td>
+         <td nowrap></td>
       </tr>
       <tr>
-         <td nowrap>衍生品</td>
-         <td nowrap>期货：国债期货、短期利率期货；互换：固定对浮动利率互换；信用衍生品：单一名称 CDS、CDS 指数</td>
-         <td nowrap>期货基差、CTD 与隐含回购利率、持仓量、COT、互换利差、CDS 利差期限结构、利率期权隐含波动率</td>
+         <td nowrap>特征数据</td>
+         <td nowrap></td>
       </tr>
       <tr>
-         <td nowrap rowspan="2">外汇</td>
-         <td nowrap>现货</td>
-         <td nowrap>可交易货币对即期</td>
-         <td nowrap>各国短期利率（利差）、购买力平价 / 实际有效汇率、经常账户、央行政策利率与议息日历</td>
+         <td nowrap rowspan="4">固定收益(FI)</td>
+         <td nowrap rowspan="2">现货</td>
+         <td nowrap>收益数据</td>
+         <td nowrap></td>
       </tr>
       <tr>
-         <td nowrap>衍生品</td>
-         <td nowrap>远期：可交割外汇远期、NDF；掉期：近端与远端反向交易</td>
-         <td nowrap>远期点数（隐含利差 / Carry）、交叉货币基差、外汇期权隐含波动率与风险逆转、COT 持仓</td>
+         <td nowrap>特征数据</td>
+         <td nowrap></td>
       </tr>
       <tr>
-         <td nowrap>大宗商品</td>
-         <td nowrap>衍生品</td>
-         <td nowrap>期货：能源、金属、农产品等期货合约</td>
-         <td nowrap>期限结构（升贴水 / 展期收益）、库存、COT 持仓、供需报告（如 EIA、USDA WASDE）、现货价格与基差、天气</td>
+         <td nowrap rowspan="2">衍生品</td>
+         <td nowrap>收益数据</td>
+         <td nowrap></td>
       </tr>
       <tr>
-         <td nowrap>跨资产</td>
+         <td nowrap>特征数据</td>
+         <td nowrap></td>
+      </tr>
+      <tr>
+         <td nowrap rowspan="4">外汇(FX)</td>
+         <td nowrap rowspan="2">现货</td>
+         <td nowrap>收益数据</td>
+         <td nowrap></td>
+      </tr>
+      <tr>
+         <td nowrap>特征数据</td>
+         <td nowrap></td>
+      </tr>
+      <tr>
+         <td nowrap rowspan="2">衍生品</td>
+         <td nowrap>收益数据</td>
+         <td nowrap></td>
+      </tr>
+      <tr>
+         <td nowrap>特征数据</td>
+         <td nowrap></td>
+      </tr>
+      <tr>
+         <td nowrap rowspan="2">大宗商品(CM)</td>
+         <td nowrap rowspan="2">衍生品</td>
+         <td nowrap>收益数据</td>
+         <td nowrap></td>
+      </tr>
+      <tr>
+         <td nowrap>特征数据</td>
+         <td nowrap></td>
+      </tr>
+      <tr>
+         <td nowrap>经济体(MKT)</td>
          <td nowrap>—</td>
-         <td nowrap>—</td>
-         <td nowrap>宏观经济（GDP、CPI、PMI、就业）、经济 / 事件日历、行业 / 板块分类、风险因子数据（见 M3.4）、跨市场资金流与情绪</td>
+         <td nowrap>特征数据</td>
+         <td nowrap></td>
       </tr>
    </tbody>
 </table>
 </div>
-### M1.2 数据源登记
+#### M1.1.2 数据源
 
-所有已登记的数据源信息都应当记录在[`data/README.md`](data/README.md)中, 每一个数据源应当以卡片形式保存并包含以下信息:
+**数据源卡片**：`data/README.md` 中每张卡片包含以下字段：
+
 
 <div style="overflow-x: auto;">
 <table>
    <thead>
       <tr>
-         <th nowrap>用途</th>
          <th nowrap>一级资产类别</th>
          <th nowrap>二级业务类别</th>
-         <th nowrap>交易工具</th>
+         <th nowrap>数据类型</th>
          <th nowrap>数据接口</th>
          <th nowrap>可下载字段</th>
-         <th nowrap>数据频率</th>
-         <th nowrap>可用时间</th>
+         <th nowrap>是否修订</th>
+         <th nowrap>是否提供历史版本</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td nowrap>资产数据 / 信号数据</td>
          <td nowrap>股票 / 固定收益 / 外汇 / 大宗商品</td>
          <td nowrap>现货 / 衍生品</td>
-         <td nowrap>见 M1.1，如股指期货、外汇远期</td>
+         <td nowrap>收益 / 特征数据</td>
          <td nowrap>API 名称或下载方式</td>
          <td nowrap>接口返回的字段列表</td>
-         <td nowrap>日频及以上（当前版本不支持日内）</td>
-         <td nowrap>数据发布时点与延迟（UTC），用于 M1.3.3 point-in-time 约束</td>
+         <td nowrap>是 / 否：数据源是否会回溯修订已发布的值</td>
+         <td nowrap>是 / 否：决定 <a href="#m1241-数据修订">M1.2.4.1</a> 修订版本 <code>available_at</code> 的取法</td>
       </tr>
    </tbody>
 </table>
 </div>
-### M1.3 数据集构建
 
-从 M1.2 数据源下载M1.1原始数据后，按 归类 → 清洗 → 对齐 → 划分 → 存储 五步构建数据集（资产数据与信号数据）。当前版本只支持日频及以上数据，Tick、分钟级数据暂不纳入。
+### M1.2 数据变换（Transform）
 
-#### M1.3.1 原始数据形态归类
+收益数据与特征数据共用一条 pipeline，依次执行 <a href="#m121-标准化">M1.2.1</a>–<a href="#m125-去重">M1.2.5</a> 五步。
 
-资产数据按 A–D、信号数据按 S1–S4 归类，清洗时按形态分派处理函数：
+#### M1.2.1 标准化
+
+- **时间戳**：统一为 UTC。
+- **单位**：统一表格内计价货币、百分比 / 基点、数量单位等。
+- **列名**：数据源原始列名映射为 <a href="#m132-loading-文件格式">M1.3.2</a> 的标准列名，如 EODHD 的 `Date` → `date`。
+- **查询键**：每行保留以下四个查询键，供 <a href="#m1223-标识符设置">M1.2.2.3</a> 标识符设置比对：
 
 <div style="overflow-x: auto;">
 <table>
    <thead>
       <tr>
-         <th nowrap>类型</th>
+         <th nowrap>查询键</th>
+         <th nowrap>数据类型</th>
+         <th nowrap>作用</th>
+         <th nowrap>格式</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap><code>source</code></td>
+         <td nowrap>收益数据 / 特征数据</td>
+         <td nowrap>标明数据来源</td>
+         <td nowrap><a href="#m112-数据源">M1.1.2</a> 登记的数据源名称，如 <code>EODHD</code></td>
+      </tr>
+      <tr>
+         <td nowrap><code>source_code</code></td>
+         <td nowrap>收益数据</td>
+         <td nowrap><a href="#m1223-标识符设置">M1.2.2.3</a> 单数据源收益数据设置标识符</td>
+         <td nowrap>数据源中原始标的代码</td>
+      </tr>
+      <tr>
+         <td nowrap><code>source_field</code></td>
+         <td nowrap>特征数据</td>
+         <td nowrap><a href="#m1223-标识符设置">M1.2.2.3</a> 单数据源特征数据设置标识符</td>
+         <td nowrap>数据源中原始字段名</td>
+      </tr>
+      <tr>
+         <td nowrap><code>global_id</code></td>
+         <td nowrap>收益数据 / 特征数据</td>
+         <td nowrap><a href="#m1223-标识符设置">M1.2.2.3</a> 跨数据源设置标识符</td>
+         <td nowrap>按标的类别：<br>股票 <code>EQ</code>、固定收益 <code>FI</code>：ISIN<br>外汇 <code>FX</code>：ISO 4217 货币对<br>大宗商品 <code>CM</code>：待定<br>经济体 <code>MKT</code>：ISO 3166 国家代码</td>
+      </tr>
+   </tbody>
+</table>
+</div>
+#### M1.2.2 标识符
+
+##### M1.2.2.1 标识符定义
+
+Loading表格 **收益数据** 每行唯一主键:  `date × instrument_id`
+
+Loading表格 **特征数据 **每行唯一主键:  `date × instrument_id × field_id`
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap>标识符</th>
+         <th nowrap>作用</th>
+         <th nowrap>格式</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap><code>instrument_id</code></td>
+         <td nowrap>收益数据与特征数据按它对齐</td>
+         <td nowrap><code>{一级资产类别代码}{流水号}</code>，如 <code>EQ001</code></td>
+      </tr>
+      <tr>
+         <td nowrap><code>field_id</code></td>
+         <td nowrap>区分同一标的的不同特征</td>
+         <td nowrap><code>{特征类别代码}{流水号}</code>，如 <code>revenue001</code></td>
+      </tr>
+   </tbody>
+</table>
+</div>
+
+##### M1.2.2.2 映射表
+
+映射表记录各数据源的标的代码 / 字段名与编号的对应关系，供 <a href="#m1223-标识符设置">M1.2.2.3</a> 标识符设置比对：
+
+映射表1: `data/dictionary/instrument_map.csv`，**每个 `instrument_id` × `source` 一行**：
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap><code>instrument_id</code></th>
+         <th nowrap><code>source</code></th> 
+         <th nowrap><code>name</code></th>
+         <th nowrap><code>global_id_type</code></th>
+         <th nowrap><code>global_id</code></th>
+         <th nowrap><code>source_code</code></th>
+         <th nowrap><code>updated_at</code></th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap><code>EQ001</code></td>
+         <td nowrap><code>EODHD</code></td> 
+         <td nowrap>Apple</td>
+         <td nowrap><code>ISIN</code></td>
+         <td nowrap><code>US0378331005</code></td>
+         <td nowrap><code>AAPL.US</code></td>
+         <td nowrap>本行最后更新日</td>
+      </tr>
+   </tbody>
+</table>
+</div>
+映射表2: `data/dictionary/field_map.csv`，**每个 `field_id` × `source` 一行**：
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap><code>field_id</code></th>
+         <th nowrap><code>source</code></th>
+         <th nowrap><code>description</code></th>
+         <th nowrap><code>definition</code></th>
+         <th nowrap><code>unit</code></th>
+         <th nowrap><code>source_field</code></th>
+         <th nowrap><code>updated_at</code></th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap><code>revenue001</code></td>
+         <td nowrap><code>EODHD</code></td>
+         <td nowrap>营收</td>
+         <td nowrap>口径，如单季 / TTM</td>
+         <td nowrap>USD</td>
+         <td nowrap>数据源原始字段名</td>
+         <td nowrap>本行最后更新日</td>
+      </tr>
+   </tbody>
+</table>
+</div>
+##### M1.2.2.3 标识符设置
+
+标准化后数据用 <a href="#m121-标准化">M1.2.1</a> 的查询键在映射表（<a href="#m1222-映射表">M1.2.2.2</a>）中依次比对并设置标识符, 发现已有相同标号数据则沿用旧id:
+
+- 标准化后数据 `instrument_id`：查映射表 `instrument_map.csv`
+  1. `source` + `source_code` 命中 → 沿用旧id（同源重复下载 / 增量更新）
+  2. `global_id` 命中 → 沿用旧id，记为新增映射（跨源同一标的）
+  3. 都未命中 → 新建id，记为新增映射写 <a href="#m1222-映射表">M1.2.2.2</a> 入映射表
+- 标准化后数据 `field_id`：查映射表 `field_map.csv`
+  1. `source` + `source_field` 命中 → 沿用旧id
+  2. 未命中 → 新建id、记为新增映射写入 <a href="#m1222-映射表">M1.2.2.2</a> 映射表
+
+示例：
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap><code>date</code></th>
+         <th nowrap><code>instrument_id</code></th>
+         <th nowrap><code>field_id</code></th>
+         <th nowrap><code>value</code></th>
+         <th nowrap>说明</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap>2026-06-30</td>
+         <td nowrap><code>EQ001</code>（Apple）</td>
+         <td nowrap><code>revenue001</code></td>
+         <td nowrap>94.0B</td>
+         <td nowrap>Apple 营收</td>
+      </tr>
+      <tr>
+         <td nowrap>2026-06-30</td>
+         <td nowrap><code>EQ002</code>（MSFT）</td>
+         <td nowrap><code>revenue001</code></td>
+         <td nowrap>76.4B</td>
+         <td nowrap>同一指标、不同标的，共用 <code>field_id</code></td>
+      </tr>
+      <tr>
+         <td nowrap>2026-06-30</td>
+         <td nowrap><code>EQ001</code>（Apple）</td>
+         <td nowrap><code>eps001</code></td>
+         <td nowrap>1.57</td>
+         <td nowrap>同一标的、不同指标，共用 <code>instrument_id</code></td>
+      </tr>
+      <tr>
+         <td nowrap>2026-06-30</td>
+         <td nowrap><code>MKT001</code>（美国）</td>
+         <td nowrap><code>gdp001</code></td>
+         <td nowrap>—</td>
+         <td nowrap>美国 GDP</td>
+      </tr>
+      <tr>
+         <td nowrap>2026-06-30</td>
+         <td nowrap><code>MKT002</code>（中国）</td>
+         <td nowrap><code>gdp001</code></td>
+         <td nowrap>—</td>
+         <td nowrap>中国 GDP，与美国 GDP 共用 <code>field_id</code></td>
+      </tr>
+      <tr>
+         <td nowrap>2026-06-30</td>
+         <td nowrap><code>MKT001</code>（美国）</td>
+         <td nowrap><code>sofr001</code></td>
+         <td nowrap>—</td>
+         <td nowrap>美国 SOFR，与美国 GDP 共用 <code>instrument_id</code></td>
+      </tr>
+   </tbody>
+</table>
+</div>
+
+#### M1.2.3 形态特有处理
+
+收益数据形态按 I1、I2… (Instrument)编号，特征数据形态按 F1、F2… (Field)编号：
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
          <th nowrap>形态</th>
-         <th nowrap>数据</th>
          <th nowrap>形态特有处理</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td nowrap rowspan="6"><b>资产数据</b></td>
-         <td nowrap rowspan="3"><b>A. 现货价格型</b></td>
-         <td nowrap>股票现货</td>
-         <td nowrap>拆股 / 分红复权；保留退市股（防幸存者偏差）</td>
-      </tr>
-      <tr>
-         <td nowrap>债券现货</td>
-         <td nowrap>净价 / 全价、应计利息</td>
-      </tr>
-      <tr>
-         <td nowrap>外汇即期</td>
-         <td nowrap>统一报价方向（如统一以 USD 计价）</td>
-      </tr>
-      <tr>
-         <td nowrap><b>B. 到期合约型</b></td>
-         <td nowrap>股指期货、国债期货、短期利率期货、商品期货、可交割外汇远期</td>
-         <td nowrap>换月规则、连续合约拼接、到期日处理、涨跌停</td>
-      </tr>
-      <tr>
-         <td nowrap><b>C. 利率 / 利差曲线型</b></td>
-         <td nowrap>回购、利率互换、CDS、NDF、外汇掉期</td>
-         <td nowrap>报价为利率 / 利差 / 点数而非价格；按期限组织；收益通过久期 / DV01 换算；CDS 指数每半年换系列</td>
-      </tr>
-      <tr>
-         <td nowrap><b>D. 期权型</b></td>
-         <td nowrap>个股期权、股指期权</td>
-         <td nowrap>行权价 × 到期日二维结构；流动性稀疏；计算隐含波动率</td>
-      </tr>
-      <tr>
-         <td nowrap rowspan="4"><b>信号数据</b></td>
-         <td nowrap><b>S1. 资产级序列</b></td>
-         <td nowrap>基本面、分析师预期、融券余额、资金流、持仓量、COT、基差、库存</td>
-         <td nowrap>映射到 <code>asset_id</code>（处理代码变更、合约映射）；财报按披露日而非报告期标注</td>
-      </tr>
-      <tr>
-         <td nowrap><b>S2. 宏观 / 市场级序列</b></td>
-         <td nowrap>GDP、CPI、PMI、就业、政策利率、VIX、风险因子</td>
-         <td nowrap>按发布日而非参考期标注；使用首发值而非修订值（有 vintage 数据时）</td>
-      </tr>
-      <tr>
-         <td nowrap><b>S3. 曲线 / 曲面</b></td>
-         <td nowrap>收益率曲线、CDS 利差期限结构、隐含波动率曲面、期货期限结构</td>
-         <td nowrap>统一到标准期限节点 / moneyness 网格（插值方法待填写）</td>
-      </tr>
-      <tr>
-         <td nowrap><b>S4. 分类 / 事件</b></td>
-         <td nowrap>行业分类、指数成分、公司行为、经济 / 事件日历、新闻</td>
-         <td nowrap>保留历史版本（按当时有效值，防幸存者偏差）；事件按发生时间戳记录</td>
+         <td nowrap></td>
+         <td nowrap></td>
       </tr>
    </tbody>
 </table>
 </div>
 
-#### M1.3.2 数据清洗
+#### M1.2.4 数据对齐
 
-资产数据与信号数据共用一条 pipeline，仅第 3 步按形态分派处理函数（新增形态只需新增一个处理函数）；第 4 步按问题标注适用范围：
+数据观测日 `date` 与市场知道这个数的时点往往不同。本节按错位情形说明错位原因与对齐方式，统一产出 `available_at`（UTC）：
 
 <div style="overflow-x: auto;">
 <table>
    <thead>
       <tr>
-         <th nowrap>步骤</th>
-         <th nowrap>问题</th>
-         <th nowrap>规则</th>
+         <th nowrap>小节</th>
+         <th nowrap>错位情形</th>
+         <th nowrap>典型数据</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td nowrap>1. 标准化</td>
-         <td nowrap colspan="2">统一字段名、标识符、时间戳（UTC）、单位</td>
+         <td nowrap><a href="#m1241-数据修订">M1.2.4.1</a></td>
+         <td nowrap>数据修订</td>
+         <td nowrap>宏观数据初值 / 修正值、财报重述</td>
       </tr>
       <tr>
-         <td nowrap>2. 诊断</td>
-         <td nowrap colspan="2">资产数据：检查缺失、重复、异常跳变、零成交、价格超出涨跌停；信号数据：检查缺失、重复、异常值、发布延迟与修订；输出质量报告</td>
+         <td nowrap><a href="#m1242-收盘价次日才可知">M1.2.4.2</a></td>
+         <td nowrap>收盘价次日才可知</td>
+         <td nowrap>日频价格、成交量</td>
       </tr>
       <tr>
-         <td nowrap>3. 形态处理</td>
-         <td nowrap colspan="2">资产数据按 A–D、信号数据按 S1–S4 执行 M1.3.1 中对应形态的特有处理</td>
-      </tr>
-      <tr>
-         <td nowrap rowspan="8">4. 通用处理</td>
-         <td nowrap>重复 · 通用</td>
-         <td nowrap>删除：同一 <code>date, asset_id</code> / <code>date, series_id</code> 只保留最后一条</td>
-      </tr>
-      <tr>
-         <td nowrap>缺失 · 资产</td>
-         <td nowrap>填补：价格前向填充最多 N 期（N 取决于具体问题，由具体数据分析确定），超过 N 期记为 NaN；填补期的 <code>ret</code> 记为 NaN，不可产生收益</td>
-      </tr>
-      <tr>
-         <td nowrap>缺失 · 信号</td>
-         <td nowrap>低频序列在两次发布之间沿用最新已发布值（不插值）；应发布而未发布时记为 NaN</td>
-      </tr>
-      <tr>
-         <td nowrap>异常跳变 · 资产</td>
-         <td nowrap>标记：先核对是否为复权 / 换月遗漏，可修正则回到第 3 步；无法解释则记为 NaN（跳变阈值待填写）</td>
-      </tr>
-      <tr>
-         <td nowrap>异常值 · 信号</td>
-         <td nowrap>标记：保留原值，是否缩尾留到 M4.3 因子标准化处理</td>
-      </tr>
-      <tr>
-         <td nowrap>零成交 · 资产</td>
-         <td nowrap>标记：保留价格，<code>tradable</code> 记为 false，不参与当日截面</td>
-      </tr>
-      <tr>
-         <td nowrap>价格超出涨跌停 · 资产</td>
-         <td nowrap>删除：视为数据错误，记为 NaN；恰好触及涨跌停则只标记 <code>tradable</code> 为 false</td>
-      </tr>
-      <tr>
-         <td nowrap>数据修订 · 信号</td>
-         <td nowrap>保留首发值；无 vintage 数据时在 <code>quality_flag</code> 中标记"可能含修订"</td>
+         <td nowrap><a href="#m1243-参考期与发布日不同">M1.2.4.3</a></td>
+         <td nowrap>参考期与发布日不同</td>
+         <td nowrap>财报、宏观数据</td>
       </tr>
    </tbody>
 </table>
 </div>
 
-#### M1.3.3 数据对齐
+##### M1.2.4.1 数据修订
+
+**错位原因**：数据源发布后回溯修订已发布的值。
+
+**对齐方式**： `available_at` 取**该版本的发布时间**，而不是原始观测日 `date`。
+
+##### M1.2.4.2 收盘价次日才可知
+
+**错位原因**：日频数据的 `date` 是交易日 T，但 T 日收盘价在该市场收盘后才产生，数据源还有更新延迟，常常到 T+1 才能拿到
+
+**对齐方式**：`available_at` = 市场收盘时刻+ 数据源更新延迟
+
+##### M1.2.4.3 参考期与发布日不同
+
+**错位原因**：财报、宏观数据的 `date` 是参考期（报告期末 / 统计期），发布在参考期结束后数周到数月。
+
+**对齐方式**：`date` 保留参考期，`available_at` 取发布时点
+
+#### M1.2.5 去重
+
+数据对齐（<a href="#m124-数据对齐">M1.2.4</a>）后，任何新数据与旧数据标识符相同即视为重合。重合时按下表处理，需要人工判断时选择使用新数据还是旧数据：
 
 <div style="overflow-x: auto;">
 <table>
    <thead>
       <tr>
-         <th nowrap>步骤</th>
-         <th nowrap>规则</th>
+         <th nowrap>情形</th>
+         <th nowrap>处理</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td nowrap>1. 时区</td>
-         <td nowrap>存储统一用 UTC；每个资产的日 bar 取其所在市场收盘价，按交易日标注日期；信号数据按发布时间戳记录</td>
+         <td nowrap>跨数据源重合</td>
+         <td nowrap>raise alert</td>
       </tr>
       <tr>
-         <td nowrap>2. 交易日历</td>
-         <td nowrap>采用一个主日历（NYSE）；某市场休市当天，该资产 <code>ret</code> 记为 NaN 并标记不可交易，不可视为 0 收益</td>
+         <td nowrap>同数据源重合、数值不同（回溯修订）：特征数据</td>
+         <td nowrap>不 alert，作为新版本保留（见 <a href="#m1241-数据修订">M1.2.4.1</a>）</td>
       </tr>
       <tr>
-         <td nowrap>3. 信号对齐</td>
-         <td nowrap>信号数据按 as-of 方式对齐到主日历：每个交易日取 <code>available_at</code> 早于决策时点的最新值；S1 / S4 通过 <code>asset_id</code> 与资产面板连接，按当时有效版本映射</td>
+         <td nowrap>同数据源重合、数值不同（回溯修订）：收益数据</td>
+         <td nowrap>raise alert</td>
       </tr>
       <tr>
-         <td nowrap>4. 可用时间</td>
-         <td nowrap>按 M1.2 的"可用时间"做 point-in-time 约束：t 日信号只能使用决策时点前已发布的数据（如亚洲收盘早于美国、基本面披露滞后）；无精确发布时间的信号按保守滞后处理（滞后长度待填写）</td>
+         <td nowrap>同数据源重合、数值相同（重复下载 / 增量更新边界）</td>
+         <td nowrap>跳过，不 alert</td>
       </tr>
    </tbody>
 </table>
 </div>
+**多数据源合并**：同一 `instrument_id`（特征数据加 `field_id`）有多个数据源时，不重合的日期直接取并集（各数据源自然互相补缺）；重合的日期按人工判断结果取值，两源差异超过阈值时（阈值待定）在 `quality_flag` 中标记。
+
+### M1.3 数据存储（Loading）
+
+#### M1.3.1 本地/云端存储
+
+ `{分类}` 均指 `{一级资产类别}/{二级业务类别}/{频率}` 三级目录，频率取 `tick` / `second` / `minute` / `hour` / `daily` ：
+
+```text
+data/
+├── README.md                          # 数据源卡片（M1.1.2）
+├── dictionary/                        # 数据字典（M1.3.3）、映射表（M1.2.2.2）
+├── extraction/{分类}/                 # 原始数据：M1.1 提取结果              
+├── transform/                         # 中间数据：M1.2.1–M1.2.5 各步输出     
+│   ├── 01_standardized/{分类}/        #   M1.2.1–M1.2.2 标准化、标识符
+│   ├── 02_form_processed/{分类}/      #   M1.2.3 形态特有处理
+│   ├── 03_aligned/{分类}/             #   M1.2.4 数据对齐
+│   └── 04_deduplicated/{分类}/        #   M1.2.5 去重
+└── loading/{分类}/                    # 最终数据：M1.2.5 去重结果；不按 IS / OOS 拆分，研究时按 M1.3.4 切分
+```
+
+```mermaid
+flowchart LR
+    S[数据源<br/>M1.1.2] -->|提取| E[extraction/]
+    E -->|M1.2.1–M1.2.5| T[transform/]
+    T -->|导出| L["loading/"]
+    L -->|M1.3.4 按决策时点切分| F[研究样本]
+    D[dictionary/] -.定位 / 更新.-> T
+    E -.同步.-> C[(云盘)]
+    L -.同步.-> C
+```
+
+- **本地**：保存全部三层；数据文件全部 git ignore，Github仅提交目录结构.
+- **云端**：仅保存 `extraction/`, `loading/`, `dictionary/` . 云盘地址：询问 Liangxiao LI。
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap>层</th>
+         <th nowrap>数据类型</th>
+         <th nowrap>命名模板</th>
+         <th nowrap>示例</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap rowspan="2">Extraction</td>
+         <td nowrap>收益数据</td>
+         <td nowrap rowspan="2"><code>{数据源}_{数据接口}_{数据源代码}_{下载日期}</code></td>
+         <td nowrap><code>EODHD_EOD_AAPL.US_20261017</code></td>
+      </tr>
+      <tr>
+         <td nowrap>特征数据</td>
+         <td nowrap><code>EODHD_InterestRates_SOFR_20261017</code></td>
+      </tr>
+      <tr>
+         <td nowrap rowspan="2">Loading</td>
+         <td nowrap>收益数据</td>
+         <td nowrap rowspan="2"><code>{一级资产类别}_{二级业务类别}_{数据类型}_{形态}_{清洗日期}</code></td>
+         <td nowrap><code>股票_现货_收益_{形态}_20261017</code></td>
+      </tr>
+      <tr>
+         <td nowrap>特征数据</td>
+         <td nowrap><code>股票_现货_特征_{形态}_20261017</code></td>
+      </tr>
+   </tbody>
+</table>
+</div>
+#### M1.3.2 Loading 文件格式
+
+**收益数据**：每行对应一个 `date × instrument_id`。必需列如下：
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap><code>date</code></th>
+         <th nowrap><code>instrument_id</code></th>
+         <th nowrap><code>form</code></th>
+         <th nowrap><code>asset_class</code></th>
+         <th nowrap><code>category</code></th>
+         <th nowrap><code>ret</code></th>
+         <th nowrap><code>tradable</code></th>
+         <th nowrap><code>source</code></th>
+         <th nowrap><code>source_code</code></th>
+         <th nowrap><code>quality_flag</code></th>
+         <th nowrap><code>available_at</code></th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap>交易日</td>
+         <td nowrap>见 <a href="#m122-标识符">M1.2.2</a></td>
+         <td nowrap>见 <a href="#m123-形态特有处理">M1.2.3</a></td>
+         <td nowrap>一级资产类别</td>
+         <td nowrap>二级业务类别</td>
+         <td nowrap>可交易日收益</td>
+         <td nowrap>当日是否可交易</td>
+         <td nowrap>数据源</td>
+         <td nowrap>该数据源中的标的代码（<a href="#m1223-标识符设置">M1.2.2.3</a> 设置标识符用）</td>
+         <td nowrap>清洗标记</td>
+         <td nowrap>数据可用时间（UTC，见 <a href="#m124-数据对齐">M1.2.4</a>）</td>
+      </tr>
+   </tbody>
+</table>
+</div>
+**特征数据**：每行对应一个 `date × instrument_id × field_id × available_at`（同一观测的每个修订版本一行，见 <a href="#m1241-数据修订">M1.2.4.1</a>），必需列如下：
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap><code>date</code></th>
+         <th nowrap><code>instrument_id</code></th>
+         <th nowrap><code>field_id</code></th>
+         <th nowrap><code>form</code></th>
+         <th nowrap><code>value</code></th>
+         <th nowrap><code>frequency</code></th>
+         <th nowrap><code>source</code></th>
+         <th nowrap><code>source_code</code></th>
+         <th nowrap><code>source_field</code></th>
+         <th nowrap><code>quality_flag</code></th>
+         <th nowrap><code>available_at</code></th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap>观测日期（参考期）</td>
+         <td nowrap>见 <a href="#m122-标识符">M1.2.2</a></td>
+         <td nowrap>见 <a href="#m122-标识符">M1.2.2</a></td>
+         <td nowrap>见<a href="#m123-形态特有处理">M1.2.3</a></td>
+         <td nowrap>数值</td>
+         <td nowrap>原始发布频率</td>
+         <td nowrap>数据源（如 EODHD）</td>
+         <td nowrap>该数据源中的标的代码，<code>MKT</code> 类填市场 / 国家代码（<a href="#m1223-标识符设置">M1.2.2.3</a> 设置标识符用）</td>
+         <td nowrap>该数据源中的原始字段名，<code>MKT</code> 类填原始序列名（<a href="#m1223-标识符设置">M1.2.2.3</a> 设置标识符用）</td>
+         <td nowrap>清洗标记</td>
+         <td nowrap>该版本的数据可用时间（UTC，见 <a href="#m124-数据对齐">M1.2.4</a>）</td>
+      </tr>
+   </tbody>
+</table>
+</div>
+
+对齐到收益数据时：先按 <a href="#m124-数据对齐">M1.2.4</a> as-of 取值，再将 `EQ` 等标的级特征按 `date` + `instrument_id` 合并；`MKT` 类特征只按 `date` 合并，广播到该市场的所有标的。
+
+#### M1.3.3 数据字典格式
+
+- **数据字典**：`data/dictionary/data_dictionary.csv`，**每个形态一行**:
+  
+  <div style="overflow-x: auto;">
+  <table>
+     <thead>
+        <tr>
+           <th nowrap><code>asset_class</code></th>
+           <th nowrap><code>category</code></th>
+           <th nowrap><code>data_type</code></th>
+           <th nowrap><code>form</code></th>
+           <th nowrap><code>description</code></th>
+           <th nowrap><code>source</code></th>
+           <th nowrap><code>loading_path</code></th>
+           <th nowrap><code>fields</code></th>
+           <th nowrap><code>instrument_count</code></th>
+           <th nowrap><code>start_date</code></th>
+           <th nowrap><code>end_date</code></th>
+           <th nowrap><code>updated_at</code></th>
+        </tr>
+     </thead>
+     <tbody>
+        <tr>
+           <td nowrap>一级资产类别</td>
+           <td nowrap>二级业务类别</td>
+           <td nowrap>收益 / 特征</td>
+           <td nowrap>见 <a href="#m123-形态特有处理">M1.2.3</a></td>
+           <td nowrap>形态描述</td>
+           <td nowrap>数据源</td>
+           <td nowrap>Loading 中的文件夹路径</td>
+           <td nowrap>包含的特征及单位（收益数据填 <code>ret</code>）</td>
+           <td nowrap>标的数量</td>
+           <td nowrap>数据起始日</td>
+           <td nowrap>数据截止日</td>
+           <td nowrap>本行最后更新日</td>
+        </tr>
+     </tbody>
+  </table>
+  </div>
 
 #### M1.3.4 研究样本划分（IS + OOS）
 
-将清洗对齐后的资产数据与信号数据按同一套日期划分为以下分区（信号数据以 `available_at` 判断所属分区）：
+按**决策时点 t** 划分以下分区：
 
 <div style="overflow-x: auto;">
 <table>
@@ -388,11 +843,12 @@ M1.3 定义资产数据与信号数据的构建流程（归类、清洗、对齐
 </table>
 </div>
 
-示例（仅示意，日期与长度非最终设定）：
-
+- **特征**：任一分区内，决策时点 t 只能使用 `available_at ≤ t` 的数据（<a href="#m124-数据对齐">M1.2.4</a> as-of 取值）。OOS 回看 IS 时期的历史（如计算 12 个月动量）不算泄露；OOS 期间才发布的修订，按 `available_at` 自然进不了 IS。
+- **标签**：t 之后的未来收益率窗口不能跨进下一分区，因此 Embargo 长度 ≥ 研究中使用的最长未来收益率期限。
+- **存储**：数据不按分区物理拆分，Loading 只存一份；各 `strategy_id` 的分区边界（IS / Embargo / Validation / Test 起止日）随策略记录，研究时按边界切分决策时点。
 ```mermaid
 gantt
-    title 研究样本划分示例
+    title 研究样本划分示例(非最终)
     dateFormat YYYY-MM
     axisFormat %Y
     tickInterval 1year
@@ -406,113 +862,17 @@ gantt
     Test · 3y               :done, test, 2023-01, 2026-01
 ```
 
-#### M1.3.5 数据存储
-
-<div style="overflow-x: auto;">
-<table>
-   <thead>
-      <tr>
-         <th nowrap>项目</th>
-         <th nowrap>规则</th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td nowrap>工作目录</td>
-         <td nowrap><a href="data/"><code>data/</code></a></td>
-      </tr>
-      <tr>
-         <td nowrap>最终存储</td>
-         <td nowrap>共享 iCloud 云盘（需向 Liangxiao 申请权限）,后期移至AWS S3</td>
-      </tr>
-      <tr>
-         <td nowrap>资产数据文件命名</td>
-         <td nowrap><code>{形态}_{一级资产类别}_{二级业务类别}_{时区}_{交易工具}_{交易日历}_{清洗日期}</code>，如 <code>A_股票_股票_上市普通股_UTC_NYSE_20261017</code></td>
-      </tr>
-      <tr>
-         <td nowrap>信号数据文件命名</td>
-         <td nowrap><code>{形态}_{数据类型}_{序列名}_{时区}_{交易日历}_{清洗日期}</code>，如 <code>S2_宏观_US_CPI_UTC_NYSE_20261017</code></td>
-      </tr>
-   </tbody>
-</table>
-</div>
-**资产数据**：每个文件为一张面板，每行对应一个 `date × asset_id`，包含以下列（形态特有字段如期限、行权价追加在末尾）：
-
-<div style="overflow-x: auto;">
-<table>
-   <thead>
-      <tr>
-         <th nowrap><code>date</code></th>
-         <th nowrap><code>asset_id</code></th>
-         <th nowrap><code>form</code></th>
-         <th nowrap><code>asset_class</code></th>
-         <th nowrap><code>category</code></th>
-         <th nowrap><code>close</code></th>
-         <th nowrap><code>volume</code></th>
-         <th nowrap><code>ret</code></th>
-         <th nowrap><code>tradable</code></th>
-         <th nowrap><code>quality_flag</code></th>
-         <th nowrap><code>available_at</code></th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td nowrap>交易日</td>
-         <td nowrap>资产标识符</td>
-         <td nowrap>形态（A–D）</td>
-         <td nowrap>一级资产类别</td>
-         <td nowrap>二级业务类别（现货 / 衍生品）</td>
-         <td nowrap>收盘价 / 报价（C 类为利率或利差）</td>
-         <td nowrap>成交量</td>
-         <td nowrap>可交易日收益，供 M3 使用</td>
-         <td nowrap>当日是否可交易</td>
-         <td nowrap>清洗标记（M1.3.2 第 4 步）</td>
-         <td nowrap>数据可用时间（UTC，见 M1.3.3）</td>
-      </tr>
-   </tbody>
-</table>
-</div>
-**信号数据**：每行对应一个 `date × series_id`，包含以下列（S3 曲线 / 曲面追加期限、moneyness 等列）：
-
-<div style="overflow-x: auto;">
-<table>
-   <thead>
-      <tr>
-         <th nowrap><code>date</code></th>
-         <th nowrap><code>series_id</code></th>
-         <th nowrap><code>form</code></th>
-         <th nowrap><code>data_type</code></th>
-         <th nowrap><code>value</code></th>
-         <th nowrap><code>frequency</code></th>
-         <th nowrap><code>quality_flag</code></th>
-         <th nowrap><code>available_at</code></th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td nowrap>观测日期（参考期）</td>
-         <td nowrap>序列标识符（如 <code>US_CPI</code>；行业分类等随资产变化的数据取 <code>asset_id</code>）</td>
-         <td nowrap>形态（S1–S4）</td>
-         <td nowrap>数据类型（取值见 M2.1）</td>
-         <td nowrap>数值</td>
-         <td nowrap>原始发布频率</td>
-         <td nowrap>清洗标记（M1.3.2 第 4 步）</td>
-         <td nowrap>数据可用时间（UTC，见 M1.3.3）</td>
-      </tr>
-   </tbody>
-</table>
-</div>
-
 ---
 
 ## M2. 因子公式构建与入库
+
 本节分为三部分：
-M2.1 定义因子库的分类维度；
-M2.2 定义因子公式的构建方法；
-M2.3 定义因子入库的规范。
+<a href="#m21-因子库分类">M2.1</a> 定义因子库的分类维度；
+<a href="#m22-因子公式构建">M2.2</a> 定义因子公式的构建方法；
+<a href="#m23-因子入库规范">M2.3</a> 定义因子入库的规范。
 
 ### M2.1 因子库分类
-每条因子按下表的 10 个维度分类，分类结果作为入库信息的一部分（见 M2.3）。"分类标签"描述因子本身；"研究设定"受 M1 数据与 M3 评价方式约束，标"暂不支持"的取值当前版本不可用。
+每条因子按下表的 10 个维度分类，分类结果作为入库信息的一部分（见 <a href="#m23-因子入库规范">M2.3</a>）。"分类标签"描述因子本身；"研究设定"受 <a href="#m1-数据etl">M1</a> 数据与 <a href="#m3-因子研究与因子评价">M3</a> 评价方式约束，标"暂不支持"的取值当前版本不可用。
 
 <div style="overflow-x: auto;">
 <table>
@@ -534,12 +894,12 @@ M2.3 定义因子入库的规范。
          <td nowrap>风险补偿、行为偏差、市场摩擦、基本面定价、宏观传导、统计规律</td>
       </tr>
       <tr>
-         <td nowrap>3. 数据类型</td>
-         <td nowrap>价格、成交量、订单簿、基本面、持仓、收益率曲线、期权、宏观、另类数据（所用数据须先在 M1.2 登记）</td>
+         <td nowrap>3. 数据内容</td>
+         <td nowrap>价格、成交量、订单簿、基本面、持仓、收益率曲线、期权、宏观、另类数据（所用数据须先在 <a href="#m112-数据源">M1.1.2</a> 登记）</td>
       </tr>
       <tr>
          <td nowrap>4. 适用资产类别</td>
-         <td nowrap>股票、固定收益、外汇、大宗商品（与 M1.1 一致）、跨资产</td>
+         <td nowrap>股票、固定收益、外汇、大宗商品（与 <a href="#m11-数据提取extraction">M1.1</a> 一致）、跨资产</td>
       </tr>
       <tr>
          <td nowrap>5. 信号结构</td>
@@ -551,7 +911,7 @@ M2.3 定义因子入库的规范。
       </tr>
       <tr>
          <td nowrap>7. 因子作用范围</td>
-         <td nowrap>单资产、行业 / 板块（依赖 M1.2 行业分类数据）、跨品种、市场级、宏观级</td>
+         <td nowrap>单资产、行业 / 板块（依赖 <a href="#m112-数据源">M1.1.2</a> 行业分类数据）、跨品种、市场级、宏观级</td>
       </tr>
       <tr>
          <td nowrap rowspan="3"><b>研究设定</b></td>
@@ -570,9 +930,9 @@ M2.3 定义因子入库的规范。
 </table>
 </div>
 
-- **期限 / 合约属性**、**历史回看窗口**是因子参数而非分类，在 M2.3 必填信息中记录；合约连续方式默认采用 M1.3.1 规则，因子只记录与默认不同之处。
-- **风险暴露**不在入库时分类，由 M3.4 因子风险画像计算得出。
-- **时间序列型因子**的评价方式待在 M3 中补充（M3.4 当前指标均为横截面指标）。
+- **期限 / 合约属性**、**历史回看窗口**是因子参数而非分类，在 <a href="#m23-因子入库规范">M2.3</a> 必填信息中记录；合约连续方式默认采用 <a href="#m123-形态特有处理">M1.2.3</a> 形态处理规则，因子只记录与默认不同之处。
+- **风险暴露**不在入库时分类，由 <a href="#m34-因子评价指标">M3.4</a> 因子风险画像计算得出。
+- **时间序列型因子**的评价方式待在 <a href="#m3-因子研究与因子评价">M3</a> 中补充（<a href="#m34-因子评价指标">M3.4</a> 当前指标均为横截面指标）。
 
 ### M2.2 因子公式构建
 
@@ -632,7 +992,7 @@ M2.3 定义因子入库的规范。
       </tr>
       <tr>
          <td nowrap>因子代码</td>
-         <td nowrap><code>factor/code/{factor_id}.py</code>：输入 M1.3.5 的资产 / 信号数据，输出因子值</td>
+         <td nowrap><code>factor/code/{factor_id}.py</code>：输入 <a href="#m132-loading-文件格式">M1.3.2</a> 的收益 / 特征数据，输出因子值</td>
       </tr>
       <tr>
          <td nowrap>因子总表</td>
@@ -707,14 +1067,14 @@ M2.3 定义因子入库的规范。
    <tbody>
       <tr>
          <td nowrap>{主题代码}_{三位序号}，如 <code>MOM_001</code></td>
-         <td nowrap>构建方法（M2.2 第 1–6 种）</td>
-         <td nowrap>分类标签（M2.1 第 1–7 维）</td>
-         <td nowrap>研究设定（M2.1 第 8–10 维）</td>
+         <td nowrap>构建方法（<a href="#m22-因子公式构建">M2.2</a> 第 1–6 种）</td>
+         <td nowrap>分类标签（<a href="#m21-因子库分类">M2.1</a> 第 1–7 维）</td>
+         <td nowrap>研究设定（<a href="#m21-因子库分类">M2.1</a> 第 8–10 维）</td>
          <td nowrap>公式（数学表达式或模型说明）</td>
          <td nowrap>经济逻辑 / 假设</td>
          <td nowrap>预期方向（+ / −）</td>
-         <td nowrap>所用数据（M1.2 数据源与 M1.3.5 列名）</td>
-         <td nowrap>参数：回看窗口、期限 / 合约属性（与 M1.3.1 默认不同时）等</td>
+         <td nowrap>所用数据（<a href="#m112-数据源">M1.1.2</a> 数据源与 <a href="#m132-loading-文件格式">M1.3.2</a> 列名）</td>
+         <td nowrap>参数：回看窗口、期限 / 合约属性（与 <a href="#m123-形态特有处理">M1.2.3</a> 默认不同时）等</td>
          <td nowrap>因子值在 t 日的可用时点（UTC）</td>
          <td nowrap>来源文献或研报</td>
          <td nowrap>状态（见下方状态流转）</td>
@@ -725,7 +1085,7 @@ M2.3 定义因子入库的规范。
 </table>
 </div>
 
-不同构建方法（M2.2）需额外记录：
+不同构建方法（<a href="#m22-因子公式构建">M2.2</a>）需额外记录：
 
 <div style="overflow-x: auto;">
 <table>
@@ -750,7 +1110,7 @@ M2.3 定义因子入库的规范。
       </tr>
       <tr>
          <td nowrap>4. 算法搜索</td>
-         <td nowrap>数据字段与算子集合、搜索空间大小、试验总次数（供 M3 多重检验校正）</td>
+         <td nowrap>数据字段与算子集合、搜索空间大小、试验总次数（供 <a href="#m3-因子研究与因子评价">M3</a> 多重检验校正）</td>
       </tr>
       <tr>
          <td nowrap>5. 因子变换与组合</td>
@@ -768,12 +1128,12 @@ M2.3 定义因子入库的规范。
 
 ## M3. 因子研究与因子评价
 本节分为六部分：
-M3.1 定义基础频率；
-M3.2 定义因子值及其预处理；
-M3.3 定义未来收益率；
-M3.4 定义用什么指标检验因子特性；
-M3.5 定义样本内划分方法；
-M3.6 定义各检验指标的计算范围。
+<a href="#m31-基础频率">M3.1</a> 定义基础频率；
+<a href="#m32-因子值">M3.2</a> 定义因子值及其预处理；
+<a href="#m33-未来收益率">M3.3</a> 定义未来收益率；
+<a href="#m34-因子评价指标">M3.4</a> 定义用什么指标检验因子特性；
+<a href="#m35-样本内划分">M3.5</a> 定义样本内划分方法；
+<a href="#m36-指标范围">M3.6</a> 定义各检验指标的计算范围。
 
 ### M3.1 基础频率
 将原始 bar 合成为基础 bar，基础 bar 的频率 `Δ` 即交易频率，各字段按其自身性质分别合成。基础 bar 按各资产自身的交易日历划分，休市时段（如收盘到次日开盘、周末、节假日）不算缺失。交易时段内任一根原始 bar 缺失时，该基础 bar 标记为缺失，不参与后续计算。因子值与收益率均以基础 bar 为单位计算。
@@ -887,14 +1247,14 @@ M3.6 定义各检验指标的计算范围。
 
 ## M4. 因子组合
 本节分为八部分：
-M4.1 定义因子综合评分方法；
-M4.2 定义因子选择规则；
-M4.3 定义因子值的标准化方法；
-M4.4 定义未来收益率如何调整；
-M4.5 定义合成因子信号的模型；
-M4.6 定义训练前的数据处理方式；
-M4.7 定义模型的初始训练与超参数选择；
-M4.8 定义组合信号本身的评价方法。
+<a href="#m41-因子综合评分">M4.1</a> 定义因子综合评分方法；
+<a href="#m42-因子选择">M4.2</a> 定义因子选择规则；
+<a href="#m43-因子值标准化">M4.3</a> 定义因子值的标准化方法；
+<a href="#m44-未来收益率调整">M4.4</a> 定义未来收益率如何调整；
+<a href="#m45-模型选择">M4.5</a> 定义合成因子信号的模型；
+<a href="#m46-数据处理">M4.6</a> 定义训练前的数据处理方式；
+<a href="#m47-模型训练">M4.7</a> 定义模型的初始训练与超参数选择；
+<a href="#m48-模型检验">M4.8</a> 定义组合信号本身的评价方法。
 
 ### M4.1 因子综合评分
 我们先对候选因子做初步筛选，再将通过筛选的因子的各项属性汇总为一个综合评分，用于排序，步骤如下：
@@ -1003,14 +1363,14 @@ M4.8 定义组合信号本身的评价方法。
 
 ## M5. 策略与仓位
 本节分为两部分：
-M5.1 把信号转成每个 symbol 的目标持仓；
-M5.2 检查组合市场中性。
+<a href="#m51-目标持仓构建">M5.1</a> 把信号转成每个 symbol 的目标持仓；
+<a href="#m52-组合中性">M5.2</a> 检查组合市场中性。
 
 ### M5.1 目标持仓构建
 根据模型输出的信号进行资产分配，每根 bar 都用当时的信号重新计算目标权重并整体调仓，可选以下几种方式：
 1. **按排名分层**：每根 bar 横截面上按信号值排名，排名前 q 的 symbol 做多、后 q 的做空，等权分配资金（同分层测试结果相同）。
 
-2. **按信号大小**：资金权重由信号大小决定：`weight = signal / Σ|signal|`，符号决定多空方向，大小跟信号强度成正比。为避免单个 symbol 信号异常导致仓位过度集中，对 `|weight|` 设一个上限，超出上限的部分直接截断；配平和缩放之后的上限检查见 M5.2。
+2. **按信号大小**：资金权重由信号大小决定：`weight = signal / Σ|signal|`，符号决定多空方向，大小跟信号强度成正比。为避免单个 symbol 信号异常导致仓位过度集中，对 `|weight|` 设一个上限，超出上限的部分直接截断；配平和缩放之后的上限检查见 <a href="#m52-组合中性">M5.2</a>。
 
 3. **按风险调整**：在权重基础上，再除以各 symbol 的历史波动率（只用第 t 根 bar 及之前的数据估计），使每个 symbol 贡献的风险大致相当。同一横截面里资产波动率差别很大时（如国债期货与原油期货），应采用这种方式，否则组合风险会集中在高波动的品种上。
 
@@ -1027,16 +1387,16 @@ M5.2 检查组合市场中性。
 
 2. **缩放**：把权重整体按比例缩放，使总敞口回到目标水平。
 
-若 M5.1 或 M6.2 对单个 symbol 设了权重上限，缩放后要重新检查：把超出上限的权重截断，再重复上面两步，直到满足上限或达到最大迭代次数。
+若 <a href="#m51-目标持仓构建">M5.1</a> 或 <a href="#m62-风险控制">M6.2</a> 对单个 symbol 设了权重上限，缩放后要重新检查：把超出上限的权重截断，再重复上面两步，直到满足上限或达到最大迭代次数。
 
-若某资产类别不能直接做空（见 M1.1 做空约束），空头腿可改用指数期货等对冲工具，此时组合只能对该对冲工具代表的暴露保持中性，需在 strategy 文档中说明。
+若某资产类别不能直接做空（见 <a href="#m11-数据提取extraction">M1.1</a> 做空约束），空头腿可改用指数期货等对冲工具，此时组合只能对该对冲工具代表的暴露保持中性，需在 strategy 文档中说明。
 
 ---
 
 ## M6. 风险与成本
 本节分为两部分：
-M6.1 定义交易成本的构成和计入方式；
-M6.2 定义组合层面的风险控制。
+<a href="#m61-交易成本">M6.1</a> 定义交易成本的构成和计入方式；
+<a href="#m62-风险控制">M6.2</a> 定义组合层面的风险控制。
 
 ### M6.1 交易成本
 - **成本构成**：
@@ -1045,14 +1405,14 @@ M6.2 定义组合层面的风险控制。
   - 市场冲击：默认用平方根模型，冲击成本 = c × σ × √(成交额 ÷ 日均成交额)，σ 为日收益率波动率，系数 c 由 strategy 文档设定
   - 持仓成本：股票多头的融资利息、空头的借券费用，期货和外汇远期展期时额外支付的买卖价差
 
-- **计入方式**：M3 的因子评价指标都是扣成本前的毛收益，M4.1 的可交易性只是成本的代理指标。成本在 M7 回测中扣除：每根 bar 按各 symbol 的实际调仓金额计算交易成本，按持仓金额计算持仓成本。
+- **计入方式**：<a href="#m3-因子研究与因子评价">M3</a> 的因子评价指标都是扣成本前的毛收益，<a href="#m41-因子综合评分">M4.1</a> 的可交易性只是成本的代理指标。成本在 <a href="#m7-回测与执行">M7</a> 回测中扣除：每根 bar 按各 symbol 的实际调仓金额计算交易成本，按持仓金额计算持仓成本。
 
 - **报告口径**：同时报告扣成本前、后的收益，以及盈亏平衡成本（每根 bar 毛收益均值 ÷ 每根 bar 换手率均值，换手率为 Σ|Δw|），即单位换手的成本达到多少时，策略的净收益归零。
 
 ### M6.2 风险控制
-- **波动率目标**：用事前估计的组合波动率（只用第 t 根 bar 及之前的数据）整体缩放权重，使组合年化波动率接近 strategy 文档设定的目标值，同时设总杠杆上限。整体缩放不破坏 M5.2 的中性。
+- **波动率目标**：用事前估计的组合波动率（只用第 t 根 bar 及之前的数据）整体缩放权重，使组合年化波动率接近 strategy 文档设定的目标值，同时设总杠杆上限。整体缩放不破坏 <a href="#m52-组合中性">M5.2</a> 的中性。
 
-- **集中度上限**：单个 symbol、单个行业 / 板块、单个资产类别的权重上限，超限的处理见 M5.2。
+- **集中度上限**：单个 symbol、单个行业 / 板块、单个资产类别的权重上限，超限的处理见 <a href="#m52-组合中性">M5.2</a>。
 
 - **流动性上限**：单个 symbol 的持仓金额不超过其日均成交额的一定比例，并据此估算策略容量。
 
@@ -1060,21 +1420,21 @@ M6.2 定义组合层面的风险控制。
 
 ## M7. 回测与执行
 本节分为两部分：
-M7.1 定义回测中的执行假设；
-M7.2 定义回测流程与评价指标。
+<a href="#m71-执行假设">M7.1</a> 定义回测中的执行假设；
+<a href="#m72-策略回测与评价">M7.2</a> 定义回测流程与评价指标。
 
 ### M7.1 执行假设
-- **成交价与时点**：与 M3.3 一致，第 t 根 bar 收盘后生成目标权重，按第 t+1 根 bar 的开盘价成交。
+- **成交价与时点**：与 <a href="#m33-未来收益率">M3.3</a> 一致，第 t 根 bar 收盘后生成目标权重，按第 t+1 根 bar 的开盘价成交。
 
 - **无法成交**：遇到停牌、涨跌停、无报价等无法按目标成交的情况，该 symbol 本期维持原持仓，其余 symbol 照常调仓；由此带来的中性偏离在回测结果中单独报告。
 
-- **退出资产集与退市**：按 M1.1 的规则处理。
+- **退出资产集与退市**：按 <a href="#m11-数据提取extraction">M1.1</a> 的规则处理。
 
-- **交易成本**：按 M6.1 扣除。
+- **交易成本**：按 <a href="#m61-交易成本">M6.1</a> 扣除。
 
 ### M7.2 策略回测与评价
-把 M5、M6 输出的目标权重面板和价格面板交给回测框架（如 vectorbt）模拟，得到这套目标持仓规则真实执行起来的表现。正式结果只在 OOS Test 上报告一次；IS 上的回测只用于诊断，不用于调参。
-- **报告指标**：年化收益、年化波动率、夏普率、最大回撤、换手率、扣成本前后的收益与盈亏平衡成本、组合对市场的 beta 与风险因子暴露（方法同 M3.4 因子风险画像），多头、空头两侧各自的收益贡献（做空受限时，空头一侧的收益可能无法实现），以及按年份、资产类别拆分的表现。
+把 <a href="#m5-策略与仓位">M5</a>、<a href="#m6-风险与成本">M6</a> 输出的目标权重面板和价格面板交给回测框架（如 vectorbt）模拟，得到这套目标持仓规则真实执行起来的表现。正式结果只在 OOS Test 上报告一次；IS 上的回测只用于诊断，不用于调参。
+- **报告指标**：年化收益、年化波动率、夏普率、最大回撤、换手率、扣成本前后的收益与盈亏平衡成本、组合对市场的 beta 与风险因子暴露（方法同 <a href="#m34-因子评价指标">M3.4</a> 因子风险画像），多头、空头两侧各自的收益贡献（做空受限时，空头一侧的收益可能无法实现），以及按年份、资产类别拆分的表现。
 
 - **基准**：用等权加法的组合信号按同样的规则回测，作为对照。
 
@@ -1084,9 +1444,9 @@ M7.2 定义回测流程与评价指标。
 
 ### M8.1 滚动训练
 超参数选定后，模型按以下方式持续更新：
-1. **固定超参数**：超参数使用 M4.7 选定的结果。
+1. **固定超参数**：超参数使用 <a href="#m47-模型训练">M4.7</a> 选定的结果。
 
-2. **重新拟合参数**：将 OOS Validation 的样本放入，扩张窗口，按 M4.7 第 1 步的时间衰减加权训练目标，重新拟合一次模型参数，作为这一轮实际使用的模型。
+2. **重新拟合参数**：将 OOS Validation 的样本放入，扩张窗口，按 <a href="#m47-模型训练">M4.7</a> 第 1 步的时间衰减加权训练目标，重新拟合一次模型参数，作为这一轮实际使用的模型。
 
 3. **重选超参数**：每三个月复查，留最近三个月的新数据当验证集，记为 NS，其余数据用来训练，记为 HS。候选超参数组合各自在 HS 上训练，比较它们在 NS 上的表现，重新选出这次要用的超参数，更新第 1 步固定的结果，直到下一次复查。
 
