@@ -18,7 +18,7 @@ from scipy.optimize import curve_fit
 # Rank IC calculation
 def rank_ic(signal, fwd_ret):
     """
-    Cross-sectional Spearman correlation between signal and forward return on each bar.
+    Spearman correlation between signal and forward return.
 
     Parameters
     ----------
@@ -50,7 +50,6 @@ def rank_ic(signal, fwd_ret):
 def nw_lag(x):
     """
     Newey & West (1994) lag selection for the Bartlett kernel.
-
     Parameters
     ----------
     x : pd.Series
@@ -74,11 +73,13 @@ def nw_lag(x):
     s0 = gamma[0] + 2 * gamma[1:].sum()
     s1 = 2 * (np.arange(1, n + 1) * gamma[1:]).sum()
     if s0 <= 0 or s1 == 0:
-        return 0
+        return n
 
     # Optimal bandwidth for the estimator of the long-run variance based on the Bartlett kernel
     bandwidth = 1.1447 * abs(s1 / s0) ** (2 / 3) * T ** (1 / 3)
-    return int(min(bandwidth, T - 1))
+
+    # Pilot lag as the lower bound
+    return int(min(max(bandwidth, n), T - 1))
 
 
 # Newey-West t-test
@@ -93,7 +94,7 @@ def nw_test(x):
 
     Returns
     -------
-    result : dict (cheaper than pd.DataFrame)
+    result : dict
         Test summary.
     """
     x = np.asarray(x, dtype=float)
@@ -145,7 +146,6 @@ def summary_rankic(ic):
             "win_rate": [(ic > 0).mean()],
             "skew": [ic.skew()],
             "kurt": [ic.kurt() + 3],
-
         }
     )
     return summary
@@ -450,11 +450,38 @@ def quantile_turnover(signal, n_quantiles=5):
 
     return turnover.dropna()
 
+
+# Summary statistics for quantile turnover
+def summary_turnover(turnover):
+    """
+    Summary statistics for quantile turnover.
+
+    Parameters
+    ----------
+    turnover : pd.DataFrame
+        Turnover of the top and bottom buckets. Index = timestamp,
+        columns = top, bottom.
+
+    Returns
+    -------
+    summary : pd.DataFrame
+        Summary statistics.
+    """
+    top, bottom = turnover["top"].mean(), turnover["bottom"].mean()
+    summary = pd.DataFrame(
+        {
+            "top": [top],
+            "bottom": [bottom],
+            "mean": [(top + bottom) / 2],
+        }
+    )
+    return summary
+
 # %%
 # Quantile Equity
 
 # Quantile equity calculation
-def quantile_equity(spread, capital=1.0):
+def quantile_equity(spread, index, capital=1.0):
     """
     Equity of the long-short portfolio, compounding the quantile spread
     from an initial capital.
@@ -463,17 +490,23 @@ def quantile_equity(spread, capital=1.0):
     ----------
     spread : pd.Series
         Quantile spread per timestamp (without winsorization).
+    index : pd.Index
+        Timestamps of all base bars.
     capital : float
         Initial capital.
 
     Returns
     -------
     equity : pd.Series
-        Equity per timestamp.
+        Equity per base bar.
     """
 
-    # Record the return on bar t+1
-    realized = spread.shift(1, fill_value=0)
+    # Next base bar of each base bar
+    next_bar = pd.Series(index[1:], index=index[:-1])
+
+    # Record the return on bar t+1, zero on bars without a closing position
+    realized = pd.Series(spread.to_numpy(), index=spread.index.map(next_bar))
+    realized = realized[realized.index.notna()].reindex(index, fill_value=0)
 
     # Compounded equity, starting from the capital on the first bar
     equity = capital * (1 + realized).cumprod()
@@ -484,7 +517,7 @@ def quantile_equity(spread, capital=1.0):
 # Quantile Sharpe
 
 # Quantile Sharpe ratio
-def quantile_sharpe(spread, bars_per_year):
+def quantile_sharpe(spread, index, bars_per_year):
     """
     Annualized Sharpe ratio of the long-short equity curve.
 
@@ -492,6 +525,8 @@ def quantile_sharpe(spread, bars_per_year):
     ----------
     spread : pd.Series
         Quantile spread per timestamp (without winsorization).
+    index : pd.Index
+        Timestamps of all base bars.
     bars_per_year : float
         Number of bars per year.
 
@@ -502,7 +537,7 @@ def quantile_sharpe(spread, bars_per_year):
     """
 
     # Returns of the equity curve
-    equity = quantile_equity(spread)
+    equity = quantile_equity(spread, index)
     ret = equity.pct_change().dropna()
 
     # Annualized Sharpe ratio
@@ -514,7 +549,7 @@ def quantile_sharpe(spread, bars_per_year):
 # Quantile Max Drawdown
 
 # Quantile maximum drawdown
-def quantile_max_drawdown(spread):
+def quantile_max_drawdown(spread, index):
     """
     Maximum drawdown of the long-short equity curve.
 
@@ -522,6 +557,8 @@ def quantile_max_drawdown(spread):
     ----------
     spread : pd.Series
         Quantile spread per timestamp (without winsorization).
+    index : pd.Index
+        Timestamps of all base bars.
 
     Returns
     -------
@@ -530,7 +567,7 @@ def quantile_max_drawdown(spread):
     """
 
     # Equity curve, initial capital does not matter for drawdown
-    equity = quantile_equity(spread)
+    equity = quantile_equity(spread, index)
 
     # Running peak
     peak = equity.cummax()
@@ -545,7 +582,7 @@ def quantile_max_drawdown(spread):
 # Risk Profile
 
 # Factor risk profile
-def risk_profile(spread, risk_factors, freq):
+def risk_profile(spread, index, risk_factors, freq):
     """
     Regress the long-short spread on common risk factors.
 
@@ -553,6 +590,8 @@ def risk_profile(spread, risk_factors, freq):
     ----------
     spread : pd.Series
         Quantile spread per timestamp (without winsorization).
+    index : pd.Index
+        Timestamps of all base bars.
     risk_factors : pd.DataFrame
         Risk factor returns. Index = period label at freq, columns = risk factor.
     freq : str
@@ -566,7 +605,7 @@ def risk_profile(spread, risk_factors, freq):
     """
 
     # Returns of the equity curve
-    equity = quantile_equity(spread)
+    equity = quantile_equity(spread, index)
     ret = equity.pct_change().dropna()
 
     # Compound the returns to the risk factor frequency
