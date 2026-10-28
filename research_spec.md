@@ -176,63 +176,63 @@ M1.2 定义数据变换；
 M1.3 定义数据存储。
 
 ### M1.1 数据提取
+数据提取指从数据源下载原始数据，原样保存，不做任何修改。
 
 #### M1.1.1 原始数据
-原始数据按以下维度分类：
+原始数据按一级资产类别和二级业务类别分类：
+
 <div style="overflow-x: auto;">
 <table>
    <thead>
       <tr>
-         <th nowrap>维度</th>
-         <th nowrap>取值</th>
-         <th nowrap>用在</th>
+         <th nowrap>一级资产类别</th>
+         <th nowrap>代码</th>
+         <th nowrap>二级业务类别</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td nowrap>一级资产类别</td>
-         <td nowrap>股票 <code>EQ</code>、固定收益 <code>FI</code>、外汇 <code>FX</code>、大宗商品 <code>CM</code>、经济体 <code>MKT</code></td>
-         <td nowrap>存储目录（<a href="#m131-本地云端存储">M1.3.1</a>）；<code>instrument_id</code> 前缀（<a href="#m1221-标识符定义">M1.2.2.1</a>）</td>
+         <td nowrap>股票</td>
+         <td nowrap><code>EQ</code></td>
+         <td nowrap>现货 <code>spot</code>、衍生品 <code>derivative</code></td>
       </tr>
       <tr>
-         <td nowrap>二级业务类别</td>
-         <td nowrap>现货、衍生品；大宗商品只有衍生品，经济体不分</td>
-         <td nowrap>存储目录（<a href="#m131-本地云端存储">M1.3.1</a>）</td>
+         <td nowrap>固定收益</td>
+         <td nowrap><code>FI</code></td>
+         <td nowrap>现货 <code>spot</code>、衍生品 <code>derivative</code></td>
       </tr>
       <tr>
-         <td nowrap>形态</td>
-         <td nowrap>见 <a href="#m123-形态特有处理">M1.2.3</a></td>
-         <td nowrap>Loading 文件命名（<a href="#m131-本地云端存储">M1.3.1</a>）</td>
+         <td nowrap>外汇</td>
+         <td nowrap><code>FX</code></td>
+         <td nowrap>现货 <code>spot</code>、衍生品 <code>derivative</code></td>
+      </tr>
+      <tr>
+         <td nowrap>大宗商品</td>
+         <td nowrap><code>CM</code></td>
+         <td nowrap>衍生品 <code>derivative</code></td>
+      </tr>
+      <tr>
+         <td nowrap>经济体</td>
+         <td nowrap><code>MKT</code></td>
+         <td nowrap>—</td>
       </tr>
    </tbody>
 </table>
 </div>
 
 #### M1.1.2 数据源
-**数据源卡片**：`data/README.md` 中每张卡片包含 <a href="#m111-原始数据">M1.1.1</a> 的分类维度，以及以下字段：
-<div style="overflow-x: auto;">
-<table>
-   <thead>
-      <tr>
-         <th nowrap>数据接口</th>
-         <th nowrap>可下载字段</th>
-         <th nowrap>是否修订</th>
-         <th nowrap>是否提供历史版本</th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td nowrap>API 名称或下载方式</td>
-         <td nowrap>接口返回的字段列表</td>
-         <td nowrap>是 / 否：数据源是否会回溯修订已发布的值</td>
-         <td nowrap>是 / 否：决定 <a href="#m1241-数据修订">M1.2.4.1</a> 修订版本 <code>available_at</code> 的取法</td>
-      </tr>
-   </tbody>
-</table>
-</div>
+每个数据源在 `data/README.md` 中登记一张卡片，卡片包含以下字段：
+- **一级资产类别**
+- **二级业务类别**
+- **数据接口**：API 名称或下载方式
+- **可下载字段**：接口返回的字段列表
+- **数据频率**：数据的发布频率
+- **可用时间**：数据最早可用于决策的时点
+- **是否修订**：数据源是否会回溯修订已发布的值
+- **是否提供历史版本**：数据源是否保留每个修订版本及其发布时间
 
 ### M1.2 数据变换
-收益数据与特征数据共用一条 pipeline，依次执行 <a href="#m121-标准化">M1.2.1</a>–<a href="#m125-去重">M1.2.5</a> 五步。
+收益数据与特征数据共用一条 pipeline，依次执行
 
 #### M1.2.1 标准化
 - **时间戳**：统一为 UTC。
@@ -556,7 +556,7 @@ Loading表格 **特征数据 **每行唯一主键:  `date × instrument_id × fi
 
 #### M1.3.1 本地/云端存储
 
- `{分类}` 均指 `{一级资产类别}/{二级业务类别}/{频率}` 三级目录，频率取 `tick` / `second` / `minute` / `hour` / `daily` ：
+ `{分类}` 均指 `{asset_class}/{category}/{frequency}` 三级目录：`asset_class`、`category` 取 <a href="#m111-原始数据">M1.1.1</a> 的一级资产类别、二级业务类别代码（经济体无 `category` 一级），`frequency` 取 `tick` / `second` / `minute` / `hour` / `daily`：
 
 ```text
 data/
@@ -582,7 +582,7 @@ flowchart LR
     L -.同步.-> C
 ```
 
-- **本地**：保存全部三层；数据文件全部 git ignore，Github仅提交目录结构.
+- **本地**：保存全部三层；数据文件全部 git ignore，不提交到 Github。
 - **云端**：仅保存 `extraction/`, `loading/`, `dictionary/` . 云盘地址：询问 Liangxiao LI。
 
 <div style="overflow-x: auto;">
@@ -599,7 +599,7 @@ flowchart LR
       <tr>
          <td nowrap rowspan="2">Extraction</td>
          <td nowrap>收益数据</td>
-         <td nowrap rowspan="2"><code>{数据源}_{数据接口}_{数据源代码}_{下载日期}</code></td>
+         <td nowrap rowspan="2"><code>{source}_{interface}_{source_code}_{download_date}</code></td>
          <td nowrap><code>EODHD_EOD_AAPL.US_20261017</code></td>
       </tr>
       <tr>
@@ -609,12 +609,12 @@ flowchart LR
       <tr>
          <td nowrap rowspan="2">Loading</td>
          <td nowrap>收益数据</td>
-         <td nowrap rowspan="2"><code>{一级资产类别}_{二级业务类别}_{数据类型}_{形态}_{清洗日期}</code></td>
-         <td nowrap><code>股票_现货_收益_{形态}_20261017</code></td>
+         <td nowrap rowspan="2"><code>{asset_class}_{category}_{data_type}_{form}_{clean_date}</code></td>
+         <td nowrap><code>EQ_spot_return_{form}_20261017</code></td>
       </tr>
       <tr>
          <td nowrap>特征数据</td>
-         <td nowrap><code>股票_现货_特征_{形态}_20261017</code></td>
+         <td nowrap><code>EQ_spot_feature_{form}_20261017</code></td>
       </tr>
    </tbody>
 </table>
@@ -741,34 +741,12 @@ flowchart LR
 #### M1.3.4 研究样本划分（IS + OOS）
 按决策时点 t 划分以下分区：
 
-<div style="overflow-x: auto;">
-<table>
-   <thead>
-      <tr>
-         <th nowrap>分区</th>
-         <th nowrap>用途</th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td nowrap><b>In-Sample (IS)</b></td>
-         <td nowrap>评价和筛选因子，训练因子模型</td>
-      </tr>
-      <tr>
-         <td nowrap><b>Embargo</b></td>
-         <td nowrap>隔离带，丢弃</td>
-      </tr>
-      <tr>
-         <td nowrap><b>OOS Validation</b></td>
-         <td nowrap>选定因子模型超参数</td>
-      </tr>
-      <tr>
-         <td nowrap><b>OOS Test</b></td>
-         <td nowrap>无偏检验与回测</td>
-      </tr>
-   </tbody>
-</table>
-</div>
+- **In-Sample (IS)**：评价和筛选因子，训练因子模型
+- **Embargo**：IS 与 OOS Validation 之间、OOS Validation 与 OOS Test 之间各一段隔离带，丢弃
+- **OOS Validation**：选定因子模型超参数
+- **OOS Test**：无偏检验与回测
+
+划分规则如下：
 
 - **特征**：任一分区内，决策时点 t 只能使用 `available_at ≤ t` 的数据（<a href="#m124-数据对齐">M1.2.4</a> as-of 取值）。OOS 回看 IS 时期的历史（如计算 12 个月动量）不算泄露；OOS 期间才发布的修订，按 `available_at` 自然进不了 IS。
 - **标签**：t 之后的未来收益率窗口不能跨进下一分区，因此 Embargo 长度 ≥ 研究中使用的最长未来收益率期限。
@@ -785,8 +763,9 @@ gantt
     In-Sample · 10y         :is,   2010-01, 2020-01
     section Embargo
     Embargo · 1M            :crit, emb, 2020-01, 2020-02
+    Embargo · 1M            :crit, emb2, 2022-12, 2023-01
     section OOS
-    Validation · 35M        :active, val, 2020-02, 2023-01
+    Validation · 34M        :active, val, 2020-02, 2022-12
     Test · 3y               :done, test, 2023-01, 2026-01
 ```
 

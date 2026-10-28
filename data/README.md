@@ -264,6 +264,57 @@
 </table>
 </div>
 
+## 数据源卡片 2：Sharadar
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap>一级资产类别</th>
+         <th nowrap>二级业务类别</th>
+         <th nowrap>数据接口</th>
+         <th nowrap>可下载字段</th>
+         <th nowrap>数据频率</th>
+         <th nowrap>可用时间</th>
+         <th nowrap>是否修订</th>
+         <th nowrap>是否提供历史版本</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap>股票</td>
+         <td nowrap>现货</td>
+         <td nowrap>Nasdaq Data Link，<code>SHARADAR/SEP</code> 整表导出</td>
+         <td nowrap>代码；日期；开盘价；最高价；最低价；收盘价；成交量（以上为拆股复权）；复权收盘价（拆股、分红、分拆复权）；未复权收盘价；最后更新日</td>
+         <td nowrap>日频</td>
+         <td nowrap>T 日美股收盘后（收盘 21:00 UTC，夏令时 20:00 UTC）；供应商更新延迟待确认</td>
+         <td nowrap>是：拆股、分红后，历史复权价格会回溯重算</td>
+         <td nowrap>否：整表导出只有当前版本</td>
+      </tr>
+      <tr>
+         <td nowrap>股票</td>
+         <td nowrap>现货</td>
+         <td nowrap>Nasdaq Data Link，<code>SHARADAR/TICKERS</code> 整表导出</td>
+         <td nowrap>所属表；永久代码；代码；名称；交易所；是否退市；类别；CUSIP；SIC 代码、板块、行业；FIGI；Fama 行业；板块；行业；市值规模；营收规模；关联代码；币种；所在地；最后更新日；首次收录日；首个 / 最后价格日；首个 / 最后财报季度；SEC 文件链接；公司网站</td>
+         <td nowrap>快照</td>
+         <td nowrap>当前快照，不是 point-in-time；行业、交易所等为最新值</td>
+         <td nowrap>是：快照每日更新</td>
+         <td nowrap>否</td>
+      </tr>
+      <tr>
+         <td nowrap>股票</td>
+         <td nowrap>现货</td>
+         <td nowrap>Nasdaq Data Link，<code>SHARADAR/ACTIONS</code> 整表导出</td>
+         <td nowrap>日期；行为类型；代码；名称；数值；对手方代码；对手方名称</td>
+         <td nowrap>公司行为事件</td>
+         <td nowrap>生效日；公告日数据源未提供</td>
+         <td nowrap>待确认</td>
+         <td nowrap>否：整表导出只有当前版本</td>
+      </tr>
+   </tbody>
+</table>
+</div>
+
 ## 覆盖缺口
 
 以下 M1.1.1 中的数据尚无已登记的数据源：
