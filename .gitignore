@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Data files are never committed (research_spec.md M1.3.1)
+data/extraction/
+data/transform/
+data/loading/

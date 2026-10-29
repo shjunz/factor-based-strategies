@@ -1,12 +1,55 @@
 # Architecture
 
-本文件只把 research_spec.md 的章节映射到代码文件，每个文件一行。方法看 research_spec.md，实现细节看各文件的 docstring。改动顺序：先改本文件，再写代码。
+本文件只描述 research_spec.md 中各章节的代码文件。方法看 research_spec.md，实现细节看各文件的 docstring。后续操作中的有任何改动，顺序应先改本文件，再写对应代码。
 
 ## 约定
 
 - 存储：面板数据为长表，一行一个 (timestamp, symbol)；所有表都存 parquet。
-
 - 截面 / 时序：截面代码放 `eval/cs/`，时序代码放 `eval/ts/`，两者互不 import
+
+## M1 — 数据ETL（etl/）
+
+### M1.1 — 数据提取（etl/extract/）
+
+| 文件 | 章节 | 用途 | 描述 |
+| --- | --- | --- | --- |
+| `sharadar.py` | M1.1 | 数据提取 | Sharadar 数据下载 |
+
+### M1.2 — 数据变换（etl/transform/）
+
+| 文件 | 章节 | 用途 | 描述 |
+| --- | --- | --- | --- |
+| `standardize.py` | M1.2.1 | 标准化 | 时间戳、单位、列名、查询键 |
+| `identifiers.py` | M1.2.2 | 标识符 | 映射表读写、instrument_id / field_id 设置 |
+| `forms.py` | M1.2.3 | 形态特有处理 | 按形态分派的处理函数 |
+| `align.py` | M1.2.4 | 数据对齐 | available_at：数据修订、收盘价次日才可知、参考期与发布日不同 |
+| `dedup.py` | M1.2.5 | 去重 | 重合处理、多数据源合并 |
+
+### M1.3 — 数据存储（etl/storage/）
+
+| 文件 | 章节 | 用途 | 描述 |
+| --- | --- | --- | --- |
+| `paths.py` | M1.3.1 | 本地/云端存储 | 目录结构、各层文件命名 |
+| `loading.py` | M1.3.2 | Loading 文件格式 | 写 Loading 文件 |
+| `dictionary.py` | M1.3.3 | 数据字典格式 | 更新数据字典 |
+
+### 数据目录（data/）
+
+`{分类}` = `{asset_class}/{category}/{frequency}`，取值见 research_spec.md M1.3.1。
+
+| 文件 | 章节 | 用途 | 描述 |
+| --- | --- | --- | --- |
+| `README.md` | M1.1.2 | 数据源卡片 | 每个数据源一张卡片 |
+| `dictionary/` | M1.2.2.2、M1.3.3 | 映射表、数据字典 | instrument_map.csv、field_map.csv、data_dictionary.csv |
+| `extraction/{分类}/` | M1.1 | 原始数据 | 数据提取的结果，原样保存 |
+| `transform/{分类}/` | M1.2.1 | 中间数据 | 标准化后的 parquet，避免重复解析原始文件 |
+| `loading/{分类}/` | M1.3.2 | 最终数据 | 去重后的结果，研究直接读取 |
+
+### 流程（etl/）
+
+| 文件 | 章节 | 用途 | 描述 |
+| --- | --- | --- | --- |
+| `pipeline.py` | M1 | 流程 | 串起提取、变换、存储 |
 
 ## M3 — 因子评价（eval/）
 
