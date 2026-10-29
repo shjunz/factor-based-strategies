@@ -9,7 +9,7 @@
 
 ## 数据存储
 
-按 [M1.3.1](../research_spec.md#m131-本地云端存储) 分三层存放（`{分类}` = `{一级资产类别}/{二级业务类别}/{频率}`）：
+按 [M1.3.1](../research_spec.md#m131-本地云端存储) 分三层存放（`{分类}` = `{一级资产类别}/{二级工具类型}/{频率}`）：
 
 - **数据字典**：`data/dictionary/data_dictionary.csv`（每个形态一行），纳入 git，格式见 [M1.3.3](../research_spec.md#m133-数据字典格式)
 - **原始数据**：`data/extraction/{分类}/`
@@ -29,11 +29,11 @@
    <tbody>
       <tr>
          <td nowrap>Loading 收益数据文件命名</td>
-         <td nowrap><code>{一级资产类别}_{二级业务类别}_收益_{形态}_{清洗日期}</code></td>
+         <td nowrap><code>{一级资产类别}_{二级工具类型}_收益_{形态}_{清洗日期}</code></td>
       </tr>
       <tr>
          <td nowrap>Loading 特征数据文件命名</td>
-         <td nowrap><code>{一级资产类别}_{二级业务类别}_特征_{形态}_{清洗日期}</code></td>
+         <td nowrap><code>{一级资产类别}_{二级工具类型}_特征_{形态}_{清洗日期}</code></td>
       </tr>
       <tr>
          <td nowrap>Loading 收益数据列</td>
@@ -55,7 +55,7 @@
       <tr>
          <th nowrap>用途</th>
          <th nowrap>一级资产类别</th>
-         <th nowrap>二级业务类别</th>
+         <th nowrap>二级工具类型</th>
          <th nowrap>形态</th>
          <th nowrap>数据接口</th>
          <th nowrap>可下载字段</th>
@@ -233,7 +233,7 @@
    <thead>
       <tr>
          <th nowrap>一级资产类别</th>
-         <th nowrap>二级业务类别</th>
+         <th nowrap>二级工具类型</th>
          <th nowrap>形态</th>
          <th nowrap>数据接口</th>
          <th nowrap>可下载字段</th>
@@ -271,7 +271,7 @@
    <thead>
       <tr>
          <th nowrap>一级资产类别</th>
-         <th nowrap>二级业务类别</th>
+         <th nowrap>二级工具类型</th>
          <th nowrap>数据接口</th>
          <th nowrap>可下载字段</th>
          <th nowrap>数据频率</th>
@@ -324,7 +324,7 @@
    <thead>
       <tr>
          <th nowrap>一级资产类别</th>
-         <th nowrap>二级业务类别</th>
+         <th nowrap>二级工具类型</th>
          <th nowrap>缺少的数据</th>
       </tr>
    </thead>

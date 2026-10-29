@@ -170,24 +170,26 @@ M 代表研究模块（module）。
 
 ---
 ## M1. 数据ETL
+
 本节分为三部分：
 M1.1 定义数据提取；
 M1.2 定义数据变换；
 M1.3 定义数据存储。
 
 ### M1.1 数据提取
-数据提取指从数据源下载原始数据，原样保存，不做任何修改。
+
+数据提取指通过网页下载或 API 从数据源获取原始数据，原样保存，不做任何修改。
 
 #### M1.1.1 原始数据
-原始数据按一级资产类别和二级业务类别分类：
 
+原始数据统一分为两级：一级为资产类别，二级为工具类型。
 <div style="overflow-x: auto;">
 <table>
    <thead>
       <tr>
          <th nowrap>一级资产类别</th>
          <th nowrap>代码</th>
-         <th nowrap>二级业务类别</th>
+         <th nowrap>二级工具类型</th>
       </tr>
    </thead>
    <tbody>
@@ -211,11 +213,6 @@ M1.3 定义数据存储。
          <td nowrap><code>CM</code></td>
          <td nowrap>衍生品 <code>derivative</code></td>
       </tr>
-      <tr>
-         <td nowrap>经济体</td>
-         <td nowrap><code>MKT</code></td>
-         <td nowrap>—</td>
-      </tr>
    </tbody>
 </table>
 </div>
@@ -223,7 +220,7 @@ M1.3 定义数据存储。
 #### M1.1.2 数据源
 每个数据源在 `data/README.md` 中登记一张卡片，卡片包含以下字段：
 - **一级资产类别**
-- **二级业务类别**
+- **二级工具类型**
 - **数据接口**：API 名称或下载方式
 - **可下载字段**：接口返回的字段列表
 - **数据频率**：数据的发布频率
@@ -232,10 +229,11 @@ M1.3 定义数据存储。
 - **是否提供历史版本**：数据源是否保留每个修订版本及其发布时间
 
 ### M1.2 数据变换
+
 收益数据与特征数据共用一条 pipeline，依次执行
 
 #### M1.2.1 标准化
-- **时间戳**：统一为 UTC。
+- **时间**：统一为 UTC。
 - **单位**：统一表格内计价货币、百分比 / 基点、数量单位等。
 - **列名**：数据源原始列名映射为 <a href="#m132-loading-文件格式">M1.3.2</a> 的标准列名，如 EODHD 的 `Date` → `date`。
 - **查询键**：每行保留以下四个查询键，供 <a href="#m1223-标识符设置">M1.2.2.3</a> 标识符设置比对：
@@ -554,67 +552,35 @@ Loading表格 **特征数据 **每行唯一主键:  `date × instrument_id × fi
 
 ### M1.3 数据存储
 
-#### M1.3.1 本地/云端存储
+#### M1.3.1 本地与云端存储
 
- `{分类}` 均指 `{asset_class}/{category}/{frequency}` 三级目录：`asset_class`、`category` 取 <a href="#m111-原始数据">M1.1.1</a> 的一级资产类别、二级业务类别代码（经济体无 `category` 一级），`frequency` 取 `tick` / `second` / `minute` / `hour` / `daily`：
-
-```text
-data/
-├── README.md                          # 数据源卡片（M1.1.2）
-├── dictionary/                        # 数据字典（M1.3.3）、映射表（M1.2.2.2）
-├── extraction/{分类}/                 # 原始数据：M1.1 提取结果              
-├── transform/                         # 中间数据：M1.2.1–M1.2.5 各步输出     
-│   ├── 01_standardized/{分类}/        #   M1.2.1–M1.2.2 标准化、标识符
-│   ├── 02_form_processed/{分类}/      #   M1.2.3 形态特有处理
-│   ├── 03_aligned/{分类}/             #   M1.2.4 数据对齐
-│   └── 04_deduplicated/{分类}/        #   M1.2.5 去重
-└── loading/{分类}/                    # 最终数据：M1.2.5 去重结果；不按 IS / OOS 拆分，研究时按 M1.3.4 切分
-```
-
-```mermaid
-flowchart LR
-    S[数据源<br/>M1.1.2] -->|提取| E[extraction/]
-    E -->|M1.2.1–M1.2.5| T[transform/]
-    T -->|导出| L["loading/"]
-    L -->|M1.3.4 按决策时点切分| F[研究样本]
-    D[dictionary/] -.定位 / 更新.-> T
-    E -.同步.-> C[(云盘)]
-    L -.同步.-> C
-```
-
-- **本地**：保存全部三层；数据文件全部 git ignore，不提交到 Github。
-- **云端**：仅保存 `extraction/`, `loading/`, `dictionary/` . 云盘地址：询问 Liangxiao LI。
+数据分三层存放：
+- **原始数据**：数据提取的结果，原样保存
+- **中间数据**：标准化后的数据，避免重复解析原始文件；可随时从原始数据重新生成
+- **最终数据**：去重后的结果，研究直接读取
+- **分类目录**：每层数据按 `{asset_class}/{category}/{frequency}` 分目录存放。`asset_class`、`category` 取 <a href="#m111-原始数据">M1.1.1</a> 的代码，经济体没有 `category` 这一级；`frequency` 取 `tick` / `second` / `minute` / `hour` / `daily`，如 `EQ/spot/daily/`
+- **本地**：保存全部内容，三个数据目录不提交到 GitHub
+- **云端**：只同步 `dictionary/`、`extraction/`、`loading/`，许可不允许分享的数据不上传；云盘地址询问 Liangxiao LI
 
 <div style="overflow-x: auto;">
 <table>
    <thead>
       <tr>
          <th nowrap>层</th>
-         <th nowrap>数据类型</th>
          <th nowrap>命名模板</th>
          <th nowrap>示例</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td nowrap rowspan="2">Extraction</td>
-         <td nowrap>收益数据</td>
-         <td nowrap rowspan="2"><code>{source}_{interface}_{source_code}_{download_date}</code></td>
-         <td nowrap><code>EODHD_EOD_AAPL.US_20261017</code></td>
+         <td nowrap>Extraction</td>
+         <td nowrap><code>{source}_{interface}_{source_code}_{download_date}</code></td>
+         <td nowrap><code>Sharadar_SEP_ALL_20261028</code>（整表导出时 <code>source_code</code> 写 <code>ALL</code>）</td>
       </tr>
       <tr>
-         <td nowrap>特征数据</td>
-         <td nowrap><code>EODHD_InterestRates_SOFR_20261017</code></td>
-      </tr>
-      <tr>
-         <td nowrap rowspan="2">Loading</td>
-         <td nowrap>收益数据</td>
-         <td nowrap rowspan="2"><code>{asset_class}_{category}_{data_type}_{form}_{clean_date}</code></td>
-         <td nowrap><code>EQ_spot_return_{form}_20261017</code></td>
-      </tr>
-      <tr>
-         <td nowrap>特征数据</td>
-         <td nowrap><code>EQ_spot_feature_{form}_20261017</code></td>
+         <td nowrap>Loading</td>
+         <td nowrap><code>{asset_class}_{category}_{data_type}_{form}_{clean_date}</code></td>
+         <td nowrap><code>EQ_spot_return_{form}_20261028</code>（<code>data_type</code> 取 <code>return</code> 或 <code>feature</code>）</td>
       </tr>
    </tbody>
 </table>
@@ -647,7 +613,7 @@ flowchart LR
          <td nowrap>见 <a href="#m122-标识符">M1.2.2</a></td>
          <td nowrap>见 <a href="#m123-形态特有处理">M1.2.3</a></td>
          <td nowrap>一级资产类别</td>
-         <td nowrap>二级业务类别</td>
+         <td nowrap>二级工具类型</td>
          <td nowrap>可交易日收益</td>
          <td nowrap>当日是否可交易</td>
          <td nowrap>数据源</td>
@@ -722,7 +688,7 @@ flowchart LR
      <tbody>
         <tr>
            <td nowrap>一级资产类别</td>
-           <td nowrap>二级业务类别</td>
+           <td nowrap>二级工具类型</td>
            <td nowrap>收益 / 特征</td>
            <td nowrap>见 <a href="#m123-形态特有处理">M1.2.3</a></td>
            <td nowrap>形态描述</td>
@@ -739,6 +705,8 @@ flowchart LR
   </div>
 
 #### M1.3.4 研究样本划分（IS + OOS）
+> 待移至 M3。
+
 按决策时点 t 划分以下分区：
 
 - **In-Sample (IS)**：评价和筛选因子，训练因子模型
