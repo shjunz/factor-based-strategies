@@ -23,9 +23,9 @@ def rank_ic(signal, fwd_ret):
     Parameters
     ----------
     signal : pd.DataFrame
-        Signal values. Index = timestamp, columns = symbol.
+        Signal values. Index = timestamp, Columns = symbol.
     fwd_ret : pd.DataFrame
-        Forward returns. Index = timestamp, columns = symbol.
+        Forward returns. Index = timestamp, Columns = symbol.
 
     Returns
     -------
@@ -49,7 +49,8 @@ def rank_ic(signal, fwd_ret):
 # Newey & West lag selection
 def nw_lag(x):
     """
-    Newey & West (1994) lag selection for the Bartlett kernel.
+    Newey & West lag selection for the Bartlett kernel.
+
     Parameters
     ----------
     x : pd.Series
@@ -156,14 +157,14 @@ def summary_rankic(ic):
 # Bucket returns
 def bucket_returns(signal, fwd_ret, n_quantiles=5, winsor=0.0):
     """
-    Bucket forward returns by signal quantiles.
+    Mean forward returns of signal quantile buckets.
 
     Parameters
     ----------
     signal : pd.DataFrame
-        Signal values. Index = timestamp, columns = symbol.
+        Signal values. Index = timestamp, Columns = symbol.
     fwd_ret : pd.DataFrame
-        Forward returns. Index = timestamp, columns = symbol.
+        Forward returns. Index = timestamp, Columns = symbol.
     n_quantiles : int
         Number of quantiles.
     winsor : float
@@ -172,7 +173,7 @@ def bucket_returns(signal, fwd_ret, n_quantiles=5, winsor=0.0):
     Returns
     -------
     buckets : pd.DataFrame
-        Bucketed forward returns. Index = timestamp, columns = bucket number.
+        Bucketed forward returns. Index = timestamp, Columns = bucket number.
     """
 
     # Align signal and forward return
@@ -205,13 +206,12 @@ def bucket_returns(signal, fwd_ret, n_quantiles=5, winsor=0.0):
 # Quantile spread calculation
 def quantile_spread(buckets):
     """
-    Long-short quantile spread, half capital long the top bucket, half short the
-    bottom bucket.
+    Long-short quantile spread.
 
     Parameters
     ----------
     buckets : pd.DataFrame
-        Bucketed forward returns. Index = timestamp, columns = bucket number.
+        Bucketed forward returns. Index = timestamp, Columns = bucket number.
 
     Returns
     -------
@@ -242,6 +242,69 @@ def summary_spread(spread):
         Summary statistics.
     """
     result = nw_test(spread)
+    summary = pd.DataFrame(
+        {
+            "mean": [result["mean"]],
+            "lag": [result["lag"]],
+            "t": [result["t"]],
+        }
+    )
+    return summary
+
+# %%
+# Fama-MacBeth
+
+# Fama-MacBeth factor return
+def fama_macbeth(signal, fwd_ret):
+    """
+    Fama & MacBeth (1973) factor return of the z-scored signal.
+
+    Parameters
+    ----------
+    signal : pd.DataFrame
+        Signal values. Index = timestamp, Columns = symbol.
+    fwd_ret : pd.DataFrame
+        Forward returns. Index = timestamp, Columns = symbol.
+
+    Returns
+    -------
+    factor_ret : pd.Series
+        Factor return per timestamp.
+    """
+
+    # Align signal and forward return
+    s, r = signal.align(fwd_ret, join="inner")
+
+    # Drop NaN values
+    valid = s.notna() & r.notna()
+    s, r = s.where(valid), r.where(valid)
+
+    # z-score signal per timestamp
+    z = s.sub(s.mean(axis=1), axis=0).div(s.std(axis=1), axis=0)
+
+    # OLS slope with intercept per timestamp: sum(z * (r - mean(r))) / sum(z^2)
+    r_dm = r.sub(r.mean(axis=1), axis=0)
+    factor_ret = (z * r_dm).sum(axis=1) / (z ** 2).sum(axis=1)
+
+    return factor_ret.dropna()
+
+
+# Summary statistics for Fama-MacBeth factor return
+def summary_fama_macbeth(factor_ret):
+    """
+    Summary statistics for Fama-MacBeth factor return.
+
+    Parameters
+    ----------
+    factor_ret : pd.Series
+        Factor return per timestamp.
+
+    Returns
+    -------
+    summary : pd.DataFrame
+        Summary statistics.
+    """
+    result = nw_test(factor_ret)
     summary = pd.DataFrame(
         {
             "mean": [result["mean"]],
@@ -286,7 +349,7 @@ def u_shape_check(buckets):
     ----------
     buckets : pd.DataFrame
         Bucketed forward returns (with winsorization). Index = timestamp,
-        columns = bucket number.
+        Columns = bucket number.
 
     Returns
     -------
@@ -322,10 +385,10 @@ def ic_decay(signal, fwd_rets):
     Parameters
     ----------
     signal : pd.DataFrame
-        Signal values. Index = timestamp, columns = symbol.
+        Signal values. Index = timestamp, Columns = symbol.
     fwd_rets : pd.DataFrame
         Forward returns r(k) for k = 0..H, from the close of bar t+k to the
-        close of bar t+k+1. Index = timestamp, columns = (k, symbol).
+        close of bar t+k+1. Index = timestamp, Columns = (k, symbol).
 
     Returns
     -------
@@ -346,8 +409,7 @@ def ic_decay(signal, fwd_rets):
 # IC Half-life
 def ic_half_life(decay):
     """
-    Fit IC(k) = IC(0) * exp(-lambda * k) to the mean Rank IC and return the
-    decay rate and half-life.
+    Half-life of the mean Rank IC decay.
 
     Parameters
     ----------
@@ -415,13 +477,13 @@ def quantile_cvar(spread, worst=0.05):
 # Quantile turnover calculation
 def quantile_turnover(signal, n_quantiles=5):
     """
-    Percentage of symbols in the top and bottom buckets that were not in the same
+    Percentage of symbols in the top and bottom buckets that changed in the same
     bucket on the previous bar.
 
     Parameters
     ----------
     signal : pd.DataFrame
-        Signal values. Index = timestamp, columns = symbol.
+        Signal values. Index = timestamp, Columns = symbol.
     n_quantiles : int
         Number of quantiles.
 
@@ -429,7 +491,7 @@ def quantile_turnover(signal, n_quantiles=5):
     -------
     turnover : pd.DataFrame
         Turnover of the top and bottom buckets. Index = timestamp,
-        columns = top, bottom.
+        Columns = top, bottom.
     """
 
     # Assign buckets by cross-sectional percentile rank
@@ -460,7 +522,7 @@ def summary_turnover(turnover):
     ----------
     turnover : pd.DataFrame
         Turnover of the top and bottom buckets. Index = timestamp,
-        columns = top, bottom.
+        Columns = top, bottom.
 
     Returns
     -------
@@ -483,15 +545,14 @@ def summary_turnover(turnover):
 # Quantile equity calculation
 def quantile_equity(spread, index, capital=1.0):
     """
-    Equity of the long-short portfolio, compounding the quantile spread
-    from an initial capital.
+    Equity of the long-short portfolio.
 
     Parameters
     ----------
     spread : pd.Series
         Quantile spread per timestamp (without winsorization).
     index : pd.Index
-        Timestamps of all base bars.
+        Timestamp of every bar at the base frequency.
     capital : float
         Initial capital.
 
@@ -526,7 +587,7 @@ def quantile_sharpe(spread, index, bars_per_year):
     spread : pd.Series
         Quantile spread per timestamp (without winsorization).
     index : pd.Index
-        Timestamps of all base bars.
+        Timestamp of every bar at the base frequency.
     bars_per_year : float
         Number of bars per year.
 
@@ -558,7 +619,7 @@ def quantile_max_drawdown(spread, index):
     spread : pd.Series
         Quantile spread per timestamp (without winsorization).
     index : pd.Index
-        Timestamps of all base bars.
+        Timestamp of every bar at the base frequency.
 
     Returns
     -------
@@ -584,16 +645,16 @@ def quantile_max_drawdown(spread, index):
 # Factor risk profile
 def risk_profile(spread, index, risk_factors, freq):
     """
-    Regress the long-short spread on common risk factors.
+    Regression of the long-short spread on common risk factors.
 
     Parameters
     ----------
     spread : pd.Series
         Quantile spread per timestamp (without winsorization).
     index : pd.Index
-        Timestamps of all base bars.
+        Timestamp of every bar at the base frequency.
     risk_factors : pd.DataFrame
-        Risk factor returns. Index = period label at freq, columns = risk factor.
+        Risk factor returns. Index = period label at freq, Columns = risk factor.
     freq : str
         pandas frequency of the risk factors.
 
