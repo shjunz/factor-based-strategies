@@ -6,13 +6,14 @@ paths.py
 # %%
 # Imports
 
+import os
 from pathlib import Path
 
 # %%
 # Data Directory
 
-# Root of the data folder, two levels above etl/storage/
-DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+# Root of the data folder: <repo>/data (paths.py is at src/fbs/etl/storage/)
+DATA_DIR = Path(__file__).resolve().parents[4] / "data"
 
 # %%
 # Category Directory

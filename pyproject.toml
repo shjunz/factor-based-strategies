@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fbs"
+version = "0.1.0"
+description = "Factor-based strategies research"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "scipy",
+    "statsmodels",
+    "nasdaq-data-link",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
