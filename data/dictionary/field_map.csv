@@ -1,0 +1,9 @@
+source,interface,source_field,field
+Sharadar,SEP,date,timestamp
+Sharadar,SEP,open,open
+Sharadar,SEP,high,high
+Sharadar,SEP,low,low
+Sharadar,SEP,close,close
+Sharadar,SEP,closeadj,close_adj
+Sharadar,SEP,closeunadj,close_raw
+Sharadar,SEP,volume,volume

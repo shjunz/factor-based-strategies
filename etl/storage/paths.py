@@ -20,15 +20,15 @@ DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 # Category directory
 def category_dir(asset_class, category, frequency):
     """
-    Category directory {asset class}/{business category}/{frequency}, shared by
-    all data layers.
+    Category directory {asset_class}/{category}/{frequency}, shared by all data
+    layers.
 
     Parameters
     ----------
     asset_class : str
-        Asset class code, such as EQ.
+        Asset class code: EQ, FI, FX or CM.
     category : str
-        Business category, such as spot.
+        Instrument type: spot or derivative.
     frequency : str
         Data frequency: tick, second, minute, hour or daily.
 
@@ -47,11 +47,11 @@ def category_dir(asset_class, category, frequency):
 # Extraction Path
 
 # Extraction file path
-def extraction_path(source, interface, code, download_date, asset_class,
+def extraction_path(source, interface, source_code, download_date, asset_class,
                     category, frequency, suffix):
     """
     Raw data file in the extraction layer, named
-    {source}_{interface}_{code}_{download date}.
+    {source}_{interface}_{source_code}_{download_date}.
 
     Parameters
     ----------
@@ -59,14 +59,14 @@ def extraction_path(source, interface, code, download_date, asset_class,
         Data source, such as Sharadar.
     interface : str
         Data interface or table, such as SEP.
-    code : str
+    source_code : str
         Instrument code in the data source, or ALL for a whole table.
     download_date : datetime.date
         Download date.
     asset_class : str
-        Asset class code, such as EQ.
+        Asset class code: EQ, FI, FX or CM.
     category : str
-        Business category, such as spot.
+        Instrument type: spot or derivative.
     frequency : str
         Data frequency: tick, second, minute, hour or daily.
     suffix : str
@@ -79,7 +79,7 @@ def extraction_path(source, interface, code, download_date, asset_class,
     """
 
     # Build the file name and place it under extraction/{category}/
-    name = f"{source}_{interface}_{code}_{download_date:%Y%m%d}{suffix}"
+    name = f"{source}_{interface}_{source_code}_{download_date:%Y%m%d}{suffix}"
     path = DATA_DIR / "extraction" / category_dir(asset_class, category, frequency) / name
 
     return path
