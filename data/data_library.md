@@ -4,6 +4,46 @@
 
 ## 数据卡片 1：Sharadar
 
+### Sharadar 产品与可下载表
+
+`download_table(table, path, **filters)` 的 `table` 参数取下表中的表代码，实际请求为 `SHARADAR/{table}`。同一张表（如 `TICKERS`、`ACTIONS`、`INDICATORS`）可能出现在多个产品中，代码相同，只需下载一次。
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap>产品</th>
+         <th nowrap>可用表 <code>table</code></th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap>Sharadar Core US Fundamentals Data</td>
+         <td nowrap><code>SF1, DAILY, TICKERS, INDICATORS, ACTIONS, SP500, EVENTS</code></td>
+      </tr>
+      <tr>
+         <td nowrap>Sharadar Core US Insiders Data</td>
+         <td nowrap><code>SF2</code></td>
+      </tr>
+      <tr>
+         <td nowrap>Sharadar Core US Institutional Investors Data</td>
+         <td nowrap><code>SF3, SF3A, SF3B</code></td>
+      </tr>
+      <tr>
+         <td nowrap>Sharadar Equity Prices</td>
+         <td nowrap><code>SEP, ACTIONS, TICKERS, METRICS, INDICATORS</code></td>
+      </tr>
+      <tr>
+         <td nowrap>Sharadar Fund Prices</td>
+        <td nowrap><code>SFP, ACTIONS, TICKERS, METRICS, INDICATORS</code></td>
+      </tr>
+   </tbody>
+</table>
+</div>
+
+
+### 表字段
+
 <div style="overflow-x: auto;">
 <table>
    <thead>
