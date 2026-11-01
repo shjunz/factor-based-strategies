@@ -127,53 +127,22 @@ M 代表研究模块（module）。
    </tbody>
 </table>
 </div>
-产出一套截面因子策略研究工作流：从确认资产集，到因子发现与评价，再到因子建模，最终将因子变成可交易的策略。
 
 ---
 
 ## M1. 数据ETL
 
 本节按 ETL 流程分为三部分：
-<a href="#m11-数据提取">M1.1</a> 定义原始数据提取方式；
-<a href="#m12-数据变换">M1.2</a> 定义数据变换流程；
-<a href="#m13-数据存储">M1.3</a> 定义数据存储格式。
+<a href="#m11-数据提取">M1.1</a> 定义原始数据的提取方式；
+<a href="#m12-数据变换">M1.2</a> 定义原始数据的变换流程；
+<a href="#m13-数据存储">M1.3</a> 定义清洗数据的存储方式。
 
-`data/` 按 bronze、silver、gold 三层存放 ETL 各阶段的数据，每层对应一个阶段：
+数据按 ETL 流程的阶段分为三层，保存在 `data/` 下：
+- **bronze**：原始数据，未做任何变换
+- **silver**：中间数据，已完成部分变换
+- **gold**：清洗数据，已完成全部变换
 
-<div style="overflow-x: auto;">
-<table>
-   <thead>
-      <tr>
-         <th nowrap>数据层</th>
-         <th nowrap>目录</th>
-         <th nowrap>阶段</th>
-         <th nowrap>内容</th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td nowrap>bronze</td>
-         <td nowrap><code>data/bronze/</code></td>
-         <td nowrap><a href="#m11-数据提取">M1.1</a> 数据提取</td>
-         <td nowrap>原始数据，按数据源返回的格式原样保存</td>
-      </tr>
-      <tr>
-         <td nowrap>silver</td>
-         <td nowrap><code>data/silver/</code></td>
-         <td nowrap><a href="#m12-数据变换">M1.2</a> 数据变换</td>
-         <td nowrap>变换过程中的中间数据</td>
-      </tr>
-      <tr>
-         <td nowrap>gold</td>
-         <td nowrap><code>data/gold/</code></td>
-         <td nowrap><a href="#m13-数据存储">M1.3</a> 数据存储</td>
-         <td nowrap>清洗数据，研究直接读取，可选择上传到 S3</td>
-      </tr>
-   </tbody>
-</table>
-</div>
-
-三层数据仅<code>data/bronze/sample/</code> 提交到github作为参考,其余均.gitignore
+除作为参考的 `data/bronze/sample/` 外，三层数据都不提交到 GitHub。
 
 ### M1.1 数据提取
 
