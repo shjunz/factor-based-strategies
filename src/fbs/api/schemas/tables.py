@@ -37,3 +37,6 @@ class TableSchema(BaseModel):
     columns: list[str]
     filters: list[str]
     keys: list[str]
+    # unittype of each column; dates are "date (YYYY-MM-DD)", so clients
+    # detect them with startsWith("date")
+    types: dict[str, str]

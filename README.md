@@ -4,22 +4,41 @@
 
 ### 准备
 
-按顺序执行：
+根据系统选一种，按顺序执行。
+
+#### macOS / Linux
 
 ```bash
-# 1. 下载代码
-git clone https://github.com/shjunz/factor-based-strategies.git
-cd factor-based-strategies
-
-# 2. 创建虚拟环境 .venv，安装 fbs 包和全部依赖
+# 1. 创建虚拟环境 .venv，安装 fbs 包和全部依赖
 make install
 
-# 3. 生成 .env，再打开 .env 填入 API key（等号两边不要有空格）
+# 2. 生成 .env，再打开 .env 填入 API key（等号两边不要有空格）
 make env
 
-# 4. 启动后端
+# 3. 启动后端
 make api
 ```
+
+#### Windows
+
+需要先从 [python.org](https://www.python.org/downloads/) 安装 Python 3.12（安装包自带 `py` 命令）。在 VS Code 里按 `` Ctrl+` `` 打开终端，默认就是 PowerShell。
+
+```powershell
+# 1. 创建虚拟环境 .venv，安装 fbs 包和全部依赖
+py -3.12 -m venv .venv
+.venv\Scripts\python -m pip install -U pip
+.venv\Scripts\pip install -e .
+
+# 2. 生成 .env
+if (Test-Path .env) { ".env already exists, left unchanged" } else { Copy-Item .env.example .env }
+
+# 3. 打开 .env 填入 API key（等号两边不要有空格）
+
+# 4. 启动后端
+.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 127.0.0.1 --port 8000 --reload
+```
+
+不需要激活虚拟环境（`activate`），直接用 `.venv\Scripts\` 下的程序即可，这样也避开了 PowerShell 默认禁止运行脚本的限制。
 
 第 4 步启动后，打开 http://127.0.0.1:8000/docs 可以看到全部接口(按 Ctrl+C 停止) 
 
@@ -72,6 +91,18 @@ make api
 | `make api PORT=9000` | 换端口启动 |
 | `make clean-bronze` | 删除 `data/bronze/` 中下载的数据，保留 `sample/`，执行前需要输入 `y` 确认 |
 | `make clean` | 删除 `.venv` 和构建产物，之后需要重新 `make install` |
+
+Windows 下对应的 PowerShell 命令：
+
+| 对应 | PowerShell 命令 |
+|---|---|
+| `make install` | `py -3.12 -m venv .venv`，再 `.venv\Scripts\python -m pip install -U pip` 和 `.venv\Scripts\pip install -e .`（`.venv` 已存在时跳过第一条） |
+| `make env` | `if (Test-Path .env) { ".env already exists, left unchanged" } else { Copy-Item .env.example .env }` |
+| `make api` | `.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 127.0.0.1 --port 8000 --reload` |
+| `make api-prod` | `.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 0.0.0.0 --port 8000` |
+| `make api PORT=9000` | 把 `make api` 那条命令里的 `--port 8000` 改成 `--port 9000` |
+| `make clean-bronze` | `if ((Read-Host "Delete everything in data/bronze except sample/? [y/N]") -eq 'y') { Get-ChildItem data\bronze \| Where-Object Name -ne 'sample' \| Remove-Item -Recurse -Force }` |
+| `make clean` | `Remove-Item -Recurse -Force .venv, build, dist, src\*.egg-info -ErrorAction SilentlyContinue`，再 `Get-ChildItem -Recurse -Directory -Filter __pycache__ \| Remove-Item -Recurse -Force` |
 
 ## 目录
 

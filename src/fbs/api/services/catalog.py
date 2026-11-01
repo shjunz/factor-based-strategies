@@ -45,7 +45,7 @@ def indicators_file():
             return None
         return path
 
-# Columns, filters and primary key of a table, None if INDICATORS is not
+# Columns, filters, primary key and column types of a table, None if INDICATORS is not
 # available or does not list the table
 def table_schema(table):
     path = indicators_file()
@@ -58,7 +58,10 @@ def table_schema(table):
         _cache["schemas"] = {
             t: {"columns": g["indicator"].tolist(),
                 "filters": g.loc[g["isfilter"] == "Y", "indicator"].tolist(),
-                "keys": g.loc[g["isprimarykey"] == "Y", "indicator"].tolist()}
+                "keys": g.loc[g["isprimarykey"] == "Y", "indicator"].tolist(),
+                # unittype by column, such as "date (YYYY-MM-DD)" or "USD/share";
+                # "" where INDICATORS leaves it blank
+                "types": dict(zip(g["indicator"], g["unittype"].fillna("")))}
             for t, g in df.groupby("table", sort=False)}
         _cache["path"] = path
 
