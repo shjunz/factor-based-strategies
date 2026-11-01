@@ -7,7 +7,7 @@ unify.py - Unify raw data into the standard format.
 
 import pandas as pd
 
-from etl.storage.paths import DATA_DIR
+from fbs.etl.storage.paths import DATA_DIR
 
 # %%
 # Column Names
