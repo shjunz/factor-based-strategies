@@ -219,6 +219,15 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Data files are never committed (research_spec.md M1.3.1)
-data/extraction/
-data/loading/
+# Data files are never committed (research_spec.md M1.3.1). Everything under
+# data/ is ignored except the docs and mapping tables, so new layers stay out
+data/*
+!data/*.md
+!data/dictionary/
+# Only the samples of the bronze layer are committed
+!data/bronze/
+data/bronze/*
+!data/bronze/sample/
+
+# macOS Finder metadata, anywhere in the repo
+.DS_Store

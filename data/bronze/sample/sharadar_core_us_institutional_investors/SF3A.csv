@@ -1,0 +1,5 @@
+date,ticker,name,shrholders,cllholders,putholders,wntholders,dbtholders,prfholders,fndholders,undholders,shrunits,cllunits,putunits,wntunits,dbtunits,prfunits,fndunits,undunits,shrvalue,cllvalue,putvalue,wntvalue,dbtvalue,prfvalue,fndvalue,undvalue,totalvalue,percentoftotal
+2025-12-31,AAPL,APPLE INC,6143,133,203,0,4,0,0,0,9638800.6,237286.7,195167.1,0.0,206.0,0.0,0.0,0.0,2606913.1,67166.9,55301.5,0.0,0.2,0.0,0.0,0.0,2729381.7,3.843
+2026-03-31,AAPL,APPLE INC,6147,142,199,0,0,0,0,0,9486022.9,212168.1,161230.9,0.0,0.0,0.0,0.0,0.0,2393692.7,55840.7,44502.1,0.0,0.0,0.0,0.0,0.0,2494035.5,3.639
+2026-06-30,AAPL,APPLE INC,6174,157,211,0,1,0,0,0,9680466.8,235887.2,195430.0,0.0,10.0,0.0,0.0,0.0,2793941.2,72783.4,60443.1,0.0,0.0,0.0,0.0,0.0,2927167.7,3.571
+2026-09-30,AAPL,APPLE INC,2916,27,58,0,1,0,0,0,514958.3,925.1,3936.5,0.0,10.0,0.0,0.0,0.0,167318.4,310.0,1309.2,0.0,0.0,0.0,0.0,0.0,168937.6,3.434

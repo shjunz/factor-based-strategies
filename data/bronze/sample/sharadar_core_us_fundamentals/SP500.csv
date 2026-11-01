@@ -1,0 +1,5 @@
+date,action,ticker,name,contraticker,contraname,note
+2026-10-31,current,A,AGILENT TECHNOLOGIES INC,,,
+2023-01-04,added,GEHC,GE HEALTHCARE TECHNOLOGIES INC,VNO,VORNADO REALTY TRUST,General Electric completed the corporate spin-off of GE HealthCare. Announced 2022-12-28.
+2023-01-05,removed,VNO,VORNADO REALTY TRUST,GEHC,GE HEALTHCARE TECHNOLOGIES INC,General Electric completed the corporate spin-off of GE HealthCare. Announced 2022-12-28.
+2023-03-31,historical,A,AGILENT TECHNOLOGIES INC,,,

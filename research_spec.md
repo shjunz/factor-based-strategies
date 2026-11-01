@@ -38,7 +38,7 @@ M 代表研究模块（module）。
          <td nowrap rowspan="3"><a href="#m1-数据etl">M1</a></td>
          <td nowrap rowspan="3"><a href="#m1-数据etl">数据ETL</a></td>
          <td nowrap><a href="#m11-数据提取">M1.1 数据提取</a></td>
-         <td nowrap><a href="#m111-资产分类">M1.1.1 资产分类</a><br><a href="#m112-数据源">M1.1.2 数据源</a></td>
+         <td nowrap><a href="#m111-资产分类">M1.1.1 资产分类</a><br><a href="#m112-数据源">M1.1.2 数据源</a><br><a href="#m113-原始数据存储">M1.1.3 原始数据存储</a></td>
       </tr>
       <tr>
          <td nowrap><a href="#m12-数据变换">M1.2 数据变换</a></td>
@@ -138,9 +138,46 @@ M 代表研究模块（module）。
 <a href="#m12-数据变换">M1.2</a> 定义数据变换流程；
 <a href="#m13-数据存储">M1.3</a> 定义数据存储格式。
 
+`data/` 按 bronze、silver、gold 三层存放 ETL 各阶段的数据，每层对应一个阶段：
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap>数据层</th>
+         <th nowrap>目录</th>
+         <th nowrap>阶段</th>
+         <th nowrap>内容</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap>bronze</td>
+         <td nowrap><code>data/bronze/</code></td>
+         <td nowrap><a href="#m11-数据提取">M1.1</a> 数据提取</td>
+         <td nowrap>原始数据，按数据源返回的格式原样保存</td>
+      </tr>
+      <tr>
+         <td nowrap>silver</td>
+         <td nowrap><code>data/silver/</code></td>
+         <td nowrap><a href="#m12-数据变换">M1.2</a> 数据变换</td>
+         <td nowrap>变换过程中的中间数据</td>
+      </tr>
+      <tr>
+         <td nowrap>gold</td>
+         <td nowrap><code>data/gold/</code></td>
+         <td nowrap><a href="#m13-数据存储">M1.3</a> 数据存储</td>
+         <td nowrap>清洗数据，研究直接读取，可选择上传到 S3</td>
+      </tr>
+   </tbody>
+</table>
+</div>
+
+三层数据仅<code>data/bronze/sample/</code> 提交到github作为参考,其余均.gitignore
+
 ### M1.1 数据提取
 
-数据提取指通过网页下载或 API 从数据源获取原始数据，不做任何修改，原样保存。
+数据提取指通过网页下载或 API 从数据源获取原始数据，不做任何修改，原样保存到 bronze 层。
 
 #### M1.1.1 资产分类
 
@@ -207,9 +244,62 @@ M 代表研究模块（module）。
 - **数据频率**：每行数据对应的时间周期
 - **发布时间**：每行数据实际能拿到的最早时间点
 
+#### M1.1.3 原始数据存储
+
+原始数据按数据源的产品和表分目录保存在 bronze 层，文件名由下载日期、下载时的过滤条件、所选列和行数上限组成，下载日期在最前面，同一张表的文件按名称排序即按下载日期排序：
+
+`data/bronze/{source}_{product}/{table}/{download_date}_{filters}{suffix}`
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap>数据信息</th>
+         <th nowrap>字段</th>
+         <th nowrap>示例</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap>数据源名称，小写</td>
+         <td nowrap><code>source</code></td>
+         <td nowrap><code>sharadar</code></td>
+      </tr>
+      <tr>
+         <td nowrap>数据源中的产品，小写下划线</td>
+         <td nowrap><code>product</code></td>
+         <td nowrap><code>fund_prices</code></td>
+      </tr>
+      <tr>
+         <td nowrap>产品中的表名</td>
+         <td nowrap><code>table</code></td>
+         <td nowrap><code>SFP</code></td>
+      </tr>
+      <tr>
+         <td nowrap>下载时的过滤条件、所选列和行数上限，都没有时为 <code>ALL</code></td>
+         <td nowrap><code>filters</code></td>
+         <td nowrap><code>columns=close,date,ticker_date=20240101-20240131_ticker=QQQ,SPY</code></td>
+      </tr>
+      <tr>
+         <td nowrap>下载日期，格式为 <code>YYYYMMDD</code></td>
+         <td nowrap><code>download_date</code></td>
+         <td nowrap><code>20261101</code></td>
+      </tr>
+      <tr>
+         <td nowrap>数据源返回的文件格式</td>
+         <td nowrap><code>suffix</code></td>
+         <td nowrap><code>.zip</code></td>
+      </tr>
+   </tbody>
+</table>
+</div>
+每个数据文件旁有一个同名的 `.json`，记录完整的下载参数（表名、过滤条件、所选列、下载方式、行数上限、下载时间），用来还原文件名中被写成哈希的取值。
+
+同一张表可能出现在多个产品中（如 Sharadar 的 `TICKERS`、`ACTIONS`、`METRICS`、`INDICATORS`），下载时保存在对应产品的目录下，所以同一张表可以在多个产品目录中出现。
+
 ### M1.2 数据变换
 
-数据变换指用同一套流程处理各类原始数据，得到清洗数据，依次执行以下步骤。
+数据变换指用同一套流程处理各类原始数据，得到清洗数据，依次执行以下步骤。变换过程中产生的中间数据保存在 silver 层。
 
 #### M1.2.1 格式统一
 
@@ -283,11 +373,11 @@ M 代表研究模块（module）。
 
 ### M1.3 数据存储
 
-数据存储指把原始数据和清洗数据按统一的目录、命名和格式保存。
+数据存储指把清洗数据按统一的目录、命名和格式保存到 gold 层。
 
 #### M1.3.1 存储结构
 
-数据分为原始数据和清洗数据两层，都只保存在本地，不提交到 GitHub。文件路径由描述数据分类、来源和日期的字段组成，各字段如下：
+清洗数据保存在本地 gold 层，可选择上传到 S3，不提交到 GitHub。文件路径由描述数据分类、来源和日期的字段组成，各字段如下：
 
 <div style="overflow-x: auto;">
 <table>
@@ -319,10 +409,6 @@ M 代表研究模块（module）。
          <td nowrap><code>interface</code></td>
       </tr>
       <tr>
-         <td nowrap>下载日期，格式为 <code>YYYYMMDD</code></td>
-         <td nowrap><code>download_date</code></td>
-      </tr>
-      <tr>
          <td nowrap>清洗日期，格式为 <code>YYYYMMDD</code></td>
          <td nowrap><code>clean_date</code></td>
       </tr>
@@ -330,8 +416,9 @@ M 代表研究模块（module）。
 </table>
 </div>
 
-- **原始数据存储路径**：`data/extraction/{asset}/{category}/{frequency}/{source}_{interface}_{download_date}`
-- **清洗数据存储路径**：`data/loading/{asset}/{category}/{frequency}/{source}_{interface}_{clean_date}`
+- **清洗数据存储路径**：`data/gold/{asset}/{category}/{frequency}/{source}_{interface}_{clean_date}`
+
+原始数据的存储路径见 <a href="#m113-原始数据存储">M1.1.3</a>。
 
 #### M1.3.2 清洗数据格式
 
