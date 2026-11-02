@@ -1,0 +1,9 @@
+ticker,filingdate,formtype,issuername,ownername,officertitle,isdirector,isofficer,istenpercentowner,transactiondate,securityadcode,transactioncode,sharesownedbeforetransaction,transactionshares,sharesownedfollowingtransaction,transactionpricepershare,transactionvalue,securitytitle,directorindirect,natureofownership,dateexercisable,priceexercisable,expirationdate,rownum
+AAPL,2008-01-08,3,,JUNG ANDREA,,Y,N,N,,N,,77,0,77,,,Com,D,,,,,1
+MSFT,2008-01-02,4,,BACH ROBERT J,Pres,N,Y,N,2008-01-02,ND,S,548882,-25000,523882,35.79,894750.0,Com,D,,,,,1
+MSFT,2008-01-02,4,,MARQUARDT DAVID F,,Y,N,N,2007-12-21,ND,G,1411417,-2180,1409237,0.0,,Com,D,,,,,1
+MSFT,2008-01-02,4,,MARQUARDT DAVID F,,Y,N,N,2007-12-24,ND,G,1409237,-86,1409151,0.0,,Com,D,,,,,2
+MSFT,2008-07-10,5,,BROD FRANK H,COO,N,Y,N,,N,,75422,0,75422,,,Com,D,,,,,1
+TSLA,2010-06-25,RESTATED - 3,,MUSK ELON,Pres,Y,Y,Y,,N,,2666666,0,2666666,,,Com,I,Trust,,,,1
+JPM,2008-01-22,RESTATED - 4,,CROWN JAMES S,,Y,N,N,2008-01-22,,A,177892,4268,182160,39.83,170000.0,Com,D,,,,,1
+TSLA,2023-02-14,RESTATED - 5,,MUSK ELON,CEO,Y,Y,Y,2022-08-12,ND,G,423622432,-306748,423315684,0.0,,Com,I,Trust,,,,1

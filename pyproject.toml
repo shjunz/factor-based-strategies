@@ -16,6 +16,9 @@ dependencies = [
     "scipy",
     "statsmodels",
     "nasdaq-data-link",
+    "fastapi",
+    "uvicorn",
+    "python-dotenv",
 ]
 
 [tool.setuptools.packages.find]

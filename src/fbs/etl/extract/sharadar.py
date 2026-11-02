@@ -5,7 +5,9 @@ sharadar.py - Download data from Sharadar tables on Nasdaq Data Link.
 # %%
 # Imports
 
+import json
 import warnings
+from datetime import datetime, timezone
 
 import nasdaqdatalink
 
@@ -51,8 +53,14 @@ def download_table(table, path, /, method="export", limit=None, columns=None,
     Returns
     -------
     Path
-        The written file.
+        The written file. Its download parameters (table, filters, columns,
+        method, limit, download time) are written next to it as a .json with
+        the same name.
     """
+
+    # Keep the parameters as passed, before the filters take the query options
+    params = {"table": table, "filters": dict(filters), "columns": columns,
+              "method": method, "limit": limit}
 
     # Check the arguments
     if method not in ("export", "get"):
@@ -97,4 +105,9 @@ def download_table(table, path, /, method="export", limit=None, columns=None,
                   compression={"method": "zip", "archive_name": f"{path.stem}.csv"})
 
     tmp.replace(path)
+
+    # Record the full parameters, since long filter values are hashed in the file name
+    params["downloaded_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    path.with_suffix(".json").write_text(json.dumps(params, indent=2, default=str))
+
     return path
