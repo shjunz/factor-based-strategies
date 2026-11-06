@@ -73,35 +73,35 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 | `silver/` | M1.2 | 中间数据 | 数据变换过程中的中间结果 |
 | `gold/{分类}/` | M1.3.1、M1.3.2 | 清洗数据 | 数据变换的结果，研究直接读取，可选择上传到 S3 |
 
-## M3 — 因子研究与评价（src/fbs/eval/）
+## M4 — 因子研究与评价（src/fbs/eval/）
 
-### M3.2 — 截面（src/fbs/eval/cs/）
-
-| 文件 | 章节 | 用途 | 描述 |
-| --- | --- | --- | --- |
-| `bars.py` | M3.2.1 | 基础频率 | 跨市场对齐、OHLCV 合成 |
-| `returns.py` | M3.2.2 | 未来收益率 | 未来收益率、波动率调整 |
-| `factors.py` | M3.2.3 | 因子值 | 因子描述统计、异常值修正、空缺值处理、分布调整、因子中性化 |
-| `segment.py` | M3.2.4 | 样本内划分 | 全样本；分组：按期分组、按市值分组、按行业分组 |
-| `metrics.py` | M3.2.5 | 因子评价指标 | 主指标：Rank IC、分层价差、Fama-MacBeth 回归；方向判断：反向检验、U 形检验；副指标：IC 衰减、分层 CVaR、分层换手率、分层净值、分层夏普率、分层最大回撤、因子风险画像 |
-| `pipeline.py` | M3.2 | 流程 | 串起 M3.2.1–M3.2.5 因子截面研究流程 |
-
-### M3.3 — 时序（src/fbs/eval/ts/）
-
-## M4 — 因子组合（src/fbs/model/）
-
-### M4.1 — 截面（src/fbs/model/cs/）
+### M4.1 — 截面（src/fbs/eval/cs/）
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
-| `score.py` | M4.1.1 | 因子综合评分 | 显著性、属性计算、属性合成、综合评分 |
-| `selection.py` | M4.1.2 | 因子选择 | 因子排名、因子互补性、因子交易表现 |
-| `standardize.py` | M4.1.3 | 因子值标准化 | Gauss-rank、z-score |
-| `label.py` | M4.1.4 | 未来收益率调整 | 均值调整、波动率调整、Gauss-rank、z-score |
-| `models.py` | M4.1.5 | 模型选择 | 等权加法、Ridge Regression、XGBoost、Transformer |
-| `missing.py` | M4.1.6 | 数据处理 | 各模型的缺失值处理 |
-| `train_model.py` | M4.1.7 | 模型训练 | 训练目标、训练轮数、选择超参数与模型 |
-| `eval_model.py` | M4.1.8 | 模型检验 | 在 OOS Test 上评价一次，与等权加法对比 |
-| `pipeline.py` | M4.1 | 流程 | 串起 M4.1.1–M4.1.8 截面因子组合流程 |
+| `factors.py` | M4.1.2 | 因子预处理 | 因子描述统计、异常值修正、空缺值处理、分布调整、因子中性化 |
+| `rebalance.py` | M4.1.3 | 调仓频率 | 调仓日 |
+| `returns.py` | M4.1.4 | 未来收益率 | 未来收益率、波动率调整 |
+| `segment.py` | M4.1.5 | 样本内分组 | 全样本；分组：按期分组、按市值分组、按行业分组 |
+| `metrics.py` | M4.1.6 | 因子评价指标 | 主指标：Rank IC、分层价差、Fama-MacBeth 回归；方向判断：反向检验、U 形检验；副指标：IC 衰减、分层 CVaR、分层换手率、分层净值、分层夏普率、分层最大回撤、因子风险画像 |
+| `score.py` | M4.1.7 | 因子综合评分 | 显著性、属性计算、属性合成、综合评分 |
+| `selection.py` | M4.1.8 | 因子选择 | 因子排名、因子互补性、因子交易表现 |
+| `pipeline.py` | M4.1 | 流程 | 串起 M4.1.1–M4.1.8 因子截面研究流程 |
 
-### M4.2 — 时序（src/fbs/model/ts/）
+### M4.2 — 时序（src/fbs/eval/ts/）
+
+## M5 — 信号合成（src/fbs/model/）
+
+### M5.1 — 截面（src/fbs/model/cs/）
+
+| 文件 | 章节 | 用途 | 描述 |
+| --- | --- | --- | --- |
+| `standardize.py` | M5.1.1 | 因子值标准化 | Gauss-rank、z-score |
+| `label.py` | M5.1.2 | 未来收益率调整 | 均值调整、波动率调整、Gauss-rank、z-score |
+| `models.py` | M5.1.3 | 模型选择 | 等权加法、Ridge Regression、XGBoost、Transformer |
+| `missing.py` | M5.1.4 | 数据处理 | 各模型的缺失值处理 |
+| `train_model.py` | M5.1.5 | 模型训练 | 训练目标、训练轮数、选择超参数与模型 |
+| `eval_model.py` | M5.1.6 | 模型检验 | 在 OOS Test 上评价一次，与等权加法对比 |
+| `pipeline.py` | M5.1 | 流程 | 串起 M5.1.1–M5.1.6 截面信号合成流程 |
+
+### M5.2 — 时序（src/fbs/model/ts/）
