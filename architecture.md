@@ -38,7 +38,7 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
-| `sharadar.py` | M1.1、M1.1.3 | 数据提取 | Sharadar 数据下载，数据文件旁写同名 `.json` 记录完整的下载参数 |
+| `sharadar.py` | M1.1、M1.1.3 | 数据提取 | Sharadar 数据下载与读取，下载时在数据文件旁写同名 `.json` 记录完整的下载参数 |
 
 ### M1.2 — 数据变换（src/fbs/etl/transform/）
 

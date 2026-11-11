@@ -24,9 +24,9 @@ $(BIN)/python:
 install: venv  ## Install the fbs package in editable mode
 	$(BIN)/pip install -e .
 
-env:  ## Create .env from .env.example if it does not exist yet
+env:  ## Create .env with an empty NASDAQ_DATA_LINK_API_KEY if it does not exist yet
 	@if [ -f .env ]; then echo ".env already exists, left unchanged"; \
-	else cp .env.example .env && echo "Created .env, fill in NASDAQ_DATA_LINK_API_KEY"; fi
+	else printf 'NASDAQ_DATA_LINK_API_KEY=\n' > .env && echo "Created .env, fill in NASDAQ_DATA_LINK_API_KEY"; fi
 
 api:  ## Run the backend API with auto-reload (docs at http://HOST:PORT/docs)
 	$(BIN)/uvicorn $(APP) --app-dir src --env-file .env --host $(HOST) --port $(PORT) --reload
