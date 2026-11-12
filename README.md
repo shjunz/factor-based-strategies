@@ -30,7 +30,7 @@ py -3.12 -m venv .venv
 .venv\Scripts\pip install -e .
 
 # 2. 生成 .env
-if (Test-Path .env) { ".env already exists, left unchanged" } else { Copy-Item .env.example .env }
+if (Test-Path .env) { ".env already exists, left unchanged" } else { Set-Content .env "NASDAQ_DATA_LINK_API_KEY=" -Encoding ascii }
 
 # 3. 打开 .env 填入 API key（等号两边不要有空格）
 
@@ -85,7 +85,7 @@ if (Test-Path .env) { ".env already exists, left unchanged" } else { Copy-Item .
 | 命令 | 作用 |
 |---|---|
 | `make install` | 创建 `.venv`（只在第一次创建），安装 fbs 包和依赖 |
-| `make env` | 从 `.env.example` 生成 `.env`，已存在时不覆盖 |
+| `make env` | 生成只含 `NASDAQ_DATA_LINK_API_KEY=` 一行的 `.env`，已存在时不覆盖 |
 | `make api` | 启动后端，修改代码后自动重启，只能本机访问 |
 | `make api-prod` | 启动后端，不自动重启，其他机器也能访问（部署用） |
 | `make api PORT=9000` | 换端口启动 |
@@ -97,7 +97,7 @@ Windows 下对应的 PowerShell 命令：
 | 对应 | PowerShell 命令 |
 |---|---|
 | `make install` | `py -3.12 -m venv .venv`，再 `.venv\Scripts\python -m pip install -U pip` 和 `.venv\Scripts\pip install -e .`（`.venv` 已存在时跳过第一条） |
-| `make env` | `if (Test-Path .env) { ".env already exists, left unchanged" } else { Copy-Item .env.example .env }` |
+| `make env` | `if (Test-Path .env) { ".env already exists, left unchanged" } else { Set-Content .env "NASDAQ_DATA_LINK_API_KEY=" -Encoding ascii }` |
 | `make api` | `.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 127.0.0.1 --port 8000 --reload` |
 | `make api-prod` | `.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 0.0.0.0 --port 8000` |
 | `make api PORT=9000` | 把 `make api` 那条命令里的 `--port 8000` 改成 `--port 9000` |

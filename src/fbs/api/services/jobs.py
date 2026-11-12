@@ -72,7 +72,7 @@ def _target_path(request):
 def run_job(job_id):
     """
     Download the job's table with its request into the bronze layer, at
-    bronze/sharadar_{product}/{table}/{filters}_{download_date}.zip.
+    bronze/sharadar_{product}/{table}/{download_date}_{filters}.zip.
     """
 
     request = get_job(job_id).request
