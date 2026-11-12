@@ -17,9 +17,13 @@
       <td><code>MOM_001</code></td>
    </tr>
    <tr>
+      <td nowrap><b>适用用途</b></td>
+      <td>截面、时序</td>
+   </tr>
+   <tr>
       <td nowrap><b>计算公式</b></td>
       <td>
-         <code>J_min &lt;= j &amp;&amp; k &lt;= K_max &amp;&amp; RunUp &gt;= R_min &amp;&amp; HigherLow &gt; 0 &amp;&amp; Tight &lt; 1 ? 1 : 0</code><br><br>
+         <code>J_min &lt;= j &amp;&amp; k &lt;= K_max &amp;&amp; RunUp &gt;= R_min ? ((1 + RunUp) * Retain - 1) * max(HigherLow, 0) * max(1 - Tight, 0) : NaN</code><br><br>
          <code>k = ts_argmax(close_adj, L)</code><br>
          <code>j = ts_argmin(close_adj, k + 1)</code><br>
          <code>RunUp = delay(close_adj / ts_min(close_adj, 15) - 1, k)</code><br>
