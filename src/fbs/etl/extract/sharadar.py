@@ -1,5 +1,5 @@
 '''
-sharadar.py - Download data from Sharadar tables on Nasdaq Data Link.
+sharadar.py - Download and read data from Sharadar products on Nasdaq Data Link.
 '''
 
 # %%
@@ -10,6 +10,7 @@ import warnings
 from datetime import datetime, timezone
 
 import nasdaqdatalink
+import pandas as pd
 
 # %%
 # Constants
@@ -17,8 +18,13 @@ import nasdaqdatalink
 # Rows per page returned by get_table
 PAGE_SIZE = 10_000
 
-# Candidate sort keys, applied in this order when present (API data is unsorted)
+# Columns to sort rows by in priority order, if present in the table
 SORT_KEYS = ["ticker", "dimension", "calendardate", "datekey", "date"]
+
+# Columns parsed as dates, if present in the table
+DATE_COLUMNS = ["date", "datekey", "calendardate", "reportperiod", "lastupdated",
+                "firstadded", "firstpricedate", "lastpricedate", "firstquarter",
+                "lastquarter"]
 
 # %%
 # Table Download
@@ -34,14 +40,14 @@ def download_table(table, path, /, method="export", limit=None, columns=None,
     table : str
         Sharadar table name.
     path : Path
-        Destination zip file (zipped CSV for both methods).
+        Destination zip file.
     method : {"export", "get"}
-        "export": server-side bulk export (qopts.export), no row limit.
-        "get": paged API query (get_table), up to about 1,000,000 rows.
-    limit : int, optional
+        "export": bulk export (export_table), no row limit.
+        "get": paged query (get_table), up to about 1,000,000 rows.
+    limit : int
         Maximum number of rows, "get" only. All matching rows if None.
-    columns : list of str, optional
-        Columns to keep (qopts.columns). All columns if None.
+    columns : list of str
+        Columns to keep. All columns if None.
     overwrite : bool
         Replace an existing file instead of raising.
     **filters
@@ -98,9 +104,8 @@ def download_table(table, path, /, method="export", limit=None, columns=None,
             warnings.simplefilter("ignore", UserWarning)
             df = nasdaqdatalink.get_table(code, paginate=not one_page, **filters)
 
-        # Keep the limit and sort on whichever keys the table has (API data is unsorted)
-        df = df.iloc[:limit].sort_values([k for k in SORT_KEYS if k in df.columns],
-                                         ignore_index=True)
+        # Keep the first limit rows, in the order the API returned them
+        df = df.iloc[:limit]
         df.to_csv(tmp, index=False,
                   compression={"method": "zip", "archive_name": f"{path.stem}.csv"})
 
@@ -111,3 +116,38 @@ def download_table(table, path, /, method="export", limit=None, columns=None,
     path.with_suffix(".json").write_text(json.dumps(params, indent=2, default=str))
 
     return path
+
+# %%
+# Table Read
+
+# Sharadar table read
+def read_table(path, columns=None):
+    """
+    Sharadar table read from a downloaded zip file.
+
+    Parameters
+    ----------
+    path : Path
+        Downloaded zip file.
+    columns : list of str
+        Columns to read. All columns if None.
+
+    Returns
+    -------
+    table : pd.DataFrame
+        Table with its date columns parsed as dates and its rows sorted by
+        SORT_KEYS.
+    """
+
+    # Date columns among the columns to read
+    names = pd.read_csv(path, nrows=0).columns if columns is None else columns
+    dates = [c for c in DATE_COLUMNS if c in names]
+
+    # Read the zipped CSV
+    table = pd.read_csv(path, usecols=columns, parse_dates=dates)
+
+    # Sort on whichever keys the table has (downloaded rows are unsorted)
+    table = table.sort_values([k for k in SORT_KEYS if k in table.columns],
+                              ignore_index=True)
+
+    return table

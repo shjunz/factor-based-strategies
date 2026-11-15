@@ -38,7 +38,7 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
-| `sharadar.py` | M1.1、M1.1.3 | 数据提取 | Sharadar 数据下载，数据文件旁写同名 `.json` 记录完整的下载参数 |
+| `sharadar.py` | M1.1、M1.1.3 | 数据提取 | Sharadar 数据下载与读取，下载时在数据文件旁写同名 `.json` 记录完整的下载参数 |
 
 ### M1.2 — 数据变换（src/fbs/etl/transform/）
 
@@ -72,6 +72,15 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 | `bronze/sample/{source}_{product}/` | M1.1.3 | 样本数据 | 每个产品每张表的小样本和 README（主键、可过滤列、下载方法） |
 | `silver/` | M1.2 | 中间数据 | 数据变换过程中的中间结果 |
 | `gold/{分类}/` | M1.3.1、M1.3.2 | 清洗数据 | 数据变换的结果，研究直接读取，可选择上传到 S3 |
+
+## M2 — 因子库（factor/）
+
+| 文件 | 章节 | 用途 | 描述 |
+| --- | --- | --- | --- |
+| `factor_library.md` | M2.2 | 因子卡片 | 每条因子一张卡片，文件开头为因子目录 |
+| `code/{factor_id}.py` | M2.2 | 因子代码 | 读取清洗数据，输出因子值 |
+
+## M3 — 研究样本
 
 ## M4 — 因子研究与评价（src/fbs/eval/）
 
