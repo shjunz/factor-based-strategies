@@ -229,5 +229,10 @@ data/*
 data/bronze/*
 !data/bronze/sample/
 
+# Each strategy's own data files stay on the researcher's machine;
+# only the README that reserves the data folder is committed
+strategy/*/data/*
+!strategy/*/data/README.md
+
 # macOS Finder metadata, anywhere in the repo
 .DS_Store

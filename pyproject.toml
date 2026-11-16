@@ -21,5 +21,12 @@ dependencies = [
     "python-dotenv",
 ]
 
+[project.optional-dependencies]
+live = [            # paper trading runner (src/fbs/live): pip install -e ".[live]"
+    "alpaca-py",
+    "pyyaml",
+    "matplotlib",   # dry-run PDF report (src/fbs/live/report.py)
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]

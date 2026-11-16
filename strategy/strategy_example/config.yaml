@@ -1,0 +1,31 @@
+# 研究配置：data.py、weights.py 和 paper trading 运行器都从这里读参数。
+
+# 策略名：和文件夹名相同
+name: strategy_example
+
+# 资产集：30 只流动性好的美股大盘股，策略只在这些股票里选股
+# 注意：这是当前名单，拿来回测过去有幸存者偏差，只适合演示流程，不能用于真实研究
+universe: [AAPL, MSFT, NVDA, AMZN, GOOGL, META, AVGO, TSLA, JPM, V,
+           MA, UNH, XOM, JNJ, PG, HD, COST, LLY, ABBV, MRK,
+           PEP, KO, WMT, BAC, CVX, ADBE, CRM, NFLX, ORCL, AMD]
+
+# 调仓频率：M = 每月最后一个交易日收盘后算一次权重，下一个交易日收盘时调仓
+# 其他可选值：D = 每个交易日调仓；W = 每周最后一个交易日调仓
+rebalance: M
+
+# 回看长度：每次往前下载 300 个交易日 = 动量要用的 252 个交易日 + 余量
+lookback_sessions: 300
+
+# 回测起始日：每次 dry run 的 PDF 报告从 2018-01-01 回测到信号日
+backtest_start: 2018-01-01
+
+# 策略参数（12-1 动量，等权持有最强的 10 只）
+params:
+  lookback: 252      # 动量起点：从 252 个交易日前（约一年）开始算涨幅
+  skip: 21           # 动量终点：跳过最近 21 个交易日（约一个月），避开短期反转
+  top_n: 10          # 持有动量排名前 10 的股票
+  gross: 0.95        # 总共投入 95% 的资金，10 只等权即每只 9.5%；剩下 5% 现金用来吸收整股取整的误差
+
+# 数据：data.py 每次运行都从 Sharadar SEP 下载 universe 中股票的日线，存在 ./data/
+data:
+  field: close_adj   # 传给 weights.py 的价格：拆股和分红都调整过的收盘价，算动量用这个

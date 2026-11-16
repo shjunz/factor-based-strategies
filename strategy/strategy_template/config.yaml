@@ -1,0 +1,38 @@
+# 研究配置：复制本文件夹为 strategy/<策略名>/ 后，逐项修改标了 TODO 的值。
+# data.py、weights.py 和 paper trading 运行器都从这里读参数，代码里不写死任何参数。
+
+# TODO 策略名：必须和文件夹名完全相同，只用小写字母和下划线，例如 momentum_12_1
+name: strategy_template
+
+# TODO 资产集：策略可以交易的股票代码列表，用 Alpaca 的写法（例如 BRK.B）
+# data.py 只下载这里列出的股票；weights.py 只能给这些股票分配权重
+universe: [AAPL, MSFT]
+
+# TODO 调仓频率，三选一：
+#   D = 每个交易日收盘后都重新计算权重并调仓
+#   W = 每周最后一个交易日收盘后调仓一次（这周五休市就用周四）
+#   M = 每月最后一个交易日收盘后调仓一次（例如 10 月 31 日是周六，就在 10 月 30 日）
+# 订单在下一个交易日收盘时成交；其余日子运行器直接结束，不下单
+rebalance: M
+
+# TODO 回看长度：每次计算信号要往前下载多少个交易日的数据
+# = weights.py 用到的最长窗口 + 余量。例如 12-1 动量要 252 个交易日，再留余量写 300
+lookback_sessions: 300
+
+# TODO 回测起始日：每次 dry run 生成 PDF 报告时，从这天回测到信号日（格式 YYYY-MM-DD）
+# 删掉这一行则只用最近 lookback_sessions 天的数据回测，区间很短
+backtest_start: 2018-01-01
+
+# TODO 策略参数：weights.py 里用到的每一个参数都写在这里，每个参数写一行中文注释说明含义和单位
+params:
+  example_param: 1        # 示例参数，换成你自己的参数
+
+# 数据：data.py 每次运行都从 Sharadar SEP 下载 universe 中股票的日线，存在 ./data/（不提交到 git）
+data:
+  # TODO 传给 weights.py 的价格列，七选一：
+  #   close_adj = 拆股和分红都调整过的收盘价，算收益率、动量时用这个
+  #   close     = 只按拆股调整的收盘价
+  #   close_raw = 未调整的原始收盘价，按价格门槛筛股（如股价不低于 5 美元）时用这个
+  #   open / high / low = 拆股调整后的开盘价 / 最高价 / 最低价
+  #   volume    = 拆股调整后的成交量
+  field: close_adj
