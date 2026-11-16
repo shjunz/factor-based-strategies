@@ -1,4 +1,4 @@
-source,interface,source_field,field
+source,dataset,source_field,field
 Sharadar,SEP,date,timestamp
 Sharadar,SEP,open,open
 Sharadar,SEP,high,high

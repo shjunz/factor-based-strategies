@@ -38,6 +38,6 @@ clean:  ## Remove the virtual environment and build artifacts
 	rm -rf $(VENV) build dist src/*.egg-info
 	find . -name __pycache__ -type d -prune -not -path "./$(VENV)/*" -exec rm -rf {} +
 
-clean-bronze:  ## Delete downloaded data in data/bronze, keeping data/bronze/sample
-	@read -p "Delete everything in data/bronze except sample/? [y/N] " ans && [ "$$ans" = y ]
-	find data/bronze -mindepth 1 -maxdepth 1 ! -name sample -exec rm -rf {} +
+clean-bronze:  ## Delete all downloaded data in data/bronze
+	@read -p "Delete everything in data/bronze? [y/N] " ans && [ "$$ans" = y ]
+	find data/bronze -mindepth 1 -maxdepth 1 -exec rm -rf {} +

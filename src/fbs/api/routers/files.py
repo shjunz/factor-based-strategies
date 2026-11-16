@@ -10,15 +10,15 @@ from datetime import datetime, timezone
 from fastapi import APIRouter
 
 from fbs.api.schemas.files import FileInfo
-from fbs.etl.storage.paths import BRONZE_DIR, DATA_DIR, SAMPLE_DIR
+from fbs.etl.storage.paths import BRONZE_DIR, DATA_DIR
 
 # %%
 # Routes
 
 router = APIRouter(prefix="/files", tags=["files"])
 
-# Downloaded files under data/bronze/, newest first (samples, unfinished .part
-# files and the .json download parameters excluded)
+# Downloaded files under data/bronze/, newest first (unfinished .part files and
+# the .json download parameters excluded)
 @router.get("", response_model=list[FileInfo])
 def list_files():
     root = BRONZE_DIR
@@ -27,8 +27,7 @@ def list_files():
 
     files = []
     for p in root.rglob("*"):
-        if (not p.is_file() or p.suffix in (".part", ".json") or p.name.startswith(".")
-                or SAMPLE_DIR in p.parents):
+        if not p.is_file() or p.suffix in (".part", ".json") or p.name.startswith("."):
             continue
         stat = p.stat()
         files.append(FileInfo(

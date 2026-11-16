@@ -224,10 +224,6 @@ __marimo__/
 data/*
 !data/*.md
 !data/dictionary/
-# Only the samples of the bronze layer are committed
-!data/bronze/
-data/bronze/*
-!data/bronze/sample/
 
 # macOS Finder metadata, anywhere in the repo
 .DS_Store

@@ -44,14 +44,14 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
-| `unify.py` | M1.2.1 | 格式统一 | 时间（UTC）、列名（field_map.csv）、各资产类别默认口径 |
-| `identifiers.py` | M1.2.2 | 标识符 | 数据源信息、映射表（instrument_map.csv）、OpenFIGI 查询、instrument_id |
+| `identifiers.py` | M1.2.1 | 标识符 | 取数据源的永久编号作为 instrument_id |
+| `unify.py` | M1.2.2 | 格式统一 | 时间（UTC）、列名（field_map.csv）、各资产类别默认口径 |
 
 ### M1.3 — 数据存储（src/fbs/etl/storage/）
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
-| `paths.py` | M1、M1.1.3、M1.3.1 | 存储结构 | bronze / silver / gold 目录、原始数据文件命名（产品、表、过滤条件、列、行数上限、下载日期）、清洗数据分类目录 |
+| `paths.py` | M1、M1.1.3、M1.3.1 | 存储结构 | bronze / silver / gold 目录、原始数据文件命名（产品、数据集、过滤条件、列、下载日期）、清洗数据分类目录 |
 | `loading.py` | M1.3.2 | 清洗数据格式 | 写清洗数据文件 |
 
 ### 流程（src/fbs/etl/）
@@ -62,14 +62,13 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 
 ### 数据目录（data/）
 
-`{分类}` = `{asset}/{category}/{frequency}`，取值见 research_spec.md M1.3.1。`bronze/`、`silver/`、`gold/` 只保存在本地，仅 `bronze/sample/` 提交到 GitHub。
+`{分类}` = `{asset}/{category}/{frequency}`，取值见 research_spec.md M1.3.1。`bronze/`、`silver/`、`gold/` 只保存在本地，不提交到 GitHub。
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
-| `data_library.md` | M1.1.2 | 数据源卡片 | 每个数据源一张卡片 |
-| `dictionary/` | M1.2.1、M1.2.2 | 映射表 | field_map.csv、instrument_map.csv |
-| `bronze/{source}_{product}/{table}/` | M1.1.3 | 原始数据 | 数据提取的结果，原样保存，文件名为下载日期和过滤条件，旁有同名 `.json` |
-| `bronze/sample/{source}_{product}/` | M1.1.3 | 样本数据 | 每个产品每张表的小样本和 README（主键、可过滤列、下载方法） |
+| `data_library.md` | M1.1.2 | 数据卡片 | 每个数据集一张卡片，文件开头为目录 |
+| `dictionary/` | M1.2.2 | 映射表 | field_map.csv |
+| `bronze/{source}_{product}/{dataset}/` | M1.1.3 | 原始数据 | 数据提取的结果，原样保存，文件名为下载日期和过滤条件，旁有同名 `.json` |
 | `silver/` | M1.2 | 中间数据 | 数据变换过程中的中间结果 |
 | `gold/{分类}/` | M1.3.1、M1.3.2 | 清洗数据 | 数据变换的结果，研究直接读取，可选择上传到 S3 |
 
@@ -80,7 +79,11 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 | `factor_library.md` | M2.2 | 因子卡片 | 每条因子一张卡片，文件开头为因子目录 |
 | `code/{factor_id}.py` | M2.2 | 因子代码 | 读取清洗数据，输出因子值 |
 
-## M3 — 研究样本
+## M3 — 研究样本（src/fbs/sample/）
+
+| 文件 | 章节 | 用途 | 描述 |
+| --- | --- | --- | --- |
+| `returns.py` | M3.2 | 未来收益率 | 未来收益率、超额收益、波动率调整 |
 
 ## M4 — 因子研究与评价（src/fbs/eval/）
 
@@ -90,12 +93,11 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 | --- | --- | --- | --- |
 | `factors.py` | M4.1.2 | 因子预处理 | 因子描述统计、异常值修正、空缺值处理、分布调整、因子中性化 |
 | `rebalance.py` | M4.1.3 | 调仓频率 | 调仓日 |
-| `returns.py` | M4.1.4 | 未来收益率 | 未来收益率、波动率调整 |
-| `segment.py` | M4.1.5 | 样本内分组 | 全样本；分组：按期分组、按市值分组、按行业分组 |
-| `metrics.py` | M4.1.6 | 因子评价指标 | 主指标：Rank IC、分层价差、Fama-MacBeth 回归；方向判断：反向检验、U 形检验；副指标：IC 衰减、分层 CVaR、分层换手率、分层净值、分层夏普率、分层最大回撤、因子风险画像 |
-| `score.py` | M4.1.7 | 因子综合评分 | 显著性、属性计算、属性合成、综合评分 |
-| `selection.py` | M4.1.8 | 因子选择 | 因子排名、因子互补性、因子交易表现 |
-| `pipeline.py` | M4.1 | 流程 | 串起 M4.1.1–M4.1.8 因子截面研究流程 |
+| `segment.py` | M4.1.4 | 样本内分组 | 全样本；分组：按期分组、按市值分组、按行业分组 |
+| `metrics.py` | M4.1.5 | 因子评价指标 | 主指标：Rank IC、分层价差、Fama-MacBeth 回归；方向判断：反向检验、U 形检验；副指标：IC 衰减、分层 CVaR、分层换手率、分层净值、分层夏普率、分层最大回撤、因子风险画像 |
+| `score.py` | M4.1.6 | 因子综合评分 | 显著性、属性计算、属性合成、综合评分 |
+| `selection.py` | M4.1.7 | 因子选择 | 因子排名、因子互补性、因子交易表现 |
+| `pipeline.py` | M4.1 | 流程 | 串起 M4.1.1–M4.1.7 因子截面研究流程 |
 
 ### M4.2 — 时序（src/fbs/eval/ts/）
 

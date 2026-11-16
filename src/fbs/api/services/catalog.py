@@ -39,7 +39,7 @@ def indicators_file():
         path = extraction_path("Sharadar", "fund_prices", "INDICATORS", {},
                                date.today(), ".zip")
         try:
-            download_table("INDICATORS", path, method="get")
+            download_table("INDICATORS", path)
         except Exception:
             logging.getLogger(__name__).exception("automatic INDICATORS download failed")
             return None

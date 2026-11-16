@@ -2,9 +2,26 @@
 
 每条因子一张卡片，目录如下：
 
-| 因子编号 |
-|---|
-| [`MOM_001`](#mom_001) |
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap>因子主题</th>
+         <th nowrap>因子</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap>动量 <code>MOM</code></td>
+         <td nowrap><a href="#mom_001">MOM_001</a></td>
+      </tr>
+   </tbody>
+</table>
+</div>
+
+## 动量
+
+### 因子卡片
 
 <a id="mom_001"></a>
 

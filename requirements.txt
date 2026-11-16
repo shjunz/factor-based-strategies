@@ -6,12 +6,14 @@ anyio==4.16.0
 certifi==2026.10.23
 charset-normalizer==3.5.2
 click==8.5.1
+exchange_calendars==4.13.3
 fastapi==0.162.2
 formulaic==1.2.2
 h11==0.16.0
 idna==3.20
 inflection==0.5.1
 interface_meta==2.0.1
+korean_lunar_calendar==0.4.0
 more-itertools==11.2.1
 narwhals==2.28.0
 Nasdaq-Data-Link==1.0.4
@@ -23,6 +25,7 @@ patsy==1.0.3
 pyarrow==26.0.1
 pydantic==2.14.3
 pydantic_core==2.50.4
+pyluach==2.3.0
 python-dateutil==4.0.0
 python-dotenv==1.2.4
 requests==2.34.2
@@ -30,6 +33,7 @@ scipy==1.18.1
 six==1.17.0
 starlette==1.10.0
 statsmodels==0.15.0
+toolz==1.2.0
 typing-inspection==0.4.5
 typing_extensions==4.16.0
 tzdata==2026.6
