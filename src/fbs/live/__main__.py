@@ -1,14 +1,35 @@
-"""Command line: python -m fbs.live {rebalance,status,halt,flatten} STRATEGY [options]."""
+'''
+__main__.py - Command line: python -m fbs.live {rebalance,status,performance,halt,flatten} STRATEGY [options].
+'''
 
-from __future__ import annotations
+# %%
+# Imports
 
 import argparse
 import sys
 
 from fbs.live import runner
 
+# %%
+# Command Line
 
-def main(argv: list[str] | None = None) -> int:
+# Command line entry point
+def main(argv=None):
+    """
+    Parse the command line and run one command on one strategy.
+
+    Parameters
+    ----------
+    argv : list of str
+        Command line arguments. sys.argv[1:] if None.
+
+    Returns
+    -------
+    code : int
+        Process exit code: 0 on success, 1 on a failed or blocked run.
+    """
+
+    # One sub-command per action, each taking the strategy folder name
     parser = argparse.ArgumentParser(prog="python -m fbs.live", description="Alpaca paper trading runner")
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -21,6 +42,10 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("status", help="account, positions and recent orders")
     p.add_argument("strategy")
 
+    p = sub.add_parser("performance", help="live results against the backtest, as a PDF in records/")
+    p.add_argument("strategy")
+    p.add_argument("--start", help="execution session of the first live trade, YYYY-MM-DD; default from records/")
+
     p = sub.add_parser("halt", help="cancel all open orders")
     p.add_argument("strategy")
 
@@ -29,19 +54,24 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--yes", action="store_true", help="required confirmation")
 
     args = parser.parse_args(argv)
+
+    # Run the chosen command
     if args.command == "rebalance":
-        return runner.rebalance(args.strategy, submit=args.submit, asof=runner.parse_date(args.asof),
-                                force=args.force)
-    if args.command == "status":
-        return runner.status(args.strategy)
-    if args.command == "halt":
-        return runner.halt(args.strategy)
-    if args.command == "flatten":
-        if not args.yes:
-            print("flatten closes every position in this strategy's paper account; re-run with --yes")
-            return 1
-        return runner.halt(args.strategy, flatten=True)
-    return 1
+        code = runner.rebalance(args.strategy, submit=args.submit,
+                                asof=runner.parse_date(args.asof), force=args.force)
+    elif args.command == "status":
+        code = runner.status(args.strategy)
+    elif args.command == "performance":
+        code = runner.performance(args.strategy, start=runner.parse_date(args.start))
+    elif args.command == "halt":
+        code = runner.halt(args.strategy)
+    elif args.yes:
+        code = runner.halt(args.strategy, flatten=True)
+    else:
+        print("flatten closes every position in this strategy's paper account; re-run with --yes")
+        code = 1
+
+    return code
 
 
 if __name__ == "__main__":

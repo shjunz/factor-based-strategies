@@ -1,8 +1,5 @@
-# 研究配置：复制本文件夹为 strategy/<策略名>/ 后，逐项修改标了 TODO 的值。
+# 策略的唯一配置文件：复制本文件夹为 strategy/<策略名>/ 后，逐项修改标了 TODO 的值。
 # data.py、weights.py 和 paper trading 运行器都从这里读参数，代码里不写死任何参数。
-
-# TODO 策略名：必须和文件夹名完全相同，只用小写字母和下划线，例如 momentum_12_1
-name: strategy_template
 
 # TODO 资产集：策略可以交易的股票代码列表，用 Alpaca 的写法（例如 BRK.B）
 # data.py 只下载这里列出的股票；weights.py 只能给这些股票分配权重
@@ -23,11 +20,22 @@ lookback_sessions: 300
 # 删掉这一行则只用最近 lookback_sessions 天的数据回测，区间很短
 backtest_start: 2018-01-01
 
+# TODO 样本划分：dry run 报告按这里把回测分成 IS / Embargo / OOS 三段，分别列指标
+#   IS      = backtest_start 到 is_end，用来选 params
+#   Embargo = is_end 之后的 embargo_sessions 个交易日，不参与评价，隔开 IS 和 OOS
+#   OOS     = Embargo 之后到信号日，只做报告，不能拿来改 params
+# embargo_sessions 不短于一个调仓周期：D 至少 1，W 至少 5，M 至少 21
+# 删掉这个块则只按全区间回测，不分段
+split:
+  is_end: 2022-12-30      # IS 最后一天（格式 YYYY-MM-DD）
+  embargo_sessions: 21    # Embargo 长度，单位是交易日
+
 # TODO 策略参数：weights.py 里用到的每一个参数都写在这里，每个参数写一行中文注释说明含义和单位
 params:
   example_param: 1        # 示例参数，换成你自己的参数
 
-# 数据：data.py 每次运行都从 Sharadar SEP 下载 universe 中股票的日线，存在 ./data/（不提交到 git）
+# 数据：universe 中股票的 Sharadar SEP 日线保存在 ./data/（不提交到 git）。第一次运行下载全部历史，
+# 之后每次只增量下载新的交易日和被修订（拆股、分红调整）的历史行；删掉 data/sync_state.json 可重新全量下载
 data:
   # TODO 传给 weights.py 的价格列，七选一：
   #   close_adj = 拆股和分红都调整过的收盘价，算收益率、动量时用这个
@@ -36,3 +44,23 @@ data:
   #   open / high / low = 拆股调整后的开盘价 / 最高价 / 最低价
   #   volume    = 拆股调整后的成交量
   field: close_adj
+
+# Paper trading：dry run 也会用到（读账户持仓、做风控检查），上 paper trading 前逐项核对
+# 改动这个块需要一位 QD 和一位 QR review
+paper:
+  enabled: false              # 开关：dry run 核对无误前保持 false；false 时 --submit 不会下单
+  mode: paper                 # 只接受 paper，不支持真金白银交易
+  account: STRATEGY_TEMPLATE  # TODO Alpaca paper 账户名，一个策略一个账户；API key 从环境变量 ALPACA_<账户名>_KEY / _SECRET 读取
+  capital: 100000             # TODO 策略资金（美元），不超过 paper 账户净值
+  moc_cutoff_minutes: 15      # 距收盘不足这么多分钟就不再提交收盘市价单
+
+  # TODO 风控上限：参考 Dry-run 报告里的换手率和持仓集中度，再留余量；任何一项超限，整次运行不下单
+  limits:
+    max_gross: 1.0            # 权重绝对值之和上限
+    max_net: 1.0              # 权重之和的绝对值上限
+    max_weight: 0.10          # 单只股票权重绝对值上限
+    max_turnover: 1.0         # 每次调仓单边成交额 / capital 上限
+    max_order_notional: 15000 # 单笔订单金额上限（美元）
+    max_orders: 50            # 每次调仓订单数上限
+    min_order_notional: 50    # 小于这个金额（美元）的调整直接跳过
+    allow_shorts: false       # 是否允许做空

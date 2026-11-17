@@ -1,26 +1,42 @@
-"""strategy_example target weights: equal-weight top-N by 12-1 momentum, long only.
+'''
+weights.py - strategy_example target weights: equal weight on the top_n
+stocks by 12-1 momentum, long only.
+'''
 
-Contract: compute(data, params) -> DataFrame
-    index   = session dates (same as data), columns = symbols
-    values  = target fraction of capital (long > 0, short < 0, 0 = no position)
-    row t   = uses only data up to and including session t
-The backtest uses every row; the paper runner uses the row of the signal session.
-"""
+# %%
+# Target Weights
 
-from __future__ import annotations
+# Target weights of every session
+def compute(data, params):
+    """
+    Target weights of every session: equal weight on the top_n stocks by
+    momentum from t-lookback to t-skip.
 
-import pandas as pd
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Prices from data.fetch. Index = session dates, Columns = symbols.
+    params : dict
+        config.yaml params: lookback, skip, top_n, gross.
 
+    Returns
+    -------
+    weights : pd.DataFrame
+        Target fraction of capital, same index and columns as `data`. Row t
+        uses data up to session t only.
+    """
 
-def compute(data: pd.DataFrame, params: dict) -> pd.DataFrame:
-    lookback, skip = int(params["lookback"]), int(params["skip"])
-    top_n, gross = int(params["top_n"]), float(params["gross"])
+    # 1. Signal: return from t-lookback to t-skip
+    momentum = data.shift(params["skip"]) / data.shift(params["lookback"]) - 1
 
-    momentum = data.shift(skip) / data.shift(lookback) - 1           # return from t-252 to t-21
-    eligible = momentum.notna() & data.notna()                       # needs a price today and a full history
-    rank = momentum.where(eligible).rank(axis=1, ascending=False, method="first")
-    selected = rank <= top_n
+    # 2. Eligible: a price today and a full history
+    momentum = momentum.where(data.notna())
 
-    count = selected.sum(axis=1)
-    weights = selected.astype(float).div(count.where(count > 0), axis=0) * gross
-    return weights.fillna(0.0)
+    # 3. Select: the top_n by momentum
+    selected = momentum.rank(axis=1, ascending=False, method="first") <= params["top_n"]
+
+    # 4. Weights: equal weight, gross in total, 0 for the rest
+    weights = selected.div(selected.sum(axis=1), axis=0) * params["gross"]
+    weights = weights.fillna(0.0)
+
+    return weights

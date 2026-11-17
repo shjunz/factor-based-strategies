@@ -1,18 +1,37 @@
-"""Target weights for this strategy. Replace the body of compute(); keep its name and signature.
+'''
+weights.py - Target weights of this strategy. Fill in the body of compute;
+keep its name and arguments. strategy_example/weights.py is a full example.
+'''
 
-Contract: compute(data, params) -> DataFrame
-    index   = session dates (same as data), columns = symbols
-    values  = target fraction of capital (long > 0, short < 0, 0 = no position)
-    row t   = uses only data up to and including session t (no look-ahead)
-    The backtest uses every row; the paper runner uses the row of the signal session.
-    All parameters come from config.yaml `params`.
-"""
+# %%
+# Target Weights
 
-from __future__ import annotations
+# Target weights of every session
+def compute(data, params):
+    """
+    Target weights of every session.
 
-import pandas as pd
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Prices from data.fetch. Index = session dates, Columns = symbols,
+        values = config data.field.
+    params : dict
+        config.yaml params. Every parameter comes from here.
 
+    Returns
+    -------
+    weights : pd.DataFrame
+        Target fraction of capital, same index and columns as `data`: long > 0,
+        short < 0, no position = 0. Row t uses data up to session t only.
+    """
 
-def compute(data: pd.DataFrame, params: dict) -> pd.DataFrame:
-    # TODO: signal -> weights
-    raise NotImplementedError("fill in weights.py: compute(data, params)")
+    # TODO 1. Signal: one score per stock per session, e.g. data.shift(skip) / data.shift(lookback) - 1
+
+    # TODO 2. Eligible: drop stocks without a price today or enough history, e.g. signal.where(data.notna())
+
+    # TODO 3. Select: the stocks to hold, e.g. signal.rank(axis=1, ascending=False) <= top_n
+
+    # TODO 4. Weights: e.g. selected.div(selected.sum(axis=1), axis=0) * gross, then fillna(0.0)
+
+    raise NotImplementedError("fill in compute in weights.py")

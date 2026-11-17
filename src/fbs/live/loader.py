@@ -1,7 +1,12 @@
-"""Load a strategy folder: config.yaml, paper.yaml, data.py, weights.py."""
+'''
+loader.py - Load a strategy folder: config.yaml (research settings plus the
+paper block), data.py and weights.py.
+'''
 
-from __future__ import annotations
+# %%
+# Imports
 
+import datetime as dt
 import importlib.util
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,63 +14,221 @@ from types import ModuleType
 
 import yaml
 
+# %%
+# Constants
+
+# Strategy folders live at <repo>/strategy/<name> (loader.py is at src/fbs/live/)
 REPO_ROOT = Path(__file__).resolve().parents[3]
 STRATEGY_ROOT = REPO_ROOT / "strategy"
 
-REQUIRED_CONFIG = ("name", "universe", "rebalance", "lookback_sessions", "params")
+# Required keys of config.yaml, its paper block and paper.limits
+REQUIRED_CONFIG = ("universe", "rebalance", "lookback_sessions", "params", "paper")
 REQUIRED_PAPER = ("enabled", "account", "capital", "limits")
 REQUIRED_LIMITS = ("max_gross", "max_net", "max_weight", "max_turnover",
                    "max_order_notional", "max_orders", "min_order_notional", "allow_shorts")
+
+# Rebalance rules: every session, last session of the week, last session of the month
 REBALANCE_RULES = ("D", "W", "M")
 
+# Required keys of config.yaml split (optional block)
+REQUIRED_SPLIT = ("is_end", "embargo_sessions")
 
+# Shortest embargo per rebalance rule: one holding period in sessions, so the
+# last IS position's return never reaches into OOS
+MIN_EMBARGO = {"D": 1, "W": 5, "M": 21}
+
+# %%
+# Strategy
+
+# One loaded strategy folder
 @dataclass(frozen=True)
 class Strategy:
+    """
+    One loaded strategy folder.
+
+    Attributes
+    ----------
+    name : str
+        Folder name under strategy/.
+    folder : Path
+        Strategy folder.
+    config : dict
+        config.yaml.
+    paper : dict
+        config.yaml paper block (account, capital, limits, enabled).
+    data : module
+        data.py, defines fetch(config, start, end).
+    weights : module
+        weights.py, defines compute(data, params).
+    """
+
     name: str
     folder: Path
     config: dict
     paper: dict
-    data: ModuleType       # must define fetch(config, start, end) -> DataFrame indexed by date
-    weights: ModuleType    # must define compute(data, params) -> DataFrame (dates x symbols)
+    data: ModuleType
+    weights: ModuleType
 
+# %%
+# Helpers
 
-def _import(path: Path, module_name: str) -> ModuleType:
+# Import a .py file as a module
+def _import(path, module_name):
+    """
+    Import a .py file that is not on the Python path.
+
+    Parameters
+    ----------
+    path : Path
+        The .py file.
+    module_name : str
+        Name to give the module, unique per strategy.
+
+    Returns
+    -------
+    module : module
+        The imported module.
+    """
+
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
         raise ImportError(f"cannot import {path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+
     return module
 
+# Read a yaml file
+def _read_yaml(path):
+    """
+    Read a yaml file.
 
-def _read_yaml(path: Path) -> dict:
+    Parameters
+    ----------
+    path : Path
+        The yaml file.
+
+    Returns
+    -------
+    content : dict
+        Parsed content, {} for an empty file.
+    """
+
     if not path.exists():
         raise FileNotFoundError(f"missing {path.relative_to(REPO_ROOT)}")
     with path.open() as f:
-        return yaml.safe_load(f) or {}
+        content = yaml.safe_load(f) or {}
 
+    return content
 
-def _require(mapping: dict, keys: tuple[str, ...], where: str) -> None:
+# Required keys check
+def _require(mapping, keys, where):
+    """
+    Raise if any required key is missing.
+
+    Parameters
+    ----------
+    mapping : dict
+        Parsed yaml section.
+    keys : tuple of str
+        Required keys.
+    where : str
+        Section name for the error message.
+    """
+
     missing = [k for k in keys if k not in mapping]
     if missing:
         raise ValueError(f"{where} is missing keys: {', '.join(missing)}")
 
+# Sample split check
+def _check_split(config):
+    """
+    Raise if config.yaml split is malformed. The block is optional.
 
-def load_strategy(name: str) -> Strategy:
+    Parameters
+    ----------
+    config : dict
+        config.yaml.
+    """
+
+    split = config.get("split")
+    if split is None:
+        return
+    if not isinstance(split, dict):
+        raise ValueError("config.yaml split must be a mapping with is_end and embargo_sessions")
+    _require(split, REQUIRED_SPLIT, "config.yaml split")
+
+    # is_end: a date after backtest_start
+    is_end = split["is_end"]
+    if not isinstance(is_end, dt.date):
+        raise ValueError("config.yaml split.is_end must be a date, YYYY-MM-DD")
+    start = config.get("backtest_start")
+    if start is not None and is_end <= dt.date.fromisoformat(str(start)):
+        raise ValueError("config.yaml split.is_end must be after backtest_start")
+
+    # embargo_sessions: at least one holding period
+    embargo = split["embargo_sessions"]
+    floor = MIN_EMBARGO[config["rebalance"]]
+    if isinstance(embargo, bool) or not isinstance(embargo, int) or embargo < floor:
+        raise ValueError(f"config.yaml split.embargo_sessions must be an integer >= {floor} "
+                         f"for rebalance {config['rebalance']}")
+
+# %%
+# Load
+
+# Load and check a strategy folder
+def load_strategy(name):
+    """
+    Load strategy/<name>, check its config and import its code.
+
+    Parameters
+    ----------
+    name : str
+        Folder name under strategy/.
+
+    Returns
+    -------
+    strategy : Strategy
+        The loaded strategy.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the folder or config.yaml is missing.
+    ValueError
+        If a required key is missing, a value is not allowed (including
+        the optional split block), or a leftover paper.yaml exists.
+    TypeError
+        If data.py or weights.py lacks its function.
+    """
+
+    # Folder
     folder = STRATEGY_ROOT / name
     if not folder.is_dir():
         raise FileNotFoundError(f"no strategy folder strategy/{name}")
 
+    # config.yaml, the only settings file; an old paper.yaml would be silently ignored
+    if (folder / "paper.yaml").exists():
+        raise ValueError(f"strategy/{name}/paper.yaml is no longer read: move its keys under "
+                         "`paper:` in config.yaml and delete the file")
     config = _read_yaml(folder / "config.yaml")
-    paper = _read_yaml(folder / "paper.yaml")
     _require(config, REQUIRED_CONFIG, "config.yaml")
-    _require(paper, REQUIRED_PAPER, "paper.yaml")
-    _require(paper["limits"], REQUIRED_LIMITS, "paper.yaml limits")
     if config["rebalance"] not in REBALANCE_RULES:
         raise ValueError(f"config.yaml rebalance must be one of {REBALANCE_RULES}")
-    if paper.get("mode", "paper") != "paper":
-        raise ValueError("paper.yaml mode must be 'paper'; real-money trading is not supported")
+    _check_split(config)
 
+    # config.yaml paper block
+    paper = config["paper"]
+    if not isinstance(paper, dict):
+        raise ValueError("config.yaml paper must be a mapping")
+    _require(paper, REQUIRED_PAPER, "config.yaml paper")
+    if not isinstance(paper["limits"], dict):
+        raise ValueError("config.yaml paper.limits must be a mapping")
+    _require(paper["limits"], REQUIRED_LIMITS, "config.yaml paper.limits")
+    if paper.get("mode", "paper") != "paper":
+        raise ValueError("config.yaml paper.mode must be 'paper'; real-money trading is not supported")
+
+    # data.py and weights.py
     data = _import(folder / "data.py", f"fbs_strategy_{name}_data")
     weights = _import(folder / "weights.py", f"fbs_strategy_{name}_weights")
     if not callable(getattr(data, "fetch", None)):
@@ -73,4 +236,6 @@ def load_strategy(name: str) -> Strategy:
     if not callable(getattr(weights, "compute", None)):
         raise TypeError(f"strategy/{name}/weights.py must define compute(data, params)")
 
-    return Strategy(name=name, folder=folder, config=config, paper=paper, data=data, weights=weights)
+    strategy = Strategy(name=name, folder=folder, config=config, paper=paper, data=data, weights=weights)
+
+    return strategy

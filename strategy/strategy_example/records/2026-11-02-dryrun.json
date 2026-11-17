@@ -3,8 +3,7 @@
   "mode": "dry_run",
   "signal_session": "2026-10-30",
   "exec_session": "2026-11-02",
-  "run_at": "2026-11-16T18:26:11.200327-05:00",
-  "git": "8da99c7-dirty",
+  "run_at": "2026-11-17T18:42:37.826925-05:00",
   "status": "dry_run",
   "failures": [],
   "notes": [],
@@ -56,7 +55,7 @@
     {
       "symbol": "GOOGL",
       "side": "buy",
-      "qty": 33,
+      "qty": 34,
       "client_order_id": "strategy_example-2026-11-02-GOOGL-adjust",
       "target_weight": 0.095,
       "reason": "adjust"
@@ -72,7 +71,7 @@
     {
       "symbol": "KO",
       "side": "buy",
-      "qty": 95,
+      "qty": 96,
       "client_order_id": "strategy_example-2026-11-02-KO-adjust",
       "target_weight": 0.095,
       "reason": "adjust"
@@ -103,5 +102,5 @@
     }
   ],
   "submitted": [],
-  "turnover": 0.4782
+  "turnover": 0.4766
 }
