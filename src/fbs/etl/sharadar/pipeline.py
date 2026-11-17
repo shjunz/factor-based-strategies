@@ -4,20 +4,17 @@ pipeline.py - ETL flow from raw data to clean data.
 
 # %%
 # Imports
-
-from datetime import date
+from datetime import datetime, timezone
 
 from fbs.etl.sharadar.extract import read_table
-from fbs.etl.loading import write_clean
-from fbs.etl.paths import BRONZE_DIR, clean_path
+from fbs.etl.loading import save_clean
+from fbs.etl.paths import BRONZE_DIR, gold_path
 from fbs.etl.sharadar.identifiers import add_instrument_id
-from fbs.etl.unify import STANDARD_COLUMNS, close_times, rename_fields
+from fbs.etl.unify import STANDARD_FIELDS, map_date_timestamps, rename_fields
 
 # %%
-# Sharadar SEP
-
-# Sharadar SEP clean
-def clean_sharadar_sep(sep_path, tickers_path, clean_date=None):
+# Clean SEP
+def clean_sep(sep_path, tickers_path, clean_date=None):
     """
     Clean Sharadar SEP daily prices written to the gold layer at
     EQ/spot/daily/sharadar_SEP_{clean_date}.parquet.
@@ -29,7 +26,7 @@ def clean_sharadar_sep(sep_path, tickers_path, clean_date=None):
     tickers_path : Path
         Downloaded TICKERS zip file.
     clean_date : datetime.date
-        Clean date in the file name. Today if None.
+        Clean date in the file name. Today in UTC if None.
 
     Returns
     -------
@@ -41,25 +38,24 @@ def clean_sharadar_sep(sep_path, tickers_path, clean_date=None):
     sep = read_table(sep_path)
     tickers = read_table(tickers_path, columns=["table", "ticker", "permaticker"])
 
-    # M1.2.1 Identifiers: permaticker as instrument_id
+    # Identifiers
     sep = add_instrument_id(sep, tickers, "SEP")
 
-    # Format: standard column names, NYSE close time in UTC, standard columns
+    # Format
     sep = rename_fields(sep, "Sharadar", "SEP")
-    sep["timestamp"] = close_times(sep["timestamp"], "XNYS")
-    clean = sep[STANDARD_COLUMNS["EQ"]]
+    sep["timestamp"] = map_date_timestamps(sep["timestamp"], "XNYS")
+    clean = sep[STANDARD_FIELDS["EQ"]]
 
-    # Parquet file in the gold layer
-    path = clean_path("EQ", "spot", "daily", "Sharadar", "SEP",
-                      clean_date or date.today())
-    write_clean(clean, path)
+    # Parquet file at gold layer
+    path = gold_path("EQ", "spot", "daily", "Sharadar", "SEP",
+                     clean_date or datetime.now(timezone.utc).date())
+    save_clean(clean, path, [sep_path, tickers_path])
 
     return path
 
 # %%
 # Run
-
 if __name__ == "__main__":
     prices = BRONZE_DIR / "sharadar_equity_prices"
-    print(clean_sharadar_sep(prices / "SEP" / "20261029_ALL.zip",
-                             prices / "TICKERS" / "20261029_ALL.zip"))
+    print(clean_sep(prices / "SEP" / "20261029_ALL.zip",
+                    prices / "TICKERS" / "20261029_ALL.zip"))

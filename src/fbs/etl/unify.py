@@ -4,78 +4,72 @@ unify.py - Unify raw data into the standard format.
 
 # %%
 # Imports
-
 import exchange_calendars as xcals
 import pandas as pd
-
 from fbs.etl.paths import DATA_DIR
 
 # %%
-# Standard Columns
-
-# Standard columns of each asset class, in stored order
-STANDARD_COLUMNS = {
+# Standard fields of each asset class
+STANDARD_FIELDS = {
     "EQ": ["instrument_id", "timestamp", "open", "high", "low", "close",
            "close_raw", "close_adj", "volume"],
 }
 
 # %%
-# Column Names
+# Field Names
 
-# Standard column name mapping table
+# Field name mapping table
 FIELD_MAP = DATA_DIR / "dictionary" / "field_map.csv"
 
-# Column renaming
+# Field renaming
 def rename_fields(raw, source, dataset):
     """
-    Raw data with source column names replaced by standard column names.
+    Rename raw fields to standard field names.
 
     Parameters
     ----------
     raw : pd.DataFrame
-        Raw data of one dataset from one data source.
+        Raw data of one dataset from one data source. Index = row number,
+        Columns = source field names.
     source : str
-        Data source name, as registered in data/data_library.md.
+        Source name of `raw`.
     dataset : str
-        Dataset name in the data source, such as SEP.
+        Dataset name of `raw`.
 
     Returns
     -------
     renamed : pd.DataFrame
-        Raw data with standard column names. Columns not in the mapping table
-        keep their source names.
+        Raw data with standard field names. Index = row number, Columns =
+        standard names for mapped fields, source names for the rest.
     """
 
-    # Source column to standard column for this data source and dataset
+    # Look up the standard names of this dataset's fields in field_map
     field_map = pd.read_csv(FIELD_MAP)
     rows = (field_map["source"] == source) & (field_map["dataset"] == dataset)
     mapping = field_map.loc[rows].set_index("source_field")["field"]
 
-    # Rename the mapped columns
-    renamed = raw.rename(columns=mapping.to_dict())
+    # Rename the mapped fields
+    renamed = raw.rename(columns=mapping)
 
     return renamed
 
 # %%
-# Time
-
-# Session close times
-def close_times(dates, calendar):
+# Close timestamps of dates
+def map_date_timestamps(dates, calendar):
     """
-    UTC close times of the exchange sessions on the given dates, including
-    daylight saving time and early closes.
+    Map dates to UTC close timestamps.
 
     Parameters
     ----------
     dates : pd.Series
-        Session dates, without time of day.
+        Date per row.
     calendar : str
-        Exchange calendar code in exchange_calendars, such as XNYS.
+        Exchange calendar code in exchange_calendars.
 
     Returns
     -------
-    closes : pd.Series
-        UTC close time of each date, aligned with dates.
+    timestamps : pd.Series
+        UTC close timestamp per row, aligned with `dates`.
 
     Raises
     ------
@@ -83,15 +77,17 @@ def close_times(dates, calendar):
         If a date is not a session of the calendar.
     """
 
-    # Close time of every session from the first to the last date
-    cal = xcals.get_calendar(calendar, start=dates.min(), end=dates.max())
+    # Get close timestamps of all sessions from the first date to one day after
+    # the last, since the calendar needs its start before its end
+    cal = xcals.get_calendar(calendar, start=dates.min(),
+                             end=dates.max() + pd.Timedelta(days=1))
 
-    # Close time of each date
-    closes = dates.map(cal.closes)
-    missing = closes.isna() & dates.notna()
+    # Map each date to its close timestamp
+    timestamps = dates.map(cal.closes)
+
+    # Check every date is a session
+    missing = timestamps.isna() & dates.notna()
     if missing.any():
-        raise ValueError(f"{missing.sum()} rows fall on dates that are not "
-                         f"{calendar} sessions: "
-                         f"{dates[missing].dt.strftime('%Y-%m-%d').unique()[:10].tolist()}")
+        raise ValueError(f"dates not {calendar} sessions: {dates[missing].dt.strftime('%Y-%m-%d').unique().tolist()}")
 
-    return closes
+    return timestamps

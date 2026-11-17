@@ -29,8 +29,7 @@ DATE_COLUMNS = ["date", "datekey", "calendardate", "reportperiod", "lastupdated"
 def download_table(table, path, /, columns=None, overwrite=False, **filters):
     """
     Sharadar table download from Nasdaq Data Link as a bulk export
-    (export_table), with its download parameters written next to it as a .json
-    of the same name.
+    (export_table), with a .json record.
 
     Parameters
     ----------
@@ -79,7 +78,7 @@ def download_table(table, path, /, columns=None, overwrite=False, **filters):
 
     tmp.replace(path)
 
-    # Record the full download parameters in a .json next to the file
+    # Write the .json record
     params["downloaded_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     path.with_suffix(".json").write_text(json.dumps(params, indent=2, default=str))
 
@@ -103,9 +102,10 @@ def read_table(path, columns=None):
     Returns
     -------
     table : pd.DataFrame
-        Table with its date columns parsed as dates and its rows sorted by
+        Sharadar table with date columns parsed as dates and rows sorted by
         SORT_KEYS. Only empty fields are read as missing, so text such as the
-        ticker "NA" is kept as is.
+        ticker "NA" is kept as is. Index = row number, Columns = the table's
+        columns.
     """
 
     # Date columns among the columns to read

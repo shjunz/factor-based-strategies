@@ -42,7 +42,7 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 | --- | --- | --- | --- |
 | `extract.py` | M1.1、M1.1.3 | 数据提取 | Sharadar 数据下载与读取，下载时在数据文件旁写同名 `.json` 记录完整的下载参数 |
 | `identifiers.py` | M1.2.1 | 标识符 | 按 ticker 从 TICKERS 取 permaticker 作为 instrument_id |
-| `pipeline.py` | M1 | 流程 | 串起 Sharadar 的提取、变换、存储 |
+| `pipeline.py` | M1 | 流程 | 串起 Sharadar 的提取、变换、加载 |
 
 ### 通用模块（src/fbs/etl/）
 
@@ -54,7 +54,7 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 
 ### 数据目录（data/）
 
-`{分类}` = `{asset}/{category}/{frequency}`，取值见 research_spec.md M1.3.2。`bronze/`、`silver/`、`gold/` 只保存在本地，不提交到 GitHub。
+`{分类}` = `{asset_class}/{category}/{frequency}`，取值见 research_spec.md M1.3.2。`bronze/`、`silver/`、`gold/` 只保存在本地，不提交到 GitHub。
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |

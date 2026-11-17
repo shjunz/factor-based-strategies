@@ -7,11 +7,11 @@ jobs.py - In-memory store of download jobs. Jobs are lost when the server restar
 
 import threading
 import uuid
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from fbs.api.schemas.downloads import DownloadJob
 from fbs.etl.sharadar.extract import download_table
-from fbs.etl.paths import DATA_DIR, extraction_path
+from fbs.etl.paths import DATA_DIR, bronze_path
 
 # %%
 # Store
@@ -64,8 +64,9 @@ def _update(job_id, **fields):
 
 # Bronze file a request downloads into, named by its filters and columns
 def _target_path(request):
-    return extraction_path("Sharadar", request.product, request.table, request.filters,
-                           date.today(), ".zip", columns=request.columns)
+    return bronze_path("Sharadar", request.product, request.table, request.filters,
+                       datetime.now(timezone.utc).date(), ".zip",
+                       columns=request.columns)
 
 # Run a download job (called as a background task)
 def run_job(job_id):

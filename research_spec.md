@@ -397,7 +397,7 @@ M 代表研究模块（module）。
 
 清洗数据按资产类别、工具类型和数据频率分目录，每次清洗存为一个文件。清洗日期放在文件名最后，同一个数据集的文件按名称排序即按清洗日期排序：
 
-`data/gold/{asset}/{category}/{frequency}/{source}_{dataset}_{clean_date}.parquet`
+`data/gold/{asset_class}/{category}/{frequency}/{source}_{dataset}_{clean_date}.parquet`
 
 路径示例：
 - `data/gold/EQ/spot/daily/sharadar_SEP_20261116.parquet`
@@ -414,7 +414,7 @@ M 代表研究模块（module）。
    <tbody>
       <tr>
          <td nowrap>一级资产类别</td>
-         <td nowrap><code>asset</code></td>
+         <td nowrap><code>asset_class</code></td>
          <td nowrap>资产代码</td>
       </tr>
       <tr>

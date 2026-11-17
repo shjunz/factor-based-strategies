@@ -8,12 +8,12 @@ downloading INDICATORS first when there is none.
 
 import logging
 import threading
-from datetime import date
+from datetime import datetime, timezone
 
 import pandas as pd
 
 from fbs.etl.sharadar.extract import download_table
-from fbs.etl.paths import BRONZE_DIR, extraction_path
+from fbs.etl.paths import BRONZE_DIR, bronze_path
 
 # %%
 # Catalog
@@ -36,8 +36,8 @@ def indicators_file():
         if files:
             return files[-1]
 
-        path = extraction_path("Sharadar", "fund_prices", "INDICATORS", {},
-                               date.today(), ".zip")
+        path = bronze_path("Sharadar", "fund_prices", "INDICATORS", {},
+                           datetime.now(timezone.utc).date(), ".zip")
         try:
             download_table("INDICATORS", path)
         except Exception:
