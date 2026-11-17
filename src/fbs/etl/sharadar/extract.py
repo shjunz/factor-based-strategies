@@ -1,5 +1,5 @@
 '''
-sharadar.py - Download and read data from Sharadar products on Nasdaq Data Link.
+extract.py - Download and read data from Sharadar products on Nasdaq Data Link.
 '''
 
 # %%

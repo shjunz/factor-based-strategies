@@ -10,8 +10,8 @@ import uuid
 from datetime import date, datetime, timezone
 
 from fbs.api.schemas.downloads import DownloadJob
-from fbs.etl.extract.sharadar import download_table
-from fbs.etl.storage.paths import DATA_DIR, extraction_path
+from fbs.etl.sharadar.extract import download_table
+from fbs.etl.paths import DATA_DIR, extraction_path
 
 # %%
 # Store

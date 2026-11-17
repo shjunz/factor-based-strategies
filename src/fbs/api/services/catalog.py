@@ -12,8 +12,8 @@ from datetime import date
 
 import pandas as pd
 
-from fbs.etl.extract.sharadar import download_table
-from fbs.etl.storage.paths import BRONZE_DIR, extraction_path
+from fbs.etl.sharadar.extract import download_table
+from fbs.etl.paths import BRONZE_DIR, extraction_path
 
 # %%
 # Catalog

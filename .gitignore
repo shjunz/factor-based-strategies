@@ -219,7 +219,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Data files are never committed (research_spec.md M1.3.1). Everything under
+# Data files are never committed (research_spec.md M1). Everything under
 # data/ is ignored except the docs and mapping tables, so new layers stay out
 data/*
 !data/*.md

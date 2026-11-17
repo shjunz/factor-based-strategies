@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter
 
 from fbs.api.schemas.files import FileInfo
-from fbs.etl.storage.paths import BRONZE_DIR, DATA_DIR
+from fbs.etl.paths import BRONZE_DIR, DATA_DIR
 
 # %%
 # Routes

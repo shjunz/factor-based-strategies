@@ -34,35 +34,27 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 
 ## M1 — 数据ETL（src/fbs/etl/）
 
-### M1.1 — 数据提取（src/fbs/etl/extract/）
+每个数据源一个包，放该数据源专用的代码；通用模块放在 `etl/` 下，所有数据源共用。
+
+### 数据源包（src/fbs/etl/sharadar/）
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
-| `sharadar.py` | M1.1、M1.1.3 | 数据提取 | Sharadar 数据下载与读取，下载时在数据文件旁写同名 `.json` 记录完整的下载参数 |
+| `extract.py` | M1.1、M1.1.3 | 数据提取 | Sharadar 数据下载与读取，下载时在数据文件旁写同名 `.json` 记录完整的下载参数 |
+| `identifiers.py` | M1.2.1 | 标识符 | 按 ticker 从 TICKERS 取 permaticker 作为 instrument_id |
+| `pipeline.py` | M1 | 流程 | 串起 Sharadar 的提取、变换、存储 |
 
-### M1.2 — 数据变换（src/fbs/etl/transform/）
+### 通用模块（src/fbs/etl/）
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
-| `identifiers.py` | M1.2.1 | 标识符 | 取数据源的永久编号作为 instrument_id |
+| `paths.py` | M1、M1.1.3、M1.3.2 | 存储结构 | bronze / silver / gold 目录、原始数据文件命名（产品、数据集、过滤条件、列、下载日期）、清洗数据分类目录 |
 | `unify.py` | M1.2.2 | 格式统一 | 时间（UTC）、列名（field_map.csv）、各资产类别默认口径 |
-
-### M1.3 — 数据存储（src/fbs/etl/storage/）
-
-| 文件 | 章节 | 用途 | 描述 |
-| --- | --- | --- | --- |
-| `paths.py` | M1、M1.1.3、M1.3.1 | 存储结构 | bronze / silver / gold 目录、原始数据文件命名（产品、数据集、过滤条件、列、下载日期）、清洗数据分类目录 |
-| `loading.py` | M1.3.2 | 清洗数据格式 | 写清洗数据文件 |
-
-### 流程（src/fbs/etl/）
-
-| 文件 | 章节 | 用途 | 描述 |
-| --- | --- | --- | --- |
-| `pipeline.py` | M1 | 流程 | 串起提取、变换、存储 |
+| `loading.py` | M1.3.1 | 存储格式 | 写清洗数据文件，旁写同名 `.json` 记录数据起止日期和来源文件 |
 
 ### 数据目录（data/）
 
-`{分类}` = `{asset}/{category}/{frequency}`，取值见 research_spec.md M1.3.1。`bronze/`、`silver/`、`gold/` 只保存在本地，不提交到 GitHub。
+`{分类}` = `{asset}/{category}/{frequency}`，取值见 research_spec.md M1.3.2。`bronze/`、`silver/`、`gold/` 只保存在本地，不提交到 GitHub。
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
@@ -70,7 +62,7 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 | `dictionary/` | M1.2.2 | 映射表 | field_map.csv |
 | `bronze/{source}_{product}/{dataset}/` | M1.1.3 | 原始数据 | 数据提取的结果，原样保存，文件名为下载日期和过滤条件，旁有同名 `.json` |
 | `silver/` | M1.2 | 中间数据 | 数据变换过程中的中间结果 |
-| `gold/{分类}/` | M1.3.1、M1.3.2 | 清洗数据 | 数据变换的结果，研究直接读取，可选择上传到 S3 |
+| `gold/{分类}/` | M1.3.1、M1.3.2 | 清洗数据 | 数据变换的结果，研究直接读取，可选择上传到 S3，旁有同名 `.json` |
 
 ## M2 — 因子库（factor/）
 

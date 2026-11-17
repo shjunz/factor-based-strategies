@@ -14,8 +14,8 @@ from pathlib import Path
 # %%
 # Data Directory
 
-# Root of the data folder: <repo>/data (paths.py is at src/fbs/etl/storage/)
-DATA_DIR = Path(__file__).resolve().parents[4] / "data"
+# Root of the data folder: <repo>/data (paths.py is at src/fbs/etl/)
+DATA_DIR = Path(__file__).resolve().parents[3] / "data"
 
 # Data layers
 BRONZE_DIR = DATA_DIR / "bronze"
@@ -25,7 +25,7 @@ GOLD_DIR = DATA_DIR / "gold"
 # %%
 # Category Directory
 
-# 
+# Category directory
 def category_dir(asset_class, category, frequency):
     """
     Category directory {asset_class}/{category}/{frequency}, used by the gold

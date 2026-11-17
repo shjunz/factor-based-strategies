@@ -8,7 +8,7 @@ unify.py - Unify raw data into the standard format.
 import exchange_calendars as xcals
 import pandas as pd
 
-from fbs.etl.storage.paths import DATA_DIR
+from fbs.etl.paths import DATA_DIR
 
 # %%
 # Standard Columns
