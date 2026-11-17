@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-live = [            # paper trading runner (src/fbs/live): pip install -e ".[live]"
+live = [            # paper trading runner (src/fbs/live): uv sync --extra live
     "alpaca-py",
     "pyyaml",
     "matplotlib",   # dry-run PDF report (src/fbs/live/report.py)
@@ -30,3 +30,8 @@ live = [            # paper trading runner (src/fbs/live): pip install -e ".[liv
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv]
+# Use the CPython that uv downloads and manages, not a system or Anaconda Python,
+# so every researcher runs the same interpreter build
+python-preference = "only-managed"

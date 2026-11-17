@@ -1,6 +1,6 @@
 # Makefile - Common project operations. Run `make help` to list them.
 
-PYTHON ?= python3.12
+# Dependencies are declared in pyproject.toml and pinned in uv.lock; uv builds .venv from the lock
 VENV   := .venv
 BIN    := $(VENV)/bin
 
@@ -9,20 +9,20 @@ HOST ?= 127.0.0.1
 PORT ?= 8000
 APP  := fbs.api.main:app
 
-.PHONY: help venv install env clean clean-bronze api api-prod
+.PHONY: help install lock upgrade env clean clean-bronze api api-prod
 
 help:  ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-13s %s\n", $$1, $$2}'
 
-venv: $(BIN)/python  ## Create the virtual environment in .venv
+install:  ## Build .venv with the exact versions in uv.lock (incl. live extras)
+	uv sync --locked --extra live
 
-# Created only once, re-running venv over an existing .venv can break pip
-$(BIN)/python:
-	$(PYTHON) -m venv $(VENV)
-	$(BIN)/python -m pip install -U pip
+lock:  ## Re-resolve uv.lock after editing pyproject.toml by hand
+	uv lock
 
-install: venv  ## Install the fbs package in editable mode
-	$(BIN)/pip install -e .
+upgrade:  ## Upgrade every package to the newest allowed version and rewrite uv.lock
+	uv lock --upgrade
+	uv sync --locked --extra live
 
 env:  ## Create .env with an empty NASDAQ_DATA_LINK_API_KEY if it does not exist yet
 	@if [ -f .env ]; then echo ".env already exists, left unchanged"; \

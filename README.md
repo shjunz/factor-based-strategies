@@ -6,10 +6,15 @@
 
 根据系统选一种，按顺序执行。
 
+依赖由 [uv](https://docs.astral.sh/uv/) 管理：[pyproject.toml](pyproject.toml) 声明需要哪些包，[uv.lock](uv.lock) 锁定每个包的确切版本，所以每个人装出来的环境完全一样。Python 3.12 也由 uv 自动下载，不需要自己装。
+
 #### macOS / Linux
 
 ```bash
-# 1. 创建虚拟环境 .venv，安装 fbs 包和全部依赖
+# 0. 安装 uv（只需一次）
+brew install uv          # 没有 Homebrew 时：curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 1. 按 uv.lock 创建虚拟环境 .venv，安装 fbs 包和全部依赖（含 live 下单依赖）
 make install
 
 # 2. 生成 .env，再打开 .env 填入 API key（等号两边不要有空格）
@@ -21,13 +26,14 @@ make api
 
 #### Windows
 
-需要先从 [python.org](https://www.python.org/downloads/) 安装 Python 3.12（安装包自带 `py` 命令）。在 VS Code 里按 `` Ctrl+` `` 打开终端，默认就是 PowerShell。
+在 VS Code 里按 `` Ctrl+` `` 打开终端，默认就是 PowerShell。
 
 ```powershell
-# 1. 创建虚拟环境 .venv，安装 fbs 包和全部依赖
-py -3.12 -m venv .venv
-.venv\Scripts\python -m pip install -U pip
-.venv\Scripts\pip install -e .
+# 0. 安装 uv（只需一次），装完重开终端
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# 1. 按 uv.lock 创建虚拟环境 .venv，安装 fbs 包和全部依赖（含 live 下单依赖）
+uv sync --locked --extra live
 
 # 2. 生成 .env
 if (Test-Path .env) { ".env already exists, left unchanged" } else { Set-Content .env "NASDAQ_DATA_LINK_API_KEY=" -Encoding ascii }
@@ -84,7 +90,10 @@ if (Test-Path .env) { ".env already exists, left unchanged" } else { Set-Content
 
 | 命令 | 作用 |
 |---|---|
-| `make install` | 创建 `.venv`（只在第一次创建），安装 fbs 包和依赖 |
+| `make install` | 按 `uv.lock` 创建或同步 `.venv`，装上 fbs 包和全部依赖；pull 到新的 `uv.lock` 后再跑一次即可同步 |
+| `uv add 包名` | 新增依赖：同时改 `pyproject.toml` 和 `uv.lock`，两个文件一起提交 |
+| `make lock` | 手动改了 `pyproject.toml` 后，重新生成 `uv.lock` |
+| `make upgrade` | 把所有包升级到允许范围内的最新版，重写 `uv.lock` 并同步 `.venv` |
 | `make env` | 生成只含 `NASDAQ_DATA_LINK_API_KEY=` 一行的 `.env`，已存在时不覆盖 |
 | `make api` | 启动后端，修改代码后自动重启，只能本机访问 |
 | `make api-prod` | 启动后端，不自动重启，其他机器也能访问（部署用） |
@@ -96,7 +105,9 @@ Windows 下对应的 PowerShell 命令：
 
 | 对应 | PowerShell 命令 |
 |---|---|
-| `make install` | `py -3.12 -m venv .venv`，再 `.venv\Scripts\python -m pip install -U pip` 和 `.venv\Scripts\pip install -e .`（`.venv` 已存在时跳过第一条） |
+| `make install` | `uv sync --locked --extra live` |
+| `make lock` | `uv lock` |
+| `make upgrade` | `uv lock --upgrade`，再 `uv sync --locked --extra live` |
 | `make env` | `if (Test-Path .env) { ".env already exists, left unchanged" } else { Set-Content .env "NASDAQ_DATA_LINK_API_KEY=" -Encoding ascii }` |
 | `make api` | `.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 127.0.0.1 --port 8000 --reload` |
 | `make api-prod` | `.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 0.0.0.0 --port 8000` |
