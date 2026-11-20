@@ -69,7 +69,7 @@ def map_date_timestamps(dates, calendar):
     Returns
     -------
     timestamps : pd.Series
-        UTC close timestamp per row, aligned with `dates`.
+        UTC close timestamp per row.
 
     Raises
     ------
