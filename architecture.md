@@ -68,8 +68,8 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
-| `factor_library.md` | M2.2 | 因子卡片 | 每条因子一张卡片，文件开头为因子目录 |
-| `code/{factor_id}.py` | M2.2 | 因子代码 | 读取清洗数据，输出因子值 |
+| `factor_library.md` | M2.2.2 | 因子卡片 | 每条因子一张卡片，文件开头为因子目录 |
+| `code/{factor_id}.py` | M2.2.2 | 因子代码 | 读取清洗数据，输出因子值 |
 
 ## M3 — 研究样本（src/fbs/sample/）
 

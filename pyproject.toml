@@ -15,12 +15,16 @@ dependencies = [
     "pyarrow",
     "scipy",
     "statsmodels",
+    "numba",
     "nasdaq-data-link",
     "exchange-calendars",
     "fastapi",
     "uvicorn",
     "python-dotenv",
 ]
+
+[project.optional-dependencies]
+dev = ["pytest"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

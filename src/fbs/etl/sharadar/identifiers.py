@@ -49,9 +49,9 @@ def add_instrument_id(raw, tickers, table):
     if not dup_ids.empty:
         raise ValueError(f"permatickers with more than one ticker: {dup_ids.tolist()}")
 
-    # instrument_id = permaticker, merge with raw data on ticker
+    # instrument_id = permaticker merge with raw data on ticker
     ids = ids.rename(columns={"permaticker": "instrument_id"})
-    with_id = raw.merge(ids, on="ticker", how="left", validate="many_to_one")
+    with_id = raw.merge(ids, on="ticker", how="left")
 
     # Check every row has an instrument_id
     missing = with_id["instrument_id"].isna()

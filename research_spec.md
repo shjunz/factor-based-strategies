@@ -55,8 +55,8 @@ M 代表研究模块（module）。
          <td nowrap>—</td>
       </tr>
       <tr>
-         <td nowrap><a href="#m22-因子入库">M2.2 因子入库</a></td>
-         <td nowrap>—</td>
+         <td nowrap><a href="#m22-因子构建">M2.2 因子构建</a></td>
+         <td nowrap><a href="#m221-算子定义">M2.2.1 算子定义</a><br><a href="#m222-因子入库">M2.2.2 因子入库</a></td>
       </tr>
       <tr>
          <td nowrap rowspan="3"><a href="#m3-研究样本">M3</a></td>
@@ -180,7 +180,7 @@ M 代表研究模块（module）。
 
 #### M1.1.1 资产分类
 
-原始数据分为两级，一级为资产类别，二级为工具类型，各类别的代码如下：
+每个数据集按两级归类，一级为资产类别，二级为工具类型，各类别的代码如下：
 
 <div style="overflow-x: auto;">
 <table>
@@ -268,12 +268,12 @@ M 代表研究模块（module）。
       <tr>
          <td nowrap>数据源名称</td>
          <td nowrap><code>source</code></td>
-         <td nowrap>全小写</td>
+         <td nowrap>英文小写</td>
       </tr>
       <tr>
          <td nowrap>数据源中的产品</td>
          <td nowrap><code>product</code></td>
-         <td nowrap>全小写，单词间用下划线</td>
+         <td nowrap>英文小写，单词用下划线连接</td>
       </tr>
       <tr>
          <td nowrap>数据集名称</td>
@@ -312,11 +312,11 @@ M 代表研究模块（module）。
 
 #### M1.2.1 标识符
 
-标识符是数据源给每个标的（instrument）的永久编号，列名为 `instrument_id`，不随交易代码（symbol）变化，跨日期识别标的时一律用标识符。
+原始数据的每一行加上标识符 `instrument_id`，取数据源给每个标的（instrument）的永久编号。标识符不随交易代码（symbol）变化，跨日期识别标的时一律用标识符。
 
 #### M1.2.2 格式统一
 
-各数据源的原始数据先转换成相同的格式，各资产类别的标准列名如下：
+各数据源的原始数据转换成相同的格式，各资产类别的标准列名如下：
 - **股票**
 
   <div style="overflow-x: auto;">
@@ -378,7 +378,7 @@ M 代表研究模块（module）。
   </table>
   </div>
 
-我们创建一张映射表 `data/dictionary/field_map.csv`，用来把原始列名转换成标准列名。
+原始列名按映射表 `data/dictionary/field_map.csv` 转换成标准列名。
 
 #### M1.2.3 存储结构
 
@@ -389,9 +389,9 @@ M 代表研究模块（module）。
 #### M1.3.1 存储格式
 
 清洗数据以 Parquet 格式保存。Parquet 是一种列式存储的文件格式，同一列的数据连续存放，有以下特点：
-- **按列读取**：只读取需要的列，不必读取整个文件
-- **压缩存储**：同一列的数据类型相同，压缩率高，文件体积小
-- **保留类型**：文件记录每列的数据类型，读取后无需再转换
+- **按列读取**：只读需要的列，读取更快
+- **压缩存储**：同一列数据类型相同，压缩后文件小
+- **保留类型**：日期、数值等类型随文件保存，读取后无需转换
 
 #### M1.3.2 存储结构
 
@@ -452,13 +452,13 @@ M 代表研究模块（module）。
 
 ## M2. 因子库
 
-本节分为两部分：
+本节按因子入库的流程分为两部分：
 <a href="#m21-因子分类">M2.1</a> 定义因子的分类与编号；
-<a href="#m22-因子入库">M2.2</a> 定义因子的入库方式。
+<a href="#m22-因子构建">M2.2</a> 定义因子的构建与入库。
 
 ### M2.1 因子分类
 
-因子分类指按因子主题给因子编号。每个主题有一个代码，如下：
+因子分类指按因子主题给因子归类和编号。每条因子按主题归类，各主题的代码如下：
 
 <div style="overflow-x: auto;">
 <table>
@@ -527,9 +527,82 @@ M 代表研究模块（module）。
 
 因子编号为 `{主题代码}_{三位序号}`，记为 `factor_id`。
 
-### M2.2 因子入库
+### M2.2 因子构建
 
-因子入库指把每条因子的卡片和代码保存到因子库。每条因子在 `factor/factor_library.md` 中登记一张因子卡片，卡片包含该因子的元数据：
+因子构建指用算子写出因子的计算公式，并把因子的卡片和代码保存到因子库。
+
+#### M2.2.1 算子定义
+
+因子的计算公式沿用 WorldQuant 的算子写法，算子分为三类：
+- **截面算子**：在每个时间点上，对全部标的一起计算
+- **时序算子**：在每个标的上，对过去 `d` 根 bar 一起计算（`d` 包含当前 bar）
+- **逐元素算子**：对每一行单独计算
+
+各算子的含义如下：
+
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap>类别</th>
+         <th nowrap>含义</th>
+         <th nowrap>算子</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap rowspan="7">时序</td>
+         <td nowrap>过去第 <code>d</code> 根 bar 的值</td>
+         <td nowrap><code>delay(x, d)</code></td>
+      </tr>
+      <tr>
+         <td nowrap>过去 <code>d</code> 根 bar 的最小值</td>
+         <td nowrap><code>ts_min(x, d)</code></td>
+      </tr>
+      <tr>
+         <td nowrap>过去 <code>d</code> 根 bar 的均值</td>
+         <td nowrap><code>ts_mean(x, d)</code></td>
+      </tr>
+      <tr>
+         <td nowrap>过去 <code>d</code> 根 bar 中最大值距当前的 bar 数，最大值在当前 bar 时为 0，并列时取最近的一根</td>
+         <td nowrap><code>ts_argmax(x, d)</code></td>
+      </tr>
+      <tr>
+         <td nowrap>过去 <code>d</code> 根 bar 中最小值距当前的 bar 数，最小值在当前 bar 时为 0，并列时取最近的一根</td>
+         <td nowrap><code>ts_argmin(x, d)</code></td>
+      </tr>
+      <tr>
+         <td nowrap>过去 <code>d</code> 根 bar 中 <code>x</code> 与 <code>y</code> 的 Spearman 秩相关系数</td>
+         <td nowrap><code>ts_spearman(x, y, d)</code></td>
+      </tr>
+      <tr>
+         <td nowrap>每根 bar 增加 <code>c</code> 的计数</td>
+         <td nowrap><code>ts_step(c)</code></td>
+      </tr>
+      <tr>
+         <td nowrap rowspan="4">逐元素</td>
+         <td nowrap>自然对数</td>
+         <td nowrap><code>log(x)</code></td>
+      </tr>
+      <tr>
+         <td nowrap>两者中的较大值</td>
+         <td nowrap><code>max(x, y)</code></td>
+      </tr>
+      <tr>
+         <td nowrap>条件 <code>c</code> 成立取 <code>x</code>，否则取 <code>y</code></td>
+         <td nowrap><code>c ? x : y</code></td>
+      </tr>
+      <tr>
+         <td nowrap>两个条件同时成立</td>
+         <td nowrap><code>a &amp;&amp; b</code></td>
+      </tr>
+   </tbody>
+</table>
+</div>
+
+#### M2.2.2 因子入库
+
+每条因子在 `factor/factor_library.md` 中登记一张因子卡片，卡片包含该因子的元数据：
 - **因子编号**：按主题代码和序号生成的编号
 - **适用用途**：因子可用于截面、时序或两者
 - **计算公式**：因子值的计算方式
@@ -540,7 +613,7 @@ M 代表研究模块（module）。
 - **来源文献**：计算公式的出处
 - **负责人**：维护该因子的人
 
-因子代码保存在 `factor/code/{factor_id}.py`，读取清洗数据，输出因子值。因子值每行由 `instrument_id` 和 `timestamp` 唯一确定。
+每条因子一个代码文件，保存在 `factor/code/{factor_id}.py`。
 
 ---
 

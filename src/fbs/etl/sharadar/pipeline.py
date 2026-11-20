@@ -5,7 +5,6 @@ pipeline.py - ETL flow from raw data to clean data.
 # %%
 # Imports
 from datetime import datetime, timezone
-
 from fbs.etl.sharadar.extract import read_table
 from fbs.etl.loading import save_clean
 from fbs.etl.paths import BRONZE_DIR, gold_path

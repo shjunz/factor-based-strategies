@@ -26,8 +26,8 @@ def save_clean(clean, path, sources):
 
     Returns
     -------
-    Path
-        The written file.
+    path : Path
+        Destination Parquet file.
 
     Raises
     ------
@@ -50,12 +50,12 @@ def save_clean(clean, path, sources):
     tmp.replace(path)
 
     # Write the .json record
-    meta = {"start": f"{clean['timestamp'].min():%Y-%m-%d}",
-            "end": f"{clean['timestamp'].max():%Y-%m-%d}",
-            "sources": [p.relative_to(DATA_DIR).as_posix() for p in sources]}
-    meta_path = path.with_suffix(".json")
-    tmp = meta_path.with_name(meta_path.name + ".part")
-    tmp.write_text(json.dumps(meta, indent=2))
-    tmp.replace(meta_path)
+    record = {"start": f"{clean['timestamp'].min():%Y-%m-%d}",
+              "end": f"{clean['timestamp'].max():%Y-%m-%d}",
+              "sources": [p.relative_to(DATA_DIR).as_posix() for p in sources]}
+    record_path = path.with_suffix(".json")
+    tmp = record_path.with_name(record_path.name + ".part")
+    tmp.write_text(json.dumps(record, indent=2))
+    tmp.replace(record_path)
 
     return path

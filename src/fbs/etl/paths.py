@@ -43,7 +43,7 @@ def _filter_token(value):
     return _scalar(value)
 
 # Bronze file path
-def bronze_path(source, product, dataset, filters, download_date, suffix,
+def bronze_path(source, product, dataset, download_date, filters, suffix,
                 columns=None):
     """
     Raw data file in the bronze layer, at
@@ -53,8 +53,7 @@ def bronze_path(source, product, dataset, filters, download_date, suffix,
     Filters are written as column=value joined by _, sorted by column, with
     dates as YYYYMMDD, a range as start-end (either side may be empty) and a
     list joined by commas. Selected columns are written the same way under the
-    key columns. A download of the whole dataset is named ALL. The full filters
-    are kept in the .json written next to the file by download_table.
+    key columns. A download of the whole dataset is named ALL.
 
     Parameters
     ----------
@@ -64,30 +63,30 @@ def bronze_path(source, product, dataset, filters, download_date, suffix,
         Product name of `source`.
     dataset : str
         Dataset name of `product`.
-    filters : dict
-        Column filters of the download. Empty for the whole dataset.
     download_date : datetime.date
         Download date.
+    filters : dict
+        Row filters for the download. Empty for the whole dataset.
     suffix : str
-        File extension returned by `source`.
+        File extension of the downloaded file.
     columns : list of str
         Columns selected for the download. All columns if None.
 
     Returns
     -------
     path : Path
-        Absolute path of the raw data file.
+        Path of the raw data file.
 
     Examples
     --------
-    >>> bronze_path("Sharadar", "fund_prices", "SFP",
+    >>> bronze_path("Sharadar", "fund_prices", "SFP", date(2026, 11, 1),
     ...             {"ticker": ["SPY", "QQQ"], "date": {"gte": "2024-01-01"}},
-    ...             date(2026, 11, 1), ".zip").name
+    ...             ".zip").name
     '20261101_date=20240101-_ticker=QQQ,SPY.zip'
-    >>> bronze_path("Sharadar", "fund_prices", "SFP", {"ticker": "SPY"},
-    ...             date(2026, 11, 1), ".zip", columns=["date", "close"]).name
+    >>> bronze_path("Sharadar", "fund_prices", "SFP", date(2026, 11, 1),
+    ...             {"ticker": "SPY"}, ".zip", columns=["date", "close"]).name
     '20261101_columns=close,date_ticker=SPY.zip'
-    >>> bronze_path("Sharadar", "fund_prices", "SFP", {}, date(2026, 11, 1),
+    >>> bronze_path("Sharadar", "fund_prices", "SFP", date(2026, 11, 1), {},
     ...             ".zip").name
     '20261101_ALL.zip'
     """
@@ -102,8 +101,6 @@ def bronze_path(source, product, dataset, filters, download_date, suffix,
     return path
 
 # %%
-# Gold Path
-
 # Gold file path
 def gold_path(asset_class, category, frequency, source, dataset, clean_date):
     """

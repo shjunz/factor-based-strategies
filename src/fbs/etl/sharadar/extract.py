@@ -4,10 +4,8 @@ extract.py - Download and read data from Sharadar products on Nasdaq Data Link.
 
 # %%
 # Imports
-
 import json
 from datetime import datetime, timezone
-
 import nasdaqdatalink
 import pandas as pd
 
@@ -23,13 +21,10 @@ DATE_COLUMNS = ["date", "datekey", "calendardate", "reportperiod", "lastupdated"
                 "lastquarter"]
 
 # %%
-# Table Download
-
 # Sharadar table download
 def download_table(table, path, /, columns=None, overwrite=False, **filters):
     """
-    Sharadar table download from Nasdaq Data Link as a bulk export
-    (export_table), with a .json record.
+    Sharadar table download from Nasdaq Data Link, with a .json record.
 
     Parameters
     ----------
@@ -38,23 +33,25 @@ def download_table(table, path, /, columns=None, overwrite=False, **filters):
     path : Path
         Destination zip file.
     columns : list of str
-        Columns to keep. All columns if None.
+        Columns selected for the download. All columns if None.
     overwrite : bool
-        Replace an existing file instead of raising.
+        True to replace an existing file at `path`.
     **filters
-        Optional Nasdaq Data Link filters on the table's columns,
-        e.g. ticker=['AADR', 'BAB'] or date={'gte': '2017-01-01'}.
-        table and path are positional-only, so a column named "table"
-        (TICKERS, INDICATORS) can be filtered as table='SFP'.
+        Row filters for the download, e.g. ticker=['AADR', 'BAB'] or
+        date={'gte': '2017-01-01'}.
+        A filter on the column named "table" (in TICKERS, INDICATORS) is
+        passed as table='SFP'; table and path are positional-only for this.
 
     Returns
     -------
-    Path
-        The written file.
-    """
+    path : Path
+        Destination zip file.
 
-    # Keep the parameters as passed, before the filters take the query options
-    params = {"table": table, "filters": dict(filters), "columns": columns}
+    Raises
+    ------
+    FileExistsError
+        If `path` exists and `overwrite` is False.
+    """
 
     # Stop if the file already exists
     if path.exists() and not overwrite:
@@ -63,30 +60,30 @@ def download_table(table, path, /, columns=None, overwrite=False, **filters):
     # Create the parent directories if they don't exist
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Query options: selected columns
-    qopts = filters.pop("qopts", {})
+    # Build the query from the filters and the selected columns
+    query = dict(filters)
     if columns is not None:
-        qopts["columns"] = list(columns)
-    if qopts:
-        filters["qopts"] = qopts
+        query["qopts"] = {"columns": list(columns)}
 
     # Write to a temporary file so an interrupted download leaves no partial file
     tmp = path.with_name(path.name + ".part")
 
     # API key is read from the NASDAQ_DATA_LINK_API_KEY environment variable
-    nasdaqdatalink.export_table(f"SHARADAR/{table}", filename=str(tmp), **filters)
+    nasdaqdatalink.export_table(f"SHARADAR/{table}", filename=str(tmp), **query)
 
     tmp.replace(path)
 
     # Write the .json record
-    params["downloaded_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    path.with_suffix(".json").write_text(json.dumps(params, indent=2, default=str))
+    record = {"table": table, "filters": filters, "columns": columns,
+              "downloaded_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    record_path = path.with_suffix(".json")
+    tmp = record_path.with_name(record_path.name + ".part")
+    tmp.write_text(json.dumps(record, indent=2, default=str))
+    tmp.replace(record_path)
 
     return path
 
 # %%
-# Table Read
-
 # Sharadar table read
 def read_table(path, columns=None):
     """
@@ -103,20 +100,19 @@ def read_table(path, columns=None):
     -------
     table : pd.DataFrame
         Sharadar table with date columns parsed as dates and rows sorted by
-        SORT_KEYS. Only empty fields are read as missing, so text such as the
-        ticker "NA" is kept as is. Index = row number, Columns = the table's
-        columns.
+        SORT_KEYS. Index = row number, Columns = the table's columns.
     """
 
-    # Date columns among the columns to read
-    names = pd.read_csv(path, nrows=0).columns if columns is None else columns
-    dates = [c for c in DATE_COLUMNS if c in names]
+    # Read the zipped CSV
+    # Only empty fields as missing values
+    table = pd.read_csv(path, usecols=columns, keep_default_na=False, na_values=[""])
 
-    # Read the zipped CSV, with empty fields as the only missing values
-    table = pd.read_csv(path, usecols=columns, parse_dates=dates,
-                        keep_default_na=False, na_values=[""])
+    # Parse the date columns as dates
+    for col in DATE_COLUMNS:
+        if col in table.columns:
+            table[col] = pd.to_datetime(table[col])
 
-    # Sort on whichever keys the table has (downloaded rows are unsorted)
+    # Sort on keys
     table = table.sort_values([k for k in SORT_KEYS if k in table.columns],
                               ignore_index=True)
 
