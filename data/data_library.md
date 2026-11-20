@@ -1,19 +1,36 @@
 # 数据库
 
-每个数据源一张卡片，每张表一行。
+每份数据一张卡片，目录如下：
 
-## 数据卡片 1：Sharadar
+<div style="overflow-x: auto;">
+<table>
+   <thead>
+      <tr>
+         <th nowrap>数据源</th>
+         <th nowrap>产品</th>
+         <th nowrap>数据</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td nowrap>Sharadar</td>
+         <td nowrap>Sharadar Equity Prices</td>
+         <td nowrap><a href="#sharadar_sep">SEP</a>、<a href="#sharadar_tickers">TICKERS</a>、<a href="#sharadar_actions">ACTIONS</a></td>
+      </tr>
+   </tbody>
+</table>
+</div>
 
-### Sharadar 产品与可下载表
+## Sharadar
 
-`download_table(table, path, **filters)` 的 `table` 参数取下表中的表代码，实际请求为 `SHARADAR/{table}`。同一张表（如 `TICKERS`、`ACTIONS`、`INDICATORS`）可能出现在多个产品中，代码相同，只需下载一次。
+### 概览
 
 <div style="overflow-x: auto;">
 <table>
    <thead>
       <tr>
          <th nowrap>产品</th>
-         <th nowrap>可用表 <code>table</code></th>
+         <th nowrap>数据</th>
       </tr>
    </thead>
    <tbody>
@@ -35,52 +52,130 @@
       </tr>
       <tr>
          <td nowrap>Sharadar Fund Prices</td>
-        <td nowrap><code>SFP, ACTIONS, TICKERS, METRICS, INDICATORS</code></td>
+         <td nowrap><code>SFP, ACTIONS, TICKERS, METRICS, INDICATORS</code></td>
       </tr>
    </tbody>
 </table>
 </div>
 
+### 数据卡片
 
-### 表字段
+<a id="sharadar_sep"></a>
 
-<div style="overflow-x: auto;">
 <table>
-   <thead>
-      <tr>
-         <th nowrap>一级资产类别</th>
-         <th nowrap>二级工具类型</th>
-         <th nowrap>获取方式</th>
-         <th nowrap>数据字段</th>
-         <th nowrap>数据频率</th>
-         <th nowrap>发布时间</th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td nowrap>股票 <code>EQ</code></td>
-         <td nowrap>现货 <code>spot</code></td>
-         <td nowrap>API：<code>SHARADAR/SEP</code></td>
-         <td nowrap><code>ticker, date, open, high, low, close, volume, closeadj, closeunadj, lastupdated</code></td>
-         <td nowrap>日频</td>
-         <td nowrap>T 日收盘后</td>
-      </tr>
-      <tr>
-         <td nowrap>股票 <code>EQ</code></td>
-         <td nowrap>现货 <code>spot</code></td>
-         <td nowrap>API：<code>SHARADAR/TICKERS</code></td>
-         <td nowrap><code>table, permaticker, ticker, name, exchange, isdelisted, category, cusips, siccode, sicsector, sicindustry, figi, famaindustry, sector, industry, scalemarketcap, scalerevenue, relatedtickers, currency, location, lastupdated, firstadded, firstpricedate, lastpricedate, firstquarter, lastquarter, secfilings, companysite</code></td>
-         <td nowrap>快照</td>
-         <td nowrap>未提供</td>
-      </tr>
-      <tr>
-         <td nowrap>股票 <code>EQ</code></td>
-         <td nowrap>现货 <code>spot</code></td>
-         <td nowrap>API：<code>SHARADAR/ACTIONS</code></td>
-         <td nowrap><code>date, action, ticker, name, value, contraticker, contraname</code></td>
-         <td nowrap>事件</td>
-         <td nowrap>未提供</td>
-      </tr>
-   </tbody>
+   <tr>
+      <th colspan="2" align="left">数据卡片 1：Sharadar SEP</th>
+   </tr>
+   <tr>
+      <td nowrap><b>数据源</b></td>
+      <td>Sharadar</td>
+   </tr>
+   <tr>
+      <td nowrap><b>产品</b></td>
+      <td>Sharadar Equity Prices</td>
+   </tr>
+   <tr>
+      <td nowrap><b>一级资产类别</b></td>
+      <td>股票 <code>EQ</code></td>
+   </tr>
+   <tr>
+      <td nowrap><b>二级工具类型</b></td>
+      <td>现货 <code>spot</code></td>
+   </tr>
+   <tr>
+      <td nowrap><b>获取方式</b></td>
+      <td>API</td>
+   </tr>
+   <tr>
+      <td nowrap><b>数据字段</b></td>
+      <td><code>ticker, date, open, high, low, close, volume, closeadj, closeunadj, lastupdated</code></td>
+   </tr>
+   <tr>
+      <td nowrap><b>数据频率</b></td>
+      <td>日频</td>
+   </tr>
+   <tr>
+      <td nowrap><b>发布时间</b></td>
+      <td>T 日收盘后</td>
+   </tr>
 </table>
-</div>
+
+<a id="sharadar_tickers"></a>
+
+<table>
+   <tr>
+      <th colspan="2" align="left">数据卡片 2：Sharadar TICKERS</th>
+   </tr>
+   <tr>
+      <td nowrap><b>数据源</b></td>
+      <td>Sharadar</td>
+   </tr>
+   <tr>
+      <td nowrap><b>产品</b></td>
+      <td>Sharadar Equity Prices</td>
+   </tr>
+   <tr>
+      <td nowrap><b>一级资产类别</b></td>
+      <td>股票 <code>EQ</code></td>
+   </tr>
+   <tr>
+      <td nowrap><b>二级工具类型</b></td>
+      <td>现货 <code>spot</code></td>
+   </tr>
+   <tr>
+      <td nowrap><b>获取方式</b></td>
+      <td>API</td>
+   </tr>
+   <tr>
+      <td nowrap><b>数据字段</b></td>
+      <td><code>table, permaticker, ticker, name, exchange, isdelisted, category, cusips, siccode, sicsector, sicindustry, figi, famaindustry, sector, industry, scalemarketcap, scalerevenue, relatedtickers, currency, location, lastupdated, firstadded, firstpricedate, lastpricedate, firstquarter, lastquarter, secfilings, companysite</code></td>
+   </tr>
+   <tr>
+      <td nowrap><b>数据频率</b></td>
+      <td>快照</td>
+   </tr>
+   <tr>
+      <td nowrap><b>发布时间</b></td>
+      <td>未提供</td>
+   </tr>
+</table>
+
+<a id="sharadar_actions"></a>
+
+<table>
+   <tr>
+      <th colspan="2" align="left">数据卡片 3：Sharadar ACTIONS</th>
+   </tr>
+   <tr>
+      <td nowrap><b>数据源</b></td>
+      <td>Sharadar</td>
+   </tr>
+   <tr>
+      <td nowrap><b>产品</b></td>
+      <td>Sharadar Equity Prices</td>
+   </tr>
+   <tr>
+      <td nowrap><b>一级资产类别</b></td>
+      <td>股票 <code>EQ</code></td>
+   </tr>
+   <tr>
+      <td nowrap><b>二级工具类型</b></td>
+      <td>现货 <code>spot</code></td>
+   </tr>
+   <tr>
+      <td nowrap><b>获取方式</b></td>
+      <td>API</td>
+   </tr>
+   <tr>
+      <td nowrap><b>数据字段</b></td>
+      <td><code>date, action, ticker, name, value, contraticker, contraname</code></td>
+   </tr>
+   <tr>
+      <td nowrap><b>数据频率</b></td>
+      <td>事件</td>
+   </tr>
+   <tr>
+      <td nowrap><b>发布时间</b></td>
+      <td>未提供</td>
+   </tr>
+</table>

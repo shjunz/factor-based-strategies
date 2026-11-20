@@ -15,13 +15,16 @@ dependencies = [
     "pyarrow",
     "scipy",
     "statsmodels",
+    "numba",
     "nasdaq-data-link",
+    "exchange-calendars",
     "fastapi",
     "uvicorn",
     "python-dotenv",
 ]
 
 [project.optional-dependencies]
+dev = ["pytest"]
 live = [            # paper trading runner (src/fbs/live): uv sync --extra live
     "alpaca-py",
     "pyyaml",

@@ -36,9 +36,9 @@ import nasdaqdatalink
 import pandas as pd
 from dotenv import load_dotenv
 
-from fbs.etl.extract.sharadar import download_table, read_table
-from fbs.etl.storage.paths import BRONZE_DIR, category_dir, extraction_path
-from fbs.etl.transform.unify import rename_fields
+from fbs.etl.paths import BRONZE_DIR, bronze_path
+from fbs.etl.sharadar.extract import download_table, read_table
+from fbs.etl.unify import rename_fields
 
 # %%
 # Constants
@@ -48,7 +48,7 @@ DATA_DIR = Path(__file__).parent / "data"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # Gold store, ticker -> instrument_id map and sync state
-GOLD_DIR = DATA_DIR / "gold" / category_dir("EQ", "spot", "daily")
+GOLD_DIR = DATA_DIR / "gold" / "EQ" / "spot" / "daily"
 MAP_FILE = DATA_DIR / "gold" / "instrument_map.csv"
 STATE_FILE = DATA_DIR / "sync_state.json"
 
@@ -88,12 +88,12 @@ def _download(table, /, columns=None, **filters):
     """
 
     # Same file name as the repo bronze layer, under this strategy's data folder
-    repo_path = extraction_path("Sharadar", "equity_prices", table, filters, date.today(), ".zip",
-                                columns=columns)
+    repo_path = bronze_path("Sharadar", "equity_prices", table, date.today(), filters, ".zip",
+                            columns=columns)
     path = DATA_DIR / "bronze" / repo_path.relative_to(BRONZE_DIR)
 
     # Download and read back
-    download_table(table, path, method="get", columns=columns, overwrite=True, **filters)
+    download_table(table, path, columns=columns, overwrite=True, **filters)
     raw = read_table(path)
 
     return raw
@@ -203,7 +203,7 @@ def _to_gold(sep, figi):
         composite FIGI, then FIELDS.
     """
 
-    prices = rename_fields(sep, "Sharadar")
+    prices = rename_fields(sep, "Sharadar", "SEP")
     close = (prices["timestamp"] + pd.Timedelta(hours=16)).dt.tz_localize(NY)
     gold = pd.DataFrame({"timestamp": close.dt.tz_convert("UTC"),
                          "instrument_id": prices["ticker"].map(figi).astype("string")})

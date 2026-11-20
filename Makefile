@@ -73,6 +73,6 @@ diagrams-preview: diagrams  ## Also render PNGs into build/diagrams/ for reviewi
 	$(JAVA) -Djava.awt.headless=true -jar $(TOOLS)/plantuml.jar -tpng -charset UTF-8 $(LAYOUT) \
 		$$(ls $(PUML)/structurizr-*.puml | grep -v -- '-key.puml')
 
-clean-bronze:  ## Delete downloaded data in data/bronze, keeping data/bronze/sample
-	@read -p "Delete everything in data/bronze except sample/? [y/N] " ans && [ "$$ans" = y ]
-	find data/bronze -mindepth 1 -maxdepth 1 ! -name sample -exec rm -rf {} +
+clean-bronze:  ## Delete all downloaded data in data/bronze
+	@read -p "Delete everything in data/bronze? [y/N] " ans && [ "$$ans" = y ]
+	find data/bronze -mindepth 1 -maxdepth 1 -exec rm -rf {} +

@@ -219,15 +219,11 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Data files are never committed (research_spec.md M1.3.1). Everything under
+# Data files are never committed (research_spec.md M1). Everything under
 # data/ is ignored except the docs and mapping tables, so new layers stay out
 data/*
 !data/*.md
 !data/dictionary/
-# Only the samples of the bronze layer are committed
-!data/bronze/
-data/bronze/*
-!data/bronze/sample/
 
 # Each strategy's own data files stay on the researcher's machine;
 # only the README that reserves the data folder is committed
