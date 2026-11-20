@@ -1,10 +1,12 @@
 '''
 report.py - The two PDF reports of a strategy, both written to records/.
 
-Dry-run report  rebalance without --submit -> records/{run}.pdf
-                Before going live: run summary, checks, target weights,
-                planned orders and a backtest. The researcher reads it to
-                decide whether the strategy can go live.
+Run report      every rebalance run -> records/{exec_session}-{dryrun|rebalance}.pdf
+                Run summary, checks, target weights, planned orders and a
+                backtest, the same layout for a dry run and a --submit run.
+                Before going live the researcher reads the dry-run one to
+                decide whether the strategy can go live; after, the
+                rebalance one shows what each run decided.
 Live report     performance after --submit runs -> records/{last_session}-performance.pdf
                 After going live: paper results against the backtest of the
                 same sessions, and fill quality. The researcher reads it to
@@ -34,13 +36,10 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from matplotlib.backends.backend_pdf import PdfPages  # noqa: E402
 
-from fbs.live.plan import rebalance_sessions  # noqa: E402
+from fbs.backtesting import BARS_PER_YEAR, backtest, metrics, split_segments  # noqa: E402,F401
 
 # %%
 # Constants
-
-# Sessions per year, for annualising
-BARS_PER_YEAR = 252
 
 # Page size in inches
 A4 = (8.27, 11.69)
@@ -49,113 +48,8 @@ A4 = (8.27, 11.69)
 MAX_ORDER_ROWS = 28
 
 # %%
-# Shared: backtest, metrics, tables
+# Shared: tables
 
-# Daily backtest returns
-def backtest(prices, weights, rule):
-    """
-    Daily strategy and equal-weight benchmark returns, and one-way turnover.
-
-    Parameters
-    ----------
-    prices : pd.DataFrame
-        Prices from data.fetch. Index = session dates, Columns = symbols.
-    weights : pd.DataFrame
-        Target weights from weights.compute, same shape as `prices`.
-    rule : {"D", "W", "M"}
-        config.yaml rebalance.
-
-    Returns
-    -------
-    bt : pd.DataFrame
-        Index = session dates from the first invested session + 2, Columns =
-        strategy, benchmark (daily returns) and turnover.
-    """
-
-    # Daily returns
-    rets = prices.astype(float).pct_change(fill_method=None)
-
-    # Held weights: refreshed on rebalance sessions, carried forward in between
-    sessions = list(weights.index.date)
-    is_rebalance = pd.Series(weights.index.date, index=weights.index).isin(rebalance_sessions(sessions, rule))
-    held = weights.where(is_rebalance, axis=0).ffill().fillna(0.0).reindex(columns=rets.columns, fill_value=0.0)
-
-    # Weights of t earn the return of t+2 (bought at the close of t+1)
-    bt = pd.DataFrame({
-        "strategy": (held.shift(2) * rets.fillna(0.0)).sum(axis=1),
-        "benchmark": rets.mean(axis=1),
-        "turnover": held.diff().abs().sum(axis=1).shift(1) / 2,
-    })
-
-    # Start once the strategy holds anything
-    invested = held.abs().sum(axis=1) > 0
-    if not invested.any():
-        return bt.iloc[0:0]
-    bt = bt.loc[invested.idxmax():].iloc[2:].fillna(0.0)
-
-    return bt
-
-# Performance metrics
-def metrics(r):
-    """
-    Annual return, annual volatility, Sharpe and maximum drawdown.
-
-    Parameters
-    ----------
-    r : pd.Series
-        Daily returns.
-
-    Returns
-    -------
-    m : dict of str to float
-        The four metrics, all NaN for fewer than 2 returns or zero volatility.
-    """
-
-    # Not enough data
-    if len(r) < 2 or r.std() == 0:
-        return {"Annual return": np.nan, "Annual vol": np.nan, "Sharpe": np.nan, "Max drawdown": np.nan}
-
-    equity = (1 + r).cumprod()
-    m = {
-        "Annual return": equity.iloc[-1] ** (BARS_PER_YEAR / len(r)) - 1,
-        "Annual vol": r.std() * np.sqrt(BARS_PER_YEAR),
-        "Sharpe": r.mean() / r.std() * np.sqrt(BARS_PER_YEAR),
-        "Max drawdown": (equity / equity.cummax() - 1).min(),
-    }
-
-    return m
-
-# IS / Embargo / OOS segments of a backtest
-def split_segments(bt, split):
-    """
-    Label each backtest session IS, Embargo or OOS by config.yaml split.
-
-    IS      = sessions up to split.is_end
-    Embargo = the next split.embargo_sessions sessions, not evaluated
-    OOS     = every later session, report only
-
-    Parameters
-    ----------
-    bt : pd.DataFrame
-        Output of backtest.
-    split : dict or None
-        config.yaml split: is_end, embargo_sessions. None for no split.
-
-    Returns
-    -------
-    segments : pd.Series
-        Index = bt.index, values "IS", "Embargo", "OOS"; all "Full" without a split.
-    """
-
-    if not split:
-        return pd.Series("Full", index=bt.index)
-
-    is_mask = bt.index <= pd.Timestamp(split["is_end"])
-    position = np.cumsum(~is_mask)   # 1 for the first session after is_end
-    segments = np.where(is_mask, "IS",
-                        np.where(position <= int(split["embargo_sessions"]), "Embargo", "OOS"))
-
-    return pd.Series(segments, index=bt.index)
 
 # Table on an axis
 def _table(ax, rows, header, title, col_widths=None):
@@ -190,8 +84,8 @@ def _table(ax, rows, header, title, col_widths=None):
 # %%
 # Dry-run report: before going live
 
-# Dry-run page 1: run summary
-def _dry_run_summary_page(pdf, strategy, record):
+# Run report page 1: run summary
+def _run_summary_page(pdf, strategy, record):
     """
     Page 1: run summary, checks, target weights and planned orders.
 
@@ -209,7 +103,8 @@ def _dry_run_summary_page(pdf, strategy, record):
     cfg, paper = strategy.config, strategy.paper
 
     # Title and run information
-    fig.text(0.06, 0.95, f"{strategy.name} - dry run report", fontsize=16, fontweight="bold")
+    kind = "rebalance" if record["mode"] == "submit" else "dry run"
+    fig.text(0.06, 0.95, f"{strategy.name} - {kind} report", fontsize=16, fontweight="bold")
     info = [
         f"Signal session: {record['signal_session']}    Execution: close of {record['exec_session']}",
         f"Run at: {record['run_at'][:19]}    Status: {record['status']}",
@@ -221,6 +116,10 @@ def _dry_run_summary_page(pdf, strategy, record):
         f"Capital: {float(paper['capital']):,.0f} USD    enabled: {paper['enabled']}    "
         f"Turnover: {record.get('turnover', 'n/a')}",
     ]
+    if record["mode"] == "submit":
+        sent = record["submitted"]
+        rejected = sum(1 for x in sent if x["status"].startswith("rejected"))
+        info.append(f"Submitted: {len(sent)} orders    Rejected: {rejected}")
     for i, line in enumerate(info):
         fig.text(0.06, 0.915 - i * 0.022, line, fontsize=9)
 
@@ -307,11 +206,11 @@ def _dry_run_backtest_page(pdf, bt, rule, split):
     pdf.savefig(fig)
     plt.close(fig)
 
-# Dry-run PDF
-def write_dry_run_report(path, strategy, record, prices, weights):
+# Run report PDF
+def write_run_report(path, strategy, record, prices, weights):
     """
-    Write the dry-run PDF: the summary page, then the backtest page when there
-    is enough data.
+    Write the run report PDF of a dry run or a --submit run: the summary page,
+    then the backtest page when there is enough data.
 
     Parameters
     ----------
@@ -334,7 +233,7 @@ def write_dry_run_report(path, strategy, record, prices, weights):
 
     rule = strategy.config["rebalance"]
     with PdfPages(path) as pdf:
-        _dry_run_summary_page(pdf, strategy, record)
+        _run_summary_page(pdf, strategy, record)
         if prices is not None and weights is not None:
             bt = backtest(prices, weights, rule)
             if len(bt) > 1:

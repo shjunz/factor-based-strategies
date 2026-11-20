@@ -26,12 +26,20 @@ def compute(data, params):
         short < 0, no position = 0. Row t uses data up to session t only.
     """
 
-    # TODO 1. Signal: one score per stock per session, e.g. data.shift(skip) / data.shift(lookback) - 1
+    # 1. Signal: one score per stock per session, e.g. signal = data.shift(skip) / data.shift(lookback) - 1
 
-    # TODO 2. Eligible: drop stocks without a price today or enough history, e.g. signal.where(data.notna())
+    # signal =
 
-    # TODO 3. Select: the stocks to hold, e.g. signal.rank(axis=1, ascending=False) <= top_n
+    # 2. Eligible: drop stocks without a price today or enough history, e.g. eligible_signal = signal.where(data.notna())
 
-    # TODO 4. Weights: e.g. selected.div(selected.sum(axis=1), axis=0) * gross, then fillna(0.0)
+    # eligible_signal =
+
+    # 3. Select: the stocks to hold, e.g. selected_asset = eligible_signal.rank(axis=1, ascending=False) <= top_n
+
+    # selected_asset =
+
+    # 4. Weights: e.g. selected_asset_rebalance_weights = selected_asset.div(selected_asset.sum(axis=1), axis=0) * gross, then fillna(0.0)
+
+    # selected_asset_rebalance_weights =
 
     raise NotImplementedError("fill in compute in weights.py")

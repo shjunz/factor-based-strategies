@@ -14,8 +14,10 @@ Reading order:
     __main__.py  command line
     runner.py    one run, step by step: rebalance, status, performance, halt
     loader.py    read and check the strategy folder
-    plan.py      rebalance sessions, target weights -> whole-share orders
-    checks.py    pre-trade checks
     broker.py    the only file that talks to Alpaca
     report.py    PDF reports: dry-run report (before going live) and live report (after)
+
+Shared with other packages:
+    fbs.risk       risk gates: pre_trade (data, weights, account), post_trade (orders)
+    fbs.execution  rebalance sessions, target weights -> whole-share orders
 '''

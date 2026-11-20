@@ -2,6 +2,36 @@
 
 因子策略研究项目。研究方法见 [research_spec.md](research_spec.md)，各章节对应的代码文件见 [architecture.md](architecture.md)。
 
+## 架构（C4）
+
+图由 [docs/architecture/workspace.dsl](docs/architecture/workspace.dsl)（Structurizr DSL）生成。改图只改这个文件，然后运行 `make diagrams` 重新生成 `docs/architecture/` 下的 SVG。每往下一层，就到对应文件夹的 README 里看。设计细节见 [architecture_new.md](architecture_new.md)。
+
+### L1 系统上下文
+
+![L1 系统上下文](docs/architecture/L1-context.svg)
+
+Quant Researcher 在本系统里研究因子，并把自研的通用函数移植到 QuantConnect；在 QuantConnect 上用 QC Data 做因子挖掘和策略回测，表现好的策略购买 Oxford Street 的数据，由 Quant Researcher 移植到 `strategy/`。两种回测分工不同：Quant Researcher 负责 QuantConnect 上的回测，Quant Developer 负责本系统上的回测与实盘交易（Alpaca）。
+
+### L2 容器
+
+![L2 容器](docs/architecture/L2-containers.svg)
+
+箭头表示数据流向，编号是先后顺序：① 在本系统研究、评价因子 → ② 把自研的通用函数移植到 QuantConnect → ③ QuantConnect 取 QC Data → ④ 在 QuantConnect 做因子挖掘、策略回测 → ⑤ 表现好的策略购买数据 → ⑥ 移植策略 → ⑦ Quant Developer 做回测与实盘交易 → ⑧ 启动策略包 → ⑨–⑫ 缺数据时增量下载、写入、读取 → ⑬ 返回调仓权重 → ⑭ GET 账户和持仓 → ⑮ Pre-trade 风控检查数据、调仓权重、账户 → ⑯ 通过检查的调仓权重进入订单执行 → ⑰ 整股订单进入 Post-trade 风控 → ⑱ 调仓权重与计划订单进入回测 → ⑲ 回测运行记录（计划订单 + 历史模拟绩效，不下单）→ ⑳ 整股订单回到实盘交易 → ㉑ POST 订单 → ㉒ 实盘运行记录（已提交订单 + 实盘与回测的绩效对比）。L1 图上的编号和这里一致。API 箭头：GET 从 API 指向读取方，POST 从发送方指向 API。
+
+### 各容器的 README
+
+| 容器 | 类型 | 代码 | L3 / L4 在哪看 |
+| --- | --- | --- | --- |
+| 策略包 | 每个策略一个，被 live 和回测加载 | `strategy/{name}/` | [strategy/README.md](strategy/README.md) |
+| 数据下载 | 由策略的 data.py 调用 | `src/fbs/etl/` | [src/fbs/etl/README.md](src/fbs/etl/README.md) |
+| 回测 | 被 live 的报告调用 | `src/fbs/backtesting/` | [src/fbs/backtesting/README.md](src/fbs/backtesting/README.md) |
+| 实盘交易 | 命令行，AWS 上定时运行 | `src/fbs/live/` | [src/fbs/live/README.md](src/fbs/live/README.md)（含一次 rebalance 的流程图和 AWS 部署图） |
+| 风控 | 共享库 | `src/fbs/risk/` | [src/fbs/risk/README.md](src/fbs/risk/README.md) |
+| 订单执行 | 共享库 | `src/fbs/execution/` | [src/fbs/execution/README.md](src/fbs/execution/README.md) |
+| 策略研究 | 研究用的函数库 | `src/fbs/research/` | [src/fbs/research/README.md](src/fbs/research/README.md) |
+
+图中灰色虚线的框和箭头是已经设计、还没实现的部分（architecture_new.md §5.15）。
+
 ### 准备
 
 根据系统选一种，按顺序执行。
@@ -119,8 +149,14 @@ Windows 下对应的 PowerShell 命令：
 
 | 目录 | 内容 |
 |---|---|
-| `src/fbs/etl/` | M1 数据 ETL：提取、变换、存储 |
-| `src/fbs/api/` | 后端 API，M1 数据下载的一层封装 |
-| `src/fbs/eval/` | M3 因子研究与评价 |
+| `src/fbs/etl/` | 数据下载：提取、变换、存储（[README](src/fbs/etl/README.md)） |
+| `src/fbs/backtesting/` | 回测（[README](src/fbs/backtesting/README.md)） |
+| `src/fbs/live/` | 实盘交易：Alpaca paper trading（[README](src/fbs/live/README.md)） |
+| `src/fbs/risk/` | 风控（[README](src/fbs/risk/README.md)） |
+| `src/fbs/execution/` | 执行：调仓日、订单（[README](src/fbs/execution/README.md)） |
+| `src/fbs/research/` | 策略研究：`eval/` 因子评价、`combination_factor/` 因子组合（[README](src/fbs/research/README.md)） |
+| `src/fbs/api/` | 旧版下载接口，M1 数据下载的一层封装；不在 C4 图中 |
+| `strategy/` | 每个策略一个文件夹（[README](strategy/README.md)） |
+| `docs/architecture/` | C4 架构图：`workspace.dsl` 和生成的 SVG |
 | `data/bronze/` | 原始数据；只有 `sample/` 提交到 GitHub |
 | `data/silver/`、`data/gold/` | 中间数据、清洗数据，只保存在本地 |

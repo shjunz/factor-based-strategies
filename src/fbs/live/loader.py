@@ -197,7 +197,7 @@ def load_strategy(name):
         If the folder or config.yaml is missing.
     ValueError
         If a required key is missing, a value is not allowed (including
-        the optional split block), or a leftover paper.yaml exists.
+        the optional split block).
     TypeError
         If data.py or weights.py lacks its function.
     """
@@ -207,10 +207,7 @@ def load_strategy(name):
     if not folder.is_dir():
         raise FileNotFoundError(f"no strategy folder strategy/{name}")
 
-    # config.yaml, the only settings file; an old paper.yaml would be silently ignored
-    if (folder / "paper.yaml").exists():
-        raise ValueError(f"strategy/{name}/paper.yaml is no longer read: move its keys under "
-                         "`paper:` in config.yaml and delete the file")
+    # config.yaml
     config = _read_yaml(folder / "config.yaml")
     _require(config, REQUIRED_CONFIG, "config.yaml")
     if config["rebalance"] not in REBALANCE_RULES:

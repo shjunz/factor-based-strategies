@@ -26,17 +26,17 @@ def compute(data, params):
         uses data up to session t only.
     """
 
-    # 1. Signal: return from t-lookback to t-skip
-    momentum = data.shift(params["skip"]) / data.shift(params["lookback"]) - 1
+    # 1. Signal: Calculate 12-1 momentum signal
+    signal = data.shift(params["skip"]) / data.shift(params["lookback"]) - 1
 
-    # 2. Eligible: a price today and a full history
-    momentum = momentum.where(data.notna())
+    # 2. Eligible: keep the signal only where the stock has a price at t
+    eligible_signal = signal.where(data.notna())
 
-    # 3. Select: the top_n by momentum
-    selected = momentum.rank(axis=1, ascending=False, method="first") <= params["top_n"]
+    # 3. Select: True for the top_n stocks by eligible_signal each session
+    selected_asset = eligible_signal.rank(axis=1, ascending=False, method="first") <= params["top_n"]
 
-    # 4. Weights: equal weight, gross in total, 0 for the rest
-    weights = selected.div(selected.sum(axis=1), axis=0) * params["gross"]
-    weights = weights.fillna(0.0)
+    # 4. Weights: equal weight on selected_asset, gross in total, 0 for the rest
+    selected_asset_rebalance_weights = selected_asset.div(selected_asset.sum(axis=1), axis=0) * params["gross"]
+    selected_asset_rebalance_weights = selected_asset_rebalance_weights.fillna(0.0)
 
-    return weights
+    return selected_asset_rebalance_weights

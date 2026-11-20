@@ -47,8 +47,8 @@ rebalance runs these steps in order:
 
     Step 5: Dry run or blocked: write the record and stop.
         Write records/{exec_session}-dryrun.json (or -rebalance.json for a
-        blocked --submit run). A dry run also writes a PDF report with the
-        planned orders and a backtest. No orders are sent.
+        blocked --submit run), and a PDF of the same name with the planned
+        orders and a backtest. No orders are sent.
 
     Step 6: Submit the orders (--submit only).
         Check that config.yaml `paper.enabled` is true, the market is open, and
@@ -56,7 +56,8 @@ rebalance runs these steps in order:
         orders already sent for this execution session (same
         client_order_id), so running twice never trades twice. Send the rest
         as market-on-close orders, filled at today's closing price, and
-        write records/{exec_session}-rebalance.json.
+        write records/{exec_session}-rebalance.json and, after the orders
+        are sent, its PDF in the same layout as the dry-run one.
 '''
 
 # %%
@@ -69,10 +70,11 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 
-from fbs.live import checks
+from fbs import risk
+from fbs.execution import (execution_plan_orders, execution_rebalance_sessions,
+                           execution_remove_invalid_assets, execution_turnover)
 from fbs.live.broker import AlpacaBroker
 from fbs.live.loader import load_strategy
-from fbs.live.plan import clean_targets, plan_orders, rebalance_sessions, turnover
 
 # %%
 # Constants
@@ -130,10 +132,10 @@ def _write_record(strategy, record):
 
     return path
 
-# Dry-run PDF report
-def _write_dry_run_report(strategy, record_path, record, signal, data, frame):
+# Run report PDF
+def _write_run_report(strategy, record_path, record, signal, data, frame):
     """
-    Write the dry-run PDF next to the record. Backtests from config
+    Write the run report PDF (dry run or --submit) next to the record. Backtests from config
     backtest_start when set, else on the run's own data. A failed report
     never changes the run's outcome.
 
@@ -162,7 +164,7 @@ def _write_dry_run_report(strategy, record_path, record, signal, data, frame):
             data = strategy.data.fetch(strategy.config, pd.Timestamp(start).date(), signal)
             frame = strategy.weights.compute(data, strategy.config["params"])
 
-        path = report.write_dry_run_report(record_path.with_suffix(".pdf"), strategy, record, data, frame)
+        path = report.write_run_report(record_path.with_suffix(".pdf"), strategy, record, data, frame)
         print(f"report: {path.relative_to(strategy.folder.parents[1])}")
     except Exception as exc:   # the record is already written; the report is a convenience
         print(f"report not written: {exc}")
@@ -238,7 +240,7 @@ def _target_weights(strategy, sessions, signal):
     lookback = int(strategy.config["lookback_sessions"])
     start = sessions[max(0, sessions.index(signal) - lookback + 1)]
     data = strategy.data.fetch(strategy.config, start, signal)
-    failures = checks.check_data(data, signal)
+    failures = risk.risk_input_data(data, signal)
     if failures:
         return data, None, pd.Series(dtype=float), failures
 
@@ -248,7 +250,7 @@ def _target_weights(strategy, sessions, signal):
         return data, frame, pd.Series(dtype=float), [f"weights have no row for {signal}"]
     weights = frame.loc[pd.Timestamp(signal)].dropna()
     weights = weights[weights != 0]
-    failures = checks.check_weights(weights, strategy.paper["limits"])
+    failures = risk.risk_weights(weights, strategy.paper["limits"])
 
     return data, frame, weights, failures
 
@@ -285,17 +287,17 @@ def _plan(strategy, broker, weights, exec_session):
 
     # Account
     account = broker.account()
-    failures = checks.check_account(account, capital)
+    failures = risk.risk_account(account, capital)
 
     # Targets that can be traded on Alpaca
     positions = broker.positions()
     symbols = sorted(set(weights.index) | set(positions))
     assets = {sym: broker.asset(sym) for sym in symbols}
-    targets, notes = clean_targets(weights, assets, limits["allow_shorts"])
+    targets, notes = execution_remove_invalid_assets(weights, assets, limits["allow_shorts"])
 
     # Whole-share orders at the latest prices
     prices = broker.latest_prices(symbols)
-    orders, plan_notes = plan_orders(targets, positions, prices, capital, account.buying_power,
+    orders, plan_notes = execution_plan_orders(targets, positions, prices, capital, account.buying_power,
                                      float(limits["min_order_notional"]), strategy.name, exec_session)
     notes += plan_notes
 
@@ -422,7 +424,7 @@ def rebalance(name, submit=False, asof=None, force=False):
     if submit and now.date() not in sessions:
         print(f"{now.date()} is not a trading session: nothing to do")
         return 0
-    if signal not in rebalance_sessions(sessions, s.config["rebalance"]) and not force:
+    if signal not in execution_rebalance_sessions(sessions, s.config["rebalance"]) and not force:
         print(f"not a rebalance session for rule '{s.config['rebalance']}': nothing to do")
         return 0
 
@@ -434,19 +436,18 @@ def rebalance(name, submit=False, asof=None, force=False):
     orders, prices, notes = [], {}, []
     if not failures:
         orders, prices, notes, failures = _plan(s, broker, weights, exec_session)
-        to = turnover(orders, prices, float(s.paper["capital"]))
+        to = execution_turnover(orders, prices, float(s.paper["capital"]))
         record["turnover"] = round(to, 4)
-        failures += checks.check_orders(orders, prices, to, s.paper["limits"])
+        failures += risk.risk_orders(orders, prices, to, s.paper["limits"])
     record["orders"] = [asdict(o) for o in orders]
     record["notes"] = notes
     record["failures"] = failures
 
-    # 5. Dry run or blocked: write the record (and the PDF for a dry run), stop
+    # 5. Dry run or blocked: write the record and its PDF, stop
     if failures or not submit:
         record["status"] = "blocked" if failures else "dry_run"
         path = _write_record(s, record)
-        if not submit:
-            _write_dry_run_report(s, path, record, signal, data, frame)
+        _write_run_report(s, path, record, signal, data, frame)
         return 1 if failures else 0
 
     # 6. Submit: enabled, inside the window, and never twice
@@ -455,14 +456,18 @@ def rebalance(name, submit=False, asof=None, force=False):
         record["status"] = "blocked"
         record["failures"] = gate
         print("NOT SUBMITTED: " + "; ".join(gate))
-        _write_record(s, record)
+        path = _write_record(s, record)
+        _write_run_report(s, path, record, signal, data, frame)
         return 1
 
     record["submitted"] = _submit(broker, orders, f"{name}-{exec_session.isoformat()}-",
                                   clock.timestamp - timedelta(days=3))
     rejected = [x for x in record["submitted"] if x["status"].startswith("rejected")]
     record["status"] = "partial" if rejected else "submitted"
-    _write_record(s, record)
+    path = _write_record(s, record)
+
+    # The PDF after the orders are sent, so it never delays them
+    _write_run_report(s, path, record, signal, data, frame)
 
     return 1 if rejected else 0
 

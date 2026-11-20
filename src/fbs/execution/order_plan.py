@@ -1,6 +1,6 @@
 '''
-plan.py - Rebalance sessions and target weights -> whole-share orders. Pure
-functions, no I/O.
+order_plan.py - execution_plan_orders: target weights -> whole-share orders;
+execution_turnover: one-way turnover of those orders.
 '''
 
 # %%
@@ -11,103 +11,10 @@ from dataclasses import replace
 from fbs.live.broker import OrderIntent
 
 # %%
-# Constants
-
-# Weights smaller than this are treated as 0
-DUST_WEIGHT = 1e-6
-
-# %%
-# Rebalance Sessions
-
-# Rebalance sessions of a rule
-def rebalance_sessions(sessions, rule):
-    """
-    Signal sessions on which the strategy rebalances. A session is the last of
-    its week or month when the next session falls in a new one.
-
-    Parameters
-    ----------
-    sessions : list of date
-        Trading sessions, ascending.
-    rule : {"D", "W", "M"}
-        D: every session. W: last session of each week. M: last session of
-        each month.
-
-    Returns
-    -------
-    rebalance : set of date
-        Rebalance sessions. The last session of `sessions` is never one for W
-        or M, since its next session is unknown.
-    """
-
-    # Every session
-    if rule == "D":
-        return set(sessions)
-
-    # Sessions whose next session starts a new week or month
-    rebalance = set()
-    for today, nxt in zip(sessions, sessions[1:]):
-        if rule == "W" and today.isocalendar()[:2] != nxt.isocalendar()[:2]:
-            rebalance.add(today)
-        if rule == "M" and (today.year, today.month) != (nxt.year, nxt.month):
-            rebalance.add(today)
-
-    return rebalance
-
-# %%
-# Targets
-
-# Tradable target weights
-def clean_targets(weights, assets, allow_shorts):
-    """
-    Drop NaN, dust, untradable symbols and disallowed shorts from the target
-    weights.
-
-    Parameters
-    ----------
-    weights : pd.Series
-        Target weight per symbol.
-    assets : dict of str to AssetInfo
-        Alpaca permissions per symbol.
-    allow_shorts : bool
-        config.yaml paper.limits allow_shorts.
-
-    Returns
-    -------
-    targets : dict of str to float
-        Weights that can be traded.
-    notes : list of str
-        One line per dropped symbol.
-    """
-
-    targets, notes = {}, []
-    for symbol, w in weights.dropna().items():
-        w = float(w)
-
-        # Dust
-        if abs(w) < DUST_WEIGHT:
-            continue
-
-        # Not tradable on Alpaca
-        info = assets.get(symbol)
-        if info is None or not info.tradable:
-            notes.append(f"{symbol}: not tradable on Alpaca, target set to 0")
-            continue
-
-        # Short not allowed or not borrowable
-        if w < 0 and not (allow_shorts and info.shortable and info.easy_to_borrow):
-            notes.append(f"{symbol}: short not allowed or not borrowable, target set to 0")
-            continue
-
-        targets[symbol] = w
-
-    return targets, notes
-
-# %%
 # Orders
 
 # Whole-share orders from targets
-def plan_orders(targets, positions, prices, capital, buying_power, min_order_notional,
+def execution_plan_orders(targets, positions, prices, capital, buying_power, min_order_notional,
                 strategy, exec_session):
     """
     Whole-share orders that move the positions to the target weights.
@@ -200,7 +107,7 @@ def plan_orders(targets, positions, prices, capital, buying_power, min_order_not
     return orders, notes
 
 # One-way turnover
-def turnover(orders, prices, capital):
+def execution_turnover(orders, prices, capital):
     """
     One-way turnover: half the traded value, as a fraction of capital.
 

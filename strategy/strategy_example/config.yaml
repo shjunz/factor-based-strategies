@@ -34,7 +34,7 @@ params:
 data:
   field: close_adj   # 传给 weights.py 的价格：拆股和分红都调整过的收盘价，算动量用这个
 
-# Paper trading：dry run 也会用到（读账户持仓、做风控检查）。改动这个块需要一位 QD 和一位 QR review
+# Paper trading：dry run 也会用到（读账户持仓、做风控检查）。
 paper:
   enabled: false              # 开关：dry run 核对无误后才改为 true
   mode: paper                 # 只接受 paper，不支持真金白银交易
