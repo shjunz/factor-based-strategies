@@ -25,6 +25,16 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest"]
+live = [            # paper trading runner (src/fbs/live): uv sync --extra live
+    "alpaca-py",
+    "pyyaml",
+    "matplotlib",   # dry-run PDF report (src/fbs/live/report.py)
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv]
+# Use the CPython that uv downloads and manages, not a system or Anaconda Python,
+# so every researcher runs the same interpreter build
+python-preference = "only-managed"

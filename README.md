@@ -2,14 +2,49 @@
 
 因子策略研究项目。研究方法见 [research_spec.md](research_spec.md)，各章节对应的代码文件见 [architecture.md](architecture.md)。
 
+## 架构（C4）
+
+图由 [docs/architecture/workspace.dsl](docs/architecture/workspace.dsl)（Structurizr DSL）生成。改图只改这个文件，然后运行 `make diagrams` 重新生成 `docs/architecture/` 下的 SVG。每往下一层，就到对应文件夹的 README 里看。设计细节见 [architecture_new.md](architecture_new.md)。
+
+### L1 系统上下文
+
+![L1 系统上下文](docs/architecture/L1-context.svg)
+
+Quant Researcher 在本系统里研究因子，并把自研的通用函数移植到 QuantConnect；在 QuantConnect 上用 QC Data 做因子挖掘和策略回测，表现好的策略购买 Oxford Street 的数据，由 Quant Researcher 移植到 `strategy/`。两种回测分工不同：Quant Researcher 负责 QuantConnect 上的回测，Quant Developer 负责本系统上的回测与实盘交易（Alpaca）。
+
+### L2 容器
+
+![L2 容器](docs/architecture/L2-containers.svg)
+
+箭头表示数据流向，编号是先后顺序：① 在本系统研究、评价因子 → ② 把自研的通用函数移植到 QuantConnect → ③ QuantConnect 取 QC Data → ④ 在 QuantConnect 做因子挖掘、策略回测 → ⑤ 表现好的策略购买数据 → ⑥ 移植策略 → ⑦ Quant Developer 做回测与实盘交易 → ⑧ 启动策略包 → ⑨–⑫ 缺数据时增量下载、写入、读取 → ⑬ 返回调仓权重 → ⑭ GET 账户和持仓 → ⑮ Pre-trade 风控检查数据、调仓权重、账户 → ⑯ 通过检查的调仓权重进入订单执行 → ⑰ 整股订单进入 Post-trade 风控 → ⑱ 调仓权重与计划订单进入回测 → ⑲ 回测运行记录（计划订单 + 历史模拟绩效，不下单）→ ⑳ 整股订单回到实盘交易 → ㉑ POST 订单 → ㉒ 实盘运行记录（已提交订单 + 实盘与回测的绩效对比）。L1 图上的编号和这里一致。API 箭头：GET 从 API 指向读取方，POST 从发送方指向 API。
+
+### 各容器的 README
+
+| 容器 | 类型 | 代码 | L3 / L4 在哪看 |
+| --- | --- | --- | --- |
+| 策略包 | 每个策略一个，被 live 和回测加载 | `strategy/{name}/` | [strategy/README.md](strategy/README.md) |
+| 数据下载 | 由策略的 data.py 调用 | `src/fbs/etl/` | [src/fbs/etl/README.md](src/fbs/etl/README.md) |
+| 回测 | 被 live 的报告调用 | `src/fbs/backtesting/` | [src/fbs/backtesting/README.md](src/fbs/backtesting/README.md) |
+| 实盘交易 | 命令行，AWS 上定时运行 | `src/fbs/live/` | [src/fbs/live/README.md](src/fbs/live/README.md)（含一次 rebalance 的流程图和 AWS 部署图） |
+| 风控 | 共享库 | `src/fbs/risk/` | [src/fbs/risk/README.md](src/fbs/risk/README.md) |
+| 订单执行 | 共享库 | `src/fbs/execution/` | [src/fbs/execution/README.md](src/fbs/execution/README.md) |
+| 策略研究 | 研究用的函数库 | `src/fbs/research/` | [src/fbs/research/README.md](src/fbs/research/README.md) |
+
+图中灰色虚线的框和箭头是已经设计、还没实现的部分（architecture_new.md §5.15）。
+
 ### 准备
 
 根据系统选一种，按顺序执行。
 
+依赖由 [uv](https://docs.astral.sh/uv/) 管理：[pyproject.toml](pyproject.toml) 声明需要哪些包，[uv.lock](uv.lock) 锁定每个包的确切版本，所以每个人装出来的环境完全一样。Python 3.12 也由 uv 自动下载，不需要自己装。
+
 #### macOS / Linux
 
 ```bash
-# 1. 创建虚拟环境 .venv，安装 fbs 包和全部依赖
+# 0. 安装 uv（只需一次）
+brew install uv          # 没有 Homebrew 时：curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 1. 按 uv.lock 创建虚拟环境 .venv，安装 fbs 包和全部依赖（含 live 下单依赖）
 make install
 
 # 2. 生成 .env，再打开 .env 填入 API key（等号两边不要有空格）
@@ -21,13 +56,14 @@ make api
 
 #### Windows
 
-需要先从 [python.org](https://www.python.org/downloads/) 安装 Python 3.12（安装包自带 `py` 命令）。在 VS Code 里按 `` Ctrl+` `` 打开终端，默认就是 PowerShell。
+在 VS Code 里按 `` Ctrl+` `` 打开终端，默认就是 PowerShell。
 
 ```powershell
-# 1. 创建虚拟环境 .venv，安装 fbs 包和全部依赖
-py -3.12 -m venv .venv
-.venv\Scripts\python -m pip install -U pip
-.venv\Scripts\pip install -e .
+# 0. 安装 uv（只需一次），装完重开终端
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# 1. 按 uv.lock 创建虚拟环境 .venv，安装 fbs 包和全部依赖（含 live 下单依赖）
+uv sync --locked --extra live
 
 # 2. 生成 .env
 if (Test-Path .env) { ".env already exists, left unchanged" } else { Set-Content .env "NASDAQ_DATA_LINK_API_KEY=" -Encoding ascii }
@@ -83,7 +119,10 @@ if (Test-Path .env) { ".env already exists, left unchanged" } else { Set-Content
 
 | 命令 | 作用 |
 |---|---|
-| `make install` | 创建 `.venv`（只在第一次创建），安装 fbs 包和依赖 |
+| `make install` | 按 `uv.lock` 创建或同步 `.venv`，装上 fbs 包和全部依赖；pull 到新的 `uv.lock` 后再跑一次即可同步 |
+| `uv add 包名` | 新增依赖：同时改 `pyproject.toml` 和 `uv.lock`，两个文件一起提交 |
+| `make lock` | 手动改了 `pyproject.toml` 后，重新生成 `uv.lock` |
+| `make upgrade` | 把所有包升级到允许范围内的最新版，重写 `uv.lock` 并同步 `.venv` |
 | `make env` | 生成只含 `NASDAQ_DATA_LINK_API_KEY=` 一行的 `.env`，已存在时不覆盖 |
 | `make api` | 启动后端，修改代码后自动重启，只能本机访问 |
 | `make api-prod` | 启动后端，不自动重启，其他机器也能访问（部署用） |
@@ -95,7 +134,9 @@ Windows 下对应的 PowerShell 命令：
 
 | 对应 | PowerShell 命令 |
 |---|---|
-| `make install` | `py -3.12 -m venv .venv`，再 `.venv\Scripts\python -m pip install -U pip` 和 `.venv\Scripts\pip install -e .`（`.venv` 已存在时跳过第一条） |
+| `make install` | `uv sync --locked --extra live` |
+| `make lock` | `uv lock` |
+| `make upgrade` | `uv lock --upgrade`，再 `uv sync --locked --extra live` |
 | `make env` | `if (Test-Path .env) { ".env already exists, left unchanged" } else { Set-Content .env "NASDAQ_DATA_LINK_API_KEY=" -Encoding ascii }` |
 | `make api` | `.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 127.0.0.1 --port 8000 --reload` |
 | `make api-prod` | `.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 0.0.0.0 --port 8000` |
@@ -107,7 +148,14 @@ Windows 下对应的 PowerShell 命令：
 
 | 目录 | 内容 |
 |---|---|
-| `src/fbs/etl/` | M1 数据 ETL：提取、变换、存储 |
-| `src/fbs/api/` | 后端 API，M1 数据下载的一层封装 |
-| `src/fbs/eval/` | M3 因子研究与评价 |
+| `src/fbs/etl/` | 数据下载：提取、变换、存储（[README](src/fbs/etl/README.md)） |
+| `src/fbs/factor/` | 因子算子 |
+| `src/fbs/sample/` | 样本构建：前向收益等 |
+| `src/fbs/backtesting/` | 回测（[README](src/fbs/backtesting/README.md)） |
+| `src/fbs/live/` | 实盘交易：Alpaca paper trading（[README](src/fbs/live/README.md)） |
+| `src/fbs/risk/` | 风控（[README](src/fbs/risk/README.md)） |
+| `src/fbs/execution/` | 执行：调仓日、订单（[README](src/fbs/execution/README.md)） |
+| `src/fbs/research/` | 策略研究：`eval/` 因子评价、`combination_factor/` 因子组合（[README](src/fbs/research/README.md)） |
+| `strategy/` | 每个策略一个文件夹（[README](strategy/README.md)） |
+| `docs/architecture/` | C4 架构图：`workspace.dsl` 和生成的 SVG |
 | `data/bronze/`、`data/silver/`、`data/gold/` | 原始数据、中间数据、清洗数据，只保存在本地 |
