@@ -38,15 +38,15 @@ M 代表研究模块（module）。
          <td nowrap rowspan="3"><a href="#m1-数据etl">M1</a></td>
          <td nowrap rowspan="3"><a href="#m1-数据etl">数据ETL</a></td>
          <td nowrap><a href="#m11-数据提取">M1.1 数据提取</a></td>
-         <td nowrap><a href="#m111-资产分类">M1.1.1 资产分类</a><br><a href="#m112-数据源">M1.1.2 数据源</a><br><a href="#m113-原始数据存储">M1.1.3 原始数据存储</a></td>
+         <td nowrap><a href="#m111-资产分类">M1.1.1 资产分类</a><br><a href="#m112-数据入库">M1.1.2 数据入库</a><br><a href="#m113-存储结构">M1.1.3 存储结构</a></td>
       </tr>
       <tr>
          <td nowrap><a href="#m12-数据变换">M1.2 数据变换</a></td>
-         <td nowrap><a href="#m121-格式统一">M1.2.1 格式统一</a><br><a href="#m122-标识符">M1.2.2 标识符</a></td>
+         <td nowrap><a href="#m121-标识符">M1.2.1 标识符</a><br><a href="#m122-格式统一">M1.2.2 格式统一</a><br><a href="#m123-存储结构">M1.2.3 存储结构</a></td>
       </tr>
       <tr>
-         <td nowrap><a href="#m13-数据存储">M1.3 数据存储</a></td>
-         <td nowrap><a href="#m131-存储结构">M1.3.1 存储结构</a><br><a href="#m132-清洗数据格式">M1.3.2 清洗数据格式</a></td>
+         <td nowrap><a href="#m13-数据加载">M1.3 数据加载</a></td>
+         <td nowrap><a href="#m131-存储格式">M1.3.1 存储格式</a><br><a href="#m132-存储结构">M1.3.2 存储结构</a></td>
       </tr>
       <tr>
          <td nowrap rowspan="2"><a href="#m2-因子库">M2</a></td>
@@ -59,20 +59,24 @@ M 代表研究模块（module）。
          <td nowrap>—</td>
       </tr>
       <tr>
-         <td nowrap rowspan="2"><a href="#m3-研究样本">M3</a></td>
-         <td nowrap rowspan="2"><a href="#m3-研究样本">研究样本</a></td>
+         <td nowrap rowspan="3"><a href="#m3-研究样本">M3</a></td>
+         <td nowrap rowspan="3"><a href="#m3-研究样本">研究样本</a></td>
          <td nowrap><a href="#m31-资产集">M3.1 资产集</a></td>
          <td nowrap>—</td>
       </tr>
       <tr>
-         <td nowrap><a href="#m32-样本划分">M3.2 样本划分</a></td>
+         <td nowrap><a href="#m32-未来收益率">M3.2 未来收益率</a></td>
+         <td nowrap>—</td>
+      </tr>
+      <tr>
+         <td nowrap><a href="#m33-样本划分">M3.3 样本划分</a></td>
          <td nowrap>—</td>
       </tr>
       <tr>
          <td nowrap rowspan="2"><a href="#m4-因子研究与评价">M4</a></td>
          <td nowrap rowspan="2"><a href="#m4-因子研究与评价">因子研究与评价</a></td>
          <td nowrap><a href="#m41-截面">M4.1 截面</a></td>
-         <td nowrap><a href="#m411-因子值">M4.1.1 因子值</a><br><a href="#m412-因子预处理">M4.1.2 因子预处理</a><br><a href="#m413-调仓频率">M4.1.3 调仓频率</a><br><a href="#m414-未来收益率">M4.1.4 未来收益率</a><br><a href="#m415-样本内分组">M4.1.5 样本内分组</a><br><a href="#m416-因子评价指标">M4.1.6 因子评价指标</a><br><a href="#m417-因子综合评分">M4.1.7 因子综合评分</a><br><a href="#m418-因子选择">M4.1.8 因子选择</a></td>
+         <td nowrap><a href="#m411-因子值">M4.1.1 因子值</a><br><a href="#m412-因子预处理">M4.1.2 因子预处理</a><br><a href="#m413-调仓频率">M4.1.3 调仓频率</a><br><a href="#m414-样本内分组">M4.1.4 样本内分组</a><br><a href="#m415-因子评价指标">M4.1.5 因子评价指标</a><br><a href="#m416-因子综合评分">M4.1.6 因子综合评分</a><br><a href="#m417-因子选择">M4.1.7 因子选择</a></td>
       </tr>
       <tr>
          <td nowrap><a href="#m42-时序">M4.2 时序</a></td>
@@ -161,14 +165,14 @@ M 代表研究模块（module）。
 本节按 ETL 流程分为三部分：
 <a href="#m11-数据提取">M1.1</a> 定义原始数据的提取方式；
 <a href="#m12-数据变换">M1.2</a> 定义原始数据的变换流程；
-<a href="#m13-数据存储">M1.3</a> 定义清洗数据的存储方式。
+<a href="#m13-数据加载">M1.3</a> 定义清洗数据的加载方式。
 
 数据按 ETL 流程的阶段分为三层，保存在 `data/` 下：
 - **bronze**：原始数据，未做任何变换
 - **silver**：中间数据，已完成部分变换
 - **gold**：清洗数据，已完成全部变换
 
-除作为参考的 `data/bronze/sample/` 外，三层数据都不提交到 GitHub。
+三层数据都不提交到 GitHub。
 
 ### M1.1 数据提取
 
@@ -229,9 +233,11 @@ M 代表研究模块（module）。
 </table>
 </div>
 
-#### M1.1.2 数据源
+#### M1.1.2 数据入库
 
-每个数据源在 `data/data_library.md` 中登记一张数据卡片，卡片包含该数据源的元数据：
+每个数据集在 `data/data_library.md` 中登记一张数据卡片，卡片包含该数据集的元数据：
+- **数据源**：数据所属的数据源
+- **产品**：数据所属的数据源产品
 - **一级资产类别**：数据所属的资产类别
 - **二级工具类型**：数据所属的工具类型
 - **获取方式**：网页下载或 API
@@ -239,11 +245,15 @@ M 代表研究模块（module）。
 - **数据频率**：每行数据对应的时间周期
 - **发布时间**：每行数据实际能拿到的最早时间点
 
-#### M1.1.3 原始数据存储
+#### M1.1.3 存储结构
 
-原始数据按数据源的产品和表分目录保存在 bronze 层，文件名由下载日期、下载时的过滤条件、所选列和行数上限组成，下载日期在最前面，同一张表的文件按名称排序即按下载日期排序：
+原始数据按数据源的产品和数据集分目录，每次下载存为一个文件。下载日期放在文件名最前面，同一个数据集的文件按名称排序即按下载日期排序：
 
-`data/bronze/{source}_{product}/{table}/{download_date}_{filters}{suffix}`
+`data/bronze/{source}_{product}/{dataset}/{download_date}_{filters}{suffix}`
+
+路径示例：
+- `data/bronze/sharadar_equity_prices/SEP/20261029_ALL.zip`
+- `data/bronze/sharadar_fund_prices/SFP/20261101_date=20240101-_ticker=QQQ,SPY.zip`
 
 <div style="overflow-x: auto;">
 <table>
@@ -251,54 +261,62 @@ M 代表研究模块（module）。
       <tr>
          <th nowrap>数据信息</th>
          <th nowrap>字段</th>
-         <th nowrap>示例</th>
+         <th nowrap>格式</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td nowrap>数据源名称，小写</td>
+         <td nowrap>数据源名称</td>
          <td nowrap><code>source</code></td>
-         <td nowrap><code>sharadar</code></td>
+         <td nowrap>全小写</td>
       </tr>
       <tr>
-         <td nowrap>数据源中的产品，小写下划线</td>
+         <td nowrap>数据源中的产品</td>
          <td nowrap><code>product</code></td>
-         <td nowrap><code>fund_prices</code></td>
+         <td nowrap>全小写，单词间用下划线</td>
       </tr>
       <tr>
-         <td nowrap>产品中的表名</td>
-         <td nowrap><code>table</code></td>
-         <td nowrap><code>SFP</code></td>
+         <td nowrap>数据集名称</td>
+         <td nowrap><code>dataset</code></td>
+         <td nowrap>与数据源一致</td>
       </tr>
       <tr>
-         <td nowrap>下载时的过滤条件、所选列和行数上限，都没有时为 <code>ALL</code></td>
-         <td nowrap><code>filters</code></td>
-         <td nowrap><code>columns=close,date,ticker_date=20240101-20240131_ticker=QQQ,SPY</code></td>
-      </tr>
-      <tr>
-         <td nowrap>下载日期，格式为 <code>YYYYMMDD</code></td>
+         <td nowrap>下载日期</td>
          <td nowrap><code>download_date</code></td>
-         <td nowrap><code>20261101</code></td>
+         <td nowrap><code>YYYYMMDD</code></td>
+      </tr>
+      <tr>
+         <td nowrap>下载条件</td>
+         <td nowrap><code>filters</code></td>
+         <td>
+            下载整个数据集时为 <code>ALL</code><br>
+            过滤条件、所选列各写成 <code>列名=取值</code>，列之间用 <code>_</code> 连接<br>
+            多个取值用 <code>,</code> 连接<br>
+            日期写成 <code>YYYYMMDD</code>，范围写成 <code>起点-终点</code>，任一端可以为空
+         </td>
       </tr>
       <tr>
          <td nowrap>数据源返回的文件格式</td>
          <td nowrap><code>suffix</code></td>
-         <td nowrap><code>.zip</code></td>
+         <td nowrap>与数据源一致</td>
       </tr>
    </tbody>
 </table>
 </div>
-每个数据文件旁有一个同名的 `.json`，记录完整的下载参数（表名、过滤条件、所选列、下载方式、行数上限、下载时间），用来还原文件名中被写成哈希的取值。
 
-同一张表可能出现在多个产品中（如 Sharadar 的 `TICKERS`、`ACTIONS`、`METRICS`、`INDICATORS`），下载时保存在对应产品的目录下，所以同一张表可以在多个产品目录中出现。
+每个数据文件旁有一个同名的 `.json`，记录完整的下载参数，包括数据下载时间。
 
 ### M1.2 数据变换
 
-数据变换指用同一套流程处理各类原始数据，得到清洗数据，依次执行以下步骤。变换过程中产生的中间数据保存在 silver 层。
+数据变换指用同一套流程处理各类原始数据，得到清洗数据，过程中产生的中间数据若有需要，保存在 silver 层。
 
-#### M1.2.1 格式统一
+#### M1.2.1 标识符
 
-各数据源的原始数据先转换成相同的格式，使不同来源的数据可以直接合并，各资产类别的标准列名如下：
+标识符是数据源给每个标的（instrument）的永久编号，列名为 `instrument_id`，不随交易代码（symbol）变化，跨日期识别标的时一律用标识符。
+
+#### M1.2.2 格式统一
+
+各数据源的原始数据先转换成相同的格式，各资产类别的标准列名如下：
 - **股票**
 
   <div style="overflow-x: auto;">
@@ -311,6 +329,11 @@ M 代表研究模块（module）。
         </tr>
      </thead>
      <tbody>
+        <tr>
+           <td nowrap>标识符</td>
+           <td nowrap><code>instrument_id</code></td>
+           <td nowrap>数据源永久编号</td>
+        </tr>
         <tr>
            <td nowrap>时间</td>
            <td nowrap><code>timestamp</code></td>
@@ -355,24 +378,29 @@ M 代表研究模块（module）。
   </table>
   </div>
 
-我们创建一张映射表 `data/dictionary/field_map.csv`，用来把原始列名转换成标准列名，每个数据源每张表的每个原始列名占一行。
+我们创建一张映射表 `data/dictionary/field_map.csv`，用来把原始列名转换成标准列名。
 
-#### M1.2.2 标识符
+#### M1.2.3 存储结构
 
-标识符是每个标的（instrument）永久不变的编号，列名为 `instrument_id`，用来把不同数据源中同一标的的数据合并到一张表。标的当日的交易代码（symbol）可能随时间变化，所以跨日期、跨数据源识别标的时一律用标识符。各资产类别的标识符取值如下：
-- **股票**
-    - **取值**：composite FIGI（Financial Instrument Global Identifier）
-    - **查询**：优先取数据源提供的 FIGI，其次在 OpenFIGI 中依次用 CUSIP、ISIN、symbol 加交易所查询
+### M1.3 数据加载
 
-我们创建一张映射表 `data/dictionary/instrument_map.csv`，用来把各数据源的编号转换成标识符，每个数据源的每个编号占一行。
+数据加载指把清洗数据按统一的目录、命名和格式保存到 gold 层。
 
-### M1.3 数据存储
+#### M1.3.1 存储格式
 
-数据存储指把清洗数据按统一的目录、命名和格式保存到 gold 层。
+清洗数据以 Parquet 格式保存。Parquet 是一种列式存储的文件格式，同一列的数据连续存放，有以下特点：
+- **按列读取**：只读取需要的列，不必读取整个文件
+- **压缩存储**：同一列的数据类型相同，压缩率高，文件体积小
+- **保留类型**：文件记录每列的数据类型，读取后无需再转换
 
-#### M1.3.1 存储结构
+#### M1.3.2 存储结构
 
-清洗数据保存在本地 gold 层，可选择上传到 S3，不提交到 GitHub。文件路径由描述数据分类、来源和日期的字段组成，各字段如下：
+清洗数据按资产类别、工具类型和数据频率分目录，每次清洗存为一个文件。清洗日期放在文件名最后，同一个数据集的文件按名称排序即按清洗日期排序：
+
+`data/gold/{asset_class}/{category}/{frequency}/{source}_{dataset}_{clean_date}.parquet`
+
+路径示例：
+- `data/gold/EQ/spot/daily/sharadar_SEP_20261116.parquet`
 
 <div style="overflow-x: auto;">
 <table>
@@ -380,44 +408,45 @@ M 代表研究模块（module）。
       <tr>
          <th nowrap>数据信息</th>
          <th nowrap>字段</th>
+         <th nowrap>格式</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td nowrap>一级资产类别代码</td>
-         <td nowrap><code>asset</code></td>
+         <td nowrap>一级资产类别</td>
+         <td nowrap><code>asset_class</code></td>
+         <td nowrap>资产代码</td>
       </tr>
       <tr>
-         <td nowrap>二级工具类型代码</td>
+         <td nowrap>二级工具类型</td>
          <td nowrap><code>category</code></td>
+         <td nowrap>类型代码</td>
       </tr>
       <tr>
          <td nowrap>数据频率</td>
          <td nowrap><code>frequency</code></td>
+         <td nowrap>全小写</td>
       </tr>
       <tr>
          <td nowrap>数据源名称</td>
          <td nowrap><code>source</code></td>
+         <td nowrap>全小写</td>
       </tr>
       <tr>
-         <td nowrap>数据源中的表名</td>
-         <td nowrap><code>interface</code></td>
+         <td nowrap>数据集名称</td>
+         <td nowrap><code>dataset</code></td>
+         <td nowrap>与数据源一致</td>
       </tr>
       <tr>
-         <td nowrap>清洗日期，格式为 <code>YYYYMMDD</code></td>
+         <td nowrap>清洗日期</td>
          <td nowrap><code>clean_date</code></td>
+         <td nowrap><code>YYYYMMDD</code></td>
       </tr>
    </tbody>
 </table>
 </div>
 
-- **清洗数据存储路径**：`data/gold/{asset}/{category}/{frequency}/{source}_{interface}_{clean_date}`
-
-原始数据的存储路径见 <a href="#m113-原始数据存储">M1.1.3</a>。
-
-#### M1.3.2 清洗数据格式
-
-清洗数据以 parquet 格式保存。
+每个数据文件旁有一个同名的 `.json`，记录数据的起止日期和清洗用到的原始数据文件。
 
 ---
 
@@ -449,15 +478,23 @@ M 代表研究模块（module）。
          <td nowrap><code>REV</code></td>
       </tr>
       <tr>
+         <td nowrap>规模</td>
+         <td nowrap><code>SIZ</code></td>
+      </tr>
+      <tr>
          <td nowrap>价值</td>
          <td nowrap><code>VAL</code></td>
+      </tr>
+      <tr>
+         <td nowrap>成长</td>
+         <td nowrap><code>GRO</code></td>
       </tr>
       <tr>
          <td nowrap>质量</td>
          <td nowrap><code>QUA</code></td>
       </tr>
       <tr>
-         <td nowrap>Carry</td>
+         <td nowrap>持有收益</td>
          <td nowrap><code>CAR</code></td>
       </tr>
       <tr>
@@ -484,15 +521,11 @@ M 代表研究模块（module）。
          <td nowrap>情绪</td>
          <td nowrap><code>SEN</code></td>
       </tr>
-      <tr>
-         <td nowrap>供需</td>
-         <td nowrap><code>SUP</code></td>
-      </tr>
    </tbody>
 </table>
 </div>
 
-因子编号为 `{主题代码}_{三位序号}`，列名为 `factor_id`。
+因子编号为 `{主题代码}_{三位序号}`，记为 `factor_id`。
 
 ### M2.2 因子入库
 
@@ -513,9 +546,10 @@ M 代表研究模块（module）。
 
 ## M3. 研究样本
 
-本节按样本的两个维度分为两部分：
-<a href="#m31-资产集">M3.1</a> 定义截面上的资产集；
-<a href="#m32-样本划分">M3.2</a> 定义时间上的样本划分。
+本节按研究样本的组成分为三部分：
+<a href="#m31-资产集">M3.1</a> 定义研究的标的范围；
+<a href="#m32-未来收益率">M3.2</a> 定义预测对象未来收益率；
+<a href="#m33-样本划分">M3.3</a> 定义研究的时间范围。
 
 ### M3.1 资产集
 
@@ -526,7 +560,13 @@ M 代表研究模块（module）。
 - **波动**：按标的的日均振幅筛选
 - **流动性**：按标的的日均成交额筛选
 
-### M3.2 样本划分
+### M3.2 未来收益率
+
+未来收益率指标的从第 t 个时间点收盘到第 t + `h` 个时间点收盘的收益率，即 `close_adj(t + h) / close_adj(t) − 1`，是因子评价、信号合成与回测共同的预测对象，期限 `h` 由使用它的模块设定。这一口径假设在第 t 个时间点收盘即可成交，衡量的是预测能力的理论上限。可选的调整方式如下：
+- **超额收益**：未来收益率减去基准同期的收益率，基准由使用它的模块设定
+- **波动率调整**：未来收益率乘以 `σ_tgt` / σ，得到按目标波动率配仓时的收益率；`σ_tgt` 为设定的目标波动率，σ 为只用第 t 个时间点及之前长度为 `L_σ` 的窗口估计的历史波动率，两者换算到同一时间尺度
+
+### M3.3 样本划分
 
 样本划分指把清洗数据按时间先后分成样本内和样本外两部分，各部分的用途如下：
 - **In-Sample (IS)**：评价和筛选因子；训练信号合成模型时，再按时间先后分成两段：
@@ -590,21 +630,16 @@ gantt
 
 #### M4.1.3 调仓频率
 
-调仓频率记为 `Δ`，决定多久取一次因子值。每个调仓日取一次因子值，相邻两个调仓日之间为一个调仓期，未来收益率与各项评价指标都以调仓期为单位计算。
+调仓频率记为 `Δ`，决定多久取一次因子值。每个调仓日取一次因子值，相邻两个调仓日之间为一个调仓期。未来收益率按 M3.2 计算，期限 `h` 取一个调仓期，各项评价指标也以调仓期为单位计算。
 
-#### M4.1.4 未来收益率
-
-未来收益率是第 t 个调仓日收盘到第 t+1 个调仓日收盘的收益率，作为第 t 个调仓日因子值的预测对象。这一口径假设因子值一经算出即可按收盘价成交，衡量的是因子预测能力的理论上限，实际如何建仓在策略交易时再考虑。计算时按以下规则处理：
-- **波动率调整**：未来收益率乘以 `σ_tgt` / σ，得到按目标波动率配仓时的收益率；`σ_tgt` 为设定的目标波动率，σ 为只用第 t 个调仓日及之前长度为 `L_σ` 的窗口估计的历史波动率，两者换算到同一时间尺度
-
-#### M4.1.5 样本内分组
+#### M4.1.4 样本内分组
 
 评价指标可以在样本内的全部调仓日上计算，也可以把样本内分组后在每组上分别计算，以检验因子在不同场景下的表现是否稳定。可选的分组方式如下：
 - **按期分组**：把 IS 按日历分成互不重叠的若干长度为 `L_seg` 的段，段数记为 `P`，在每段上分别计算评价指标
 - **按市值分组**：每个调仓日的截面上，按市值把资产集分成 `G_cap` 组，在每组内分别计算评价指标
 - **按行业分组**：每个调仓日的截面上，按行业把资产集分组，组数记为 `G_ind`，在每组内分别计算评价指标；symbol 数过少的行业可合并或剔除
 
-#### M4.1.6 因子评价指标
+#### M4.1.5 因子评价指标
 
 因子值预处理完成后，可以选用以下指标评价因子。
 
@@ -691,7 +726,7 @@ gantt
    - **汇总**：各风险因子的 β、Newey-West 标准误及 t 值、alpha 及其 t 值、调整后的 R²
    - **范围**：样本内
 
-#### M4.1.7 因子综合评分
+#### M4.1.6 因子综合评分
 我们先对候选因子做初步筛选，再将通过筛选的因子的各项属性汇总为一个综合评分，用于排序，步骤如下：
 1. **初筛**：
    - **显著性**：
@@ -730,7 +765,7 @@ gantt
 
 4. **综合评分**：质量、交易、风险三项分别按权重 `ω_Q`、`ω_E`、`ω_R`（三者之和为 1）加权求和，得到单因子综合评分，按综合评分降序排列，作为后续因子选择的排序依据
 
-#### M4.1.8 因子选择
+#### M4.1.7 因子选择
 我们根据以下规则选择因子进入后续的组合，入选的因子视为在 IS 样本中表现出色：
 - **因子排名**：取因子综合得分排名前 `θ_top` 的候选因子进入后续组合
 
@@ -851,6 +886,8 @@ gantt
 ## M9. 实盘模拟
 
 ### M9.1 模拟交易
+
+模拟交易通过 Interactive Brokers（IBKR）的模拟账户进行，与实盘使用同一套接口，切换到实盘时只更换账户。
 
 ### M9.2 监控指标
 

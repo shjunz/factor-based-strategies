@@ -1,12 +1,11 @@
 '''
-sharadar.py - Download and read data from Sharadar products on Nasdaq Data Link.
+extract.py - Download and read data from Sharadar products on Nasdaq Data Link.
 '''
 
 # %%
 # Imports
 
 import json
-import warnings
 from datetime import datetime, timezone
 
 import nasdaqdatalink
@@ -14,9 +13,6 @@ import pandas as pd
 
 # %%
 # Constants
-
-# Rows per page returned by get_table
-PAGE_SIZE = 10_000
 
 # Columns to sort rows by in priority order, if present in the table
 SORT_KEYS = ["ticker", "dimension", "calendardate", "datekey", "date"]
@@ -30,10 +26,10 @@ DATE_COLUMNS = ["date", "datekey", "calendardate", "reportperiod", "lastupdated"
 # Table Download
 
 # Sharadar table download
-def download_table(table, path, /, method="export", limit=None, columns=None,
-                   overwrite=False, **filters):
+def download_table(table, path, /, columns=None, overwrite=False, **filters):
     """
-    Sharadar table download from Nasdaq Data Link.
+    Sharadar table download from Nasdaq Data Link as a bulk export
+    (export_table), with a .json record.
 
     Parameters
     ----------
@@ -41,11 +37,6 @@ def download_table(table, path, /, method="export", limit=None, columns=None,
         Sharadar table name.
     path : Path
         Destination zip file.
-    method : {"export", "get"}
-        "export": bulk export (export_table), no row limit.
-        "get": paged query (get_table), up to about 1,000,000 rows.
-    limit : int
-        Maximum number of rows, "get" only. All matching rows if None.
     columns : list of str
         Columns to keep. All columns if None.
     overwrite : bool
@@ -59,20 +50,11 @@ def download_table(table, path, /, method="export", limit=None, columns=None,
     Returns
     -------
     Path
-        The written file. Its download parameters (table, filters, columns,
-        method, limit, download time) are written next to it as a .json with
-        the same name.
+        The written file.
     """
 
     # Keep the parameters as passed, before the filters take the query options
-    params = {"table": table, "filters": dict(filters), "columns": columns,
-              "method": method, "limit": limit}
-
-    # Check the arguments
-    if method not in ("export", "get"):
-        raise ValueError(f"method must be 'export' or 'get', got {method!r}")
-    if limit is not None and method == "export":
-        raise ValueError("limit is only supported with method='get'")
+    params = {"table": table, "filters": dict(filters), "columns": columns}
 
     # Stop if the file already exists
     if path.exists() and not overwrite:
@@ -81,37 +63,22 @@ def download_table(table, path, /, method="export", limit=None, columns=None,
     # Create the parent directories if they don't exist
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Query options: selected columns, and a single page when it holds the limit
+    # Query options: selected columns
     qopts = filters.pop("qopts", {})
     if columns is not None:
         qopts["columns"] = list(columns)
-    one_page = limit is not None and limit <= PAGE_SIZE
-    if one_page:
-        qopts["per_page"] = limit
     if qopts:
         filters["qopts"] = qopts
 
     # Write to a temporary file so an interrupted download leaves no partial file
     tmp = path.with_name(path.name + ".part")
-    code = f"SHARADAR/{table}"
 
     # API key is read from the NASDAQ_DATA_LINK_API_KEY environment variable
-    if method == "export":
-        nasdaqdatalink.export_table(code, filename=str(tmp), **filters)
-    else:
-        with warnings.catch_warnings():
-            # Stopping after one page triggers an expected truncation warning
-            warnings.simplefilter("ignore", UserWarning)
-            df = nasdaqdatalink.get_table(code, paginate=not one_page, **filters)
-
-        # Keep the first limit rows, in the order the API returned them
-        df = df.iloc[:limit]
-        df.to_csv(tmp, index=False,
-                  compression={"method": "zip", "archive_name": f"{path.stem}.csv"})
+    nasdaqdatalink.export_table(f"SHARADAR/{table}", filename=str(tmp), **filters)
 
     tmp.replace(path)
 
-    # Record the full parameters, since long filter values are hashed in the file name
+    # Write the .json record
     params["downloaded_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     path.with_suffix(".json").write_text(json.dumps(params, indent=2, default=str))
 
@@ -135,16 +102,19 @@ def read_table(path, columns=None):
     Returns
     -------
     table : pd.DataFrame
-        Table with its date columns parsed as dates and its rows sorted by
-        SORT_KEYS.
+        Sharadar table with date columns parsed as dates and rows sorted by
+        SORT_KEYS. Only empty fields are read as missing, so text such as the
+        ticker "NA" is kept as is. Index = row number, Columns = the table's
+        columns.
     """
 
     # Date columns among the columns to read
     names = pd.read_csv(path, nrows=0).columns if columns is None else columns
     dates = [c for c in DATE_COLUMNS if c in names]
 
-    # Read the zipped CSV
-    table = pd.read_csv(path, usecols=columns, parse_dates=dates)
+    # Read the zipped CSV, with empty fields as the only missing values
+    table = pd.read_csv(path, usecols=columns, parse_dates=dates,
+                        keep_default_na=False, na_values=[""])
 
     # Sort on whichever keys the table has (downloaded rows are unsorted)
     table = table.sort_values([k for k in SORT_KEYS if k in table.columns],

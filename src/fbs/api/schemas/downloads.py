@@ -9,7 +9,7 @@ import re
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from fbs.api.schemas.tables import PRODUCTS, ProductName, TableName
 from fbs.api.services.catalog import table_schema
@@ -35,9 +35,6 @@ class DownloadRequest(BaseModel):
 
     product: ProductName
     table: TableName
-    # None downloads every matching row as a bulk export; a number pages
-    # through the API and keeps at most that many rows
-    limit: int | None = Field(default=None, gt=0)
     columns: list[str] | None = None
     filters: dict[str, FilterValue] = {}
     overwrite: bool = False

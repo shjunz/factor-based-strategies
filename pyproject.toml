@@ -16,6 +16,7 @@ dependencies = [
     "scipy",
     "statsmodels",
     "nasdaq-data-link",
+    "exchange-calendars",
     "fastapi",
     "uvicorn",
     "python-dotenv",

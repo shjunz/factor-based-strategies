@@ -7,11 +7,11 @@ jobs.py - In-memory store of download jobs. Jobs are lost when the server restar
 
 import threading
 import uuid
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from fbs.api.schemas.downloads import DownloadJob
-from fbs.etl.extract.sharadar import download_table
-from fbs.etl.storage.paths import DATA_DIR, extraction_path
+from fbs.etl.sharadar.extract import download_table
+from fbs.etl.paths import DATA_DIR, bronze_path
 
 # %%
 # Store
@@ -62,11 +62,11 @@ def _update(job_id, **fields):
 # %%
 # Run
 
-# Bronze file a request downloads into, named by its filters, columns and limit
+# Bronze file a request downloads into, named by its filters and columns
 def _target_path(request):
-    return extraction_path("Sharadar", request.product, request.table, request.filters,
-                           date.today(), ".zip", columns=request.columns,
-                           limit=request.limit)
+    return bronze_path("Sharadar", request.product, request.table, request.filters,
+                       datetime.now(timezone.utc).date(), ".zip",
+                       columns=request.columns)
 
 # Run a download job (called as a background task)
 def run_job(job_id):
@@ -80,13 +80,10 @@ def run_job(job_id):
 
     path = _target_path(request)
 
-    # A limit pages through the API, no limit exports every row in bulk. The
-    # filters are copied, since download_table adds its query options to them
-    method = "get" if request.limit else "export"
+    # The filters are copied, since download_table adds its query options to them
     try:
-        download_table(request.table, path, method=method, limit=request.limit,
-                       columns=request.columns, overwrite=request.overwrite,
-                       **dict(request.filters))
+        download_table(request.table, path, columns=request.columns,
+                       overwrite=request.overwrite, **dict(request.filters))
     except Exception as exc:
         _update(job_id, status="failed", error=f"{type(exc).__name__}: {exc}",
                 finished_at=datetime.now(timezone.utc))
