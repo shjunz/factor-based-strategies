@@ -4,9 +4,9 @@ unify.py - Unify raw data into the standard format.
 
 # %%
 # Imports
+from pathlib import Path
 import exchange_calendars as xcals
 import pandas as pd
-from fbs.etl.paths import DATA_DIR
 
 # %%
 # Standard fields of each asset class
@@ -18,8 +18,9 @@ STANDARD_FIELDS = {
 # %%
 # Field Names
 
-# Field name mapping table
-FIELD_MAP = DATA_DIR / "dictionary" / "field_map.csv"
+# Field name mapping table of a data source: src/fbs/etl/{source}/metadata/field_map.csv
+def field_map_path(source):
+    return Path(__file__).parent / source.lower() / "metadata" / "field_map.csv"
 
 # Field renaming
 def rename_fields(raw, source, dataset):
@@ -44,7 +45,7 @@ def rename_fields(raw, source, dataset):
     """
 
     # Look up the standard names of this dataset's fields in field_map
-    field_map = pd.read_csv(FIELD_MAP)
+    field_map = pd.read_csv(field_map_path(source))
     rows = (field_map["source"] == source) & (field_map["dataset"] == dataset)
     mapping = field_map.loc[rows].set_index("source_field")["field"]
 

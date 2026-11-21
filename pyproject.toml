@@ -34,6 +34,10 @@ live = [            # paper trading runner (src/fbs/live): uv sync --extra live
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Ship each data source's field_map.csv and vendor dictionary with the package
+[tool.setuptools.package-data]
+"fbs.etl" = ["*/metadata/*.csv"]
+
 [tool.uv]
 # Use the CPython that uv downloads and manages, not a system or Anaconda Python,
 # so every researcher runs the same interpreter build
