@@ -16,7 +16,9 @@ committed:
           (new sessions, and history revised by splits and dividends)
     2. Merge into the gold store data/gold/EQ/spot/daily/sharadar_SEP_{clean_date}.parquet,
        a downloaded row replacing the stored row of the same session and instrument;
-       the sync state goes to data/sync_state.json
+       the sync state goes to data/sync_state.json. Every file carries the
+       strategy (and gold the provider, dataset and clean_date) as columns,
+       not only in its path, so the files join on them
     3. Pivot config data.field to one column per symbol, from start to end
 
 Delete data/sync_state.json to download the full history again on the next run.
@@ -47,6 +49,12 @@ from fbs.etl.unify import rename_fields
 DATA_DIR = Path(__file__).parent / "data"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+# This strategy (= folder name), the provider and the table of its gold store;
+# written as columns into every file under ./data/, so the files join on them
+STRATEGY = Path(__file__).parent.name
+PROVIDER = "sharadar"
+DATASET = "SEP"
+
 # Gold store, ticker -> instrument_id map and sync state
 GOLD_DIR = DATA_DIR / "gold" / "EQ" / "spot" / "daily"
 MAP_FILE = DATA_DIR / "gold" / "instrument_map.csv"
@@ -54,6 +62,10 @@ STATE_FILE = DATA_DIR / "sync_state.json"
 
 # Standard price fields of the gold format; config data.field must be one of them
 FIELDS = ["open", "high", "low", "close", "close_raw", "close_adj", "volume"]
+
+# Gold primary key, and all gold columns in file order
+KEY = ["strategy", "provider", "dataset", "instrument_id", "timestamp"]
+COLUMNS = [*KEY, *FIELDS, "clean_date"]
 
 # Days before the last sync from which updated rows are downloaded again, so a
 # row Sharadar updated on the day of the last sync is not missed
@@ -122,7 +134,10 @@ def _figi_map(symbols):
 
     # Tickers already mapped
     known = pd.read_csv(MAP_FILE, dtype=str) if MAP_FILE.exists() else pd.DataFrame(
-        columns=["source", "source_id", "instrument_id"])
+        columns=["strategy", "source", "source_id", "instrument_id"])
+    # Files written before the strategy column existed lack it; rewrite them below
+    outdated = "strategy" not in known.columns
+    known = known.assign(strategy=STRATEGY)[["strategy", "source", "source_id", "instrument_id"]]
     figi = known.loc[known["source"] == "sharadar"].set_index("source_id")["instrument_id"]
     missing = [s for s in symbols if s not in figi.index]
 
@@ -140,10 +155,13 @@ def _figi_map(symbols):
             raise KeyError(f"Sharadar TICKERS has no FIGI for {unmapped}")
 
         # Add the new tickers to the map
-        added = pd.DataFrame({"source": "sharadar", "source_id": found.index, "instrument_id": found.values})
+        added = pd.DataFrame({"strategy": STRATEGY, "source": "sharadar", "source_id": found.index,
+                              "instrument_id": found.values})
         MAP_FILE.parent.mkdir(parents=True, exist_ok=True)
         pd.concat([known, added], ignore_index=True).to_csv(MAP_FILE, index=False)
         figi = pd.concat([figi, found])
+    elif outdated:
+        known.to_csv(MAP_FILE, index=False)
 
     return figi.loc[symbols]
 
@@ -158,14 +176,15 @@ def _load_state():
     Returns
     -------
     state : dict
+        strategy: this strategy.
         synced: ISO date of the last sync, None if never synced.
         coverage: ticker -> ISO date from which the store holds its rows.
     """
 
     if not STATE_FILE.exists():
-        return {"synced": None, "coverage": {}}
+        return {"strategy": STRATEGY, "synced": None, "coverage": {}}
 
-    return json.loads(STATE_FILE.read_text())
+    return {**json.loads(STATE_FILE.read_text()), "strategy": STRATEGY}
 
 # Latest gold file read
 def _load_gold():
@@ -175,14 +194,17 @@ def _load_gold():
     Returns
     -------
     gold : pd.DataFrame
-        Gold rows; empty if there is no gold file yet.
+        Gold rows in COLUMNS order; empty if there is no gold file yet.
     """
 
     files = sorted(GOLD_DIR.glob("sharadar_SEP_*.parquet"))
     if not files:
-        return pd.DataFrame(columns=["timestamp", "instrument_id", *FIELDS])
+        return pd.DataFrame(columns=COLUMNS)
 
-    return pd.read_parquet(files[-1])
+    # Files written before the key columns existed lack them
+    gold = pd.read_parquet(files[-1]).assign(strategy=STRATEGY, provider=PROVIDER, dataset=DATASET)
+
+    return gold.reindex(columns=COLUMNS)
 
 # SEP rows to the gold format
 def _to_gold(sep, figi):
@@ -199,17 +221,19 @@ def _to_gold(sep, figi):
     Returns
     -------
     gold : pd.DataFrame
-        timestamp = UTC session close (16:00 New York), instrument_id =
-        composite FIGI, then FIELDS.
+        COLUMNS: strategy, provider, dataset, instrument_id = composite FIGI,
+        timestamp = UTC session close (16:00 New York), then FIELDS;
+        clean_date is filled when saved.
     """
 
-    prices = rename_fields(sep, "sharadar", "SEP")
+    prices = rename_fields(sep, PROVIDER, DATASET)
     close = (prices["timestamp"] + pd.Timedelta(hours=16)).dt.tz_localize(NY)
-    gold = pd.DataFrame({"timestamp": close.dt.tz_convert("UTC"),
-                         "instrument_id": prices["ticker"].map(figi).astype("string")})
+    gold = pd.DataFrame({"strategy": STRATEGY, "provider": PROVIDER, "dataset": DATASET,
+                         "instrument_id": prices["ticker"].map(figi).astype("string"),
+                         "timestamp": close.dt.tz_convert("UTC")})
     gold[FIELDS] = prices[FIELDS]
 
-    return gold
+    return gold.reindex(columns=COLUMNS)
 
 # Gold and sync state write
 def _save(gold, state):
@@ -227,9 +251,10 @@ def _save(gold, state):
 
     # data/gold/EQ/spot/daily/sharadar_SEP_{today}.parquet, written in full before the old files go
     GOLD_DIR.mkdir(parents=True, exist_ok=True)
-    path = GOLD_DIR / f"sharadar_SEP_{date.today():%Y%m%d}.parquet"
+    today = date.today()
+    path = GOLD_DIR / f"sharadar_SEP_{today:%Y%m%d}.parquet"
     tmp = path.with_suffix(".tmp")
-    gold.to_parquet(tmp, index=False)
+    gold.assign(clean_date=today).to_parquet(tmp, index=False)
     tmp.replace(path)
     for old in GOLD_DIR.glob("sharadar_SEP_*.parquet"):
         if old != path:
@@ -295,13 +320,13 @@ def _sync(universe, start, figi):
         fresh = _to_gold(pd.concat(downloaded, ignore_index=True), figi)
         gold = pd.concat([gold, fresh], ignore_index=True)
         gold["timestamp"] = pd.to_datetime(gold["timestamp"], utc=True)  # an empty store has no dtype
-        gold = gold.drop_duplicates(["timestamp", "instrument_id"], keep="last")
+        gold = gold.drop_duplicates(KEY, keep="last")
         gold = gold.sort_values(["timestamp", "instrument_id"], ignore_index=True)
 
     # New coverage, then save
     for t in new + short:
         coverage[t] = first
-    state = {"synced": today.isoformat(), "coverage": coverage}
+    state = {"strategy": STRATEGY, "synced": today.isoformat(), "coverage": coverage}
     _save(gold, state)
 
     print(f"data: {len(new)} new, {len(short)} backfilled, {len(stored)} updated tickers; "
