@@ -203,7 +203,7 @@ def _to_gold(sep, figi):
         composite FIGI, then FIELDS.
     """
 
-    prices = rename_fields(sep, "Sharadar", "SEP")
+    prices = rename_fields(sep, "sharadar", "SEP")
     close = (prices["timestamp"] + pd.Timedelta(hours=16)).dt.tz_localize(NY)
     gold = pd.DataFrame({"timestamp": close.dt.tz_convert("UTC"),
                          "instrument_id": prices["ticker"].map(figi).astype("string")})

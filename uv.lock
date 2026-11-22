@@ -476,6 +476,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pyarrow" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "statsmodels" },
@@ -489,7 +490,6 @@ dev = [
 live = [
     { name = "alpaca-py" },
     { name = "matplotlib" },
-    { name = "pyyaml" },
 ]
 
 [package.metadata]
@@ -505,7 +505,7 @@ requires-dist = [
     { name = "pyarrow" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "python-dotenv" },
-    { name = "pyyaml", marker = "extra == 'live'" },
+    { name = "pyyaml" },
     { name = "scipy" },
     { name = "statsmodels" },
     { name = "uvicorn" },

@@ -21,22 +21,22 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "python-dotenv",
+    "pyyaml",       # src/fbs/etl/{provider}/metadata/provider.yaml, strategy config.yaml
 ]
 
 [project.optional-dependencies]
 dev = ["pytest"]
 live = [            # paper trading runner (src/fbs/live): uv sync --extra live
     "alpaca-py",
-    "pyyaml",
     "matplotlib",   # dry-run PDF report (src/fbs/live/report.py)
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
-# Ship each data source's field_map.csv and vendor dictionary with the package
+# Ship each data provider's metadata (field_map.csv, vendor dictionary, provider.yaml) with the package
 [tool.setuptools.package-data]
-"fbs.etl" = ["*/metadata/*.csv"]
+"fbs.etl" = ["*/metadata/*.csv", "*/metadata/*.yaml"]
 
 [tool.uv]
 # Use the CPython that uv downloads and manages, not a system or Anaconda Python,

@@ -30,7 +30,7 @@ PR 标题格式：<JIRA 编号> <一句话说明改动>
 - 
 
 ### 架构与文档
-<!-- C4 图（docs/architecture/）、模块 README、根目录 README -->
+<!-- C4 图（docs/C4_Architecture/）、模块 README、根目录 README -->
 - 
 
 ### 回测模块

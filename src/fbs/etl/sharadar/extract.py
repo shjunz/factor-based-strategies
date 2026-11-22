@@ -5,12 +5,18 @@ extract.py - Download and read data from Sharadar products on Nasdaq Data Link.
 # %%
 # Imports
 import json
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 import nasdaqdatalink
 import pandas as pd
+import yaml
 
 # %%
 # Constants
+
+# Provider settings: API code and the name of the API key variable (no secrets)
+PROVIDER_PATH = Path(__file__).parent / "metadata" / "provider.yaml"
 
 # Columns to sort rows by in priority order, if present in the table
 SORT_KEYS = ["ticker", "dimension", "calendardate", "datekey", "date"]
@@ -19,6 +25,22 @@ SORT_KEYS = ["ticker", "dimension", "calendardate", "datekey", "date"]
 DATE_COLUMNS = ["date", "datekey", "calendardate", "reportperiod", "lastupdated",
                 "firstadded", "firstpricedate", "lastpricedate", "firstquarter",
                 "lastquarter"]
+
+# %%
+# Provider settings
+def provider_config():
+    """
+    Sharadar provider settings from metadata/provider.yaml.
+
+    Returns
+    -------
+    config : dict
+        provider, vendor, api, api_key_env, extractor. api_key_env is the
+        name of the API key environment variable, not the key.
+    """
+
+    with open(PROVIDER_PATH, encoding="utf-8") as f:
+        return yaml.safe_load(f)
 
 # %%
 # Sharadar table download
@@ -68,8 +90,19 @@ def download_table(table, path, /, columns=None, overwrite=False, **filters):
     # Write to a temporary file so an interrupted download leaves no partial file
     tmp = path.with_name(path.name + ".part")
 
-    # API key is read from the NASDAQ_DATA_LINK_API_KEY environment variable
-    nasdaqdatalink.export_table(f"SHARADAR/{table}", filename=str(tmp), **query)
+    # API code and key variable name come from metadata/provider.yaml; the key
+    # itself comes from that environment variable (.env locally, Secrets
+    # Manager on ECS). Set it here because nasdaqdatalink reads the variable
+    # only once at import, possibly before .env was loaded.
+    config = provider_config()
+    key = os.environ.get(config["api_key_env"])
+    if key:
+        nasdaqdatalink.ApiConfig.api_key = key
+    elif not nasdaqdatalink.ApiConfig.api_key:
+        raise RuntimeError(f"set the {config['api_key_env']} environment variable "
+                           "(.env locally, Secrets Manager on ECS)")
+    nasdaqdatalink.export_table(config["api"].format(dataset=table),
+                                filename=str(tmp), **query)
 
     tmp.replace(path)
 

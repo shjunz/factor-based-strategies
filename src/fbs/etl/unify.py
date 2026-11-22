@@ -18,22 +18,22 @@ STANDARD_FIELDS = {
 # %%
 # Field Names
 
-# Field name mapping table of a data source: src/fbs/etl/{source}/metadata/field_map.csv
-def field_map_path(source):
-    return Path(__file__).parent / source.lower() / "metadata" / "field_map.csv"
+# Field name mapping table of a data provider: src/fbs/etl/{provider}/metadata/field_map.csv
+def field_map_path(provider):
+    return Path(__file__).parent / provider.lower() / "metadata" / "field_map.csv"
 
 # Field renaming
-def rename_fields(raw, source, dataset):
+def rename_fields(raw, provider, dataset):
     """
     Rename raw fields to standard field names.
 
     Parameters
     ----------
     raw : pd.DataFrame
-        Raw data of one dataset from one data source. Index = row number,
+        Raw data of one dataset from one data provider. Index = row number,
         Columns = source field names.
-    source : str
-        Source name of `raw`.
+    provider : str
+        Data provider of `raw`, e.g. 'sharadar' (case-insensitive).
     dataset : str
         Dataset name of `raw`.
 
@@ -45,8 +45,8 @@ def rename_fields(raw, source, dataset):
     """
 
     # Look up the standard names of this dataset's fields in field_map
-    field_map = pd.read_csv(field_map_path(source))
-    rows = (field_map["source"] == source) & (field_map["dataset"] == dataset)
+    field_map = pd.read_csv(field_map_path(provider))
+    rows = (field_map["provider"] == provider.lower()) & (field_map["dataset"] == dataset)
     mapping = field_map.loc[rows].set_index("source_field")["field"]
 
     # Rename the mapped fields

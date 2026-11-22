@@ -41,7 +41,7 @@ def clean_sep(sep_path, tickers_path, clean_date=None):
     sep = add_instrument_id(sep, tickers, "SEP")
 
     # Format
-    sep = rename_fields(sep, "Sharadar", "SEP")
+    sep = rename_fields(sep, "sharadar", "SEP")
     sep["timestamp"] = map_date_timestamps(sep["timestamp"], "XNYS")
     clean = sep[STANDARD_FIELDS["EQ"]]
 
