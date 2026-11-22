@@ -29,8 +29,18 @@ def clean_sep(sep_path, tickers_path, clean_date=None):
 
     Returns
     -------
-    Path
+    path : Path
         The written clean data file.
+
+    Examples
+    --------
+    Reads the bronze zip files and writes to the gold layer under data/:
+
+    >>> prices = BRONZE_DIR / "sharadar_equity_prices"
+    >>> clean_sep(prices / "SEP" / "20261029_ALL.zip",
+    ...           prices / "TICKERS" / "20261029_ALL.zip",
+    ...           clean_date=date(2026, 10, 29))  # doctest: +SKIP
+    PosixPath('.../data/gold/EQ/spot/daily/sharadar_SEP_20261029.parquet')
     """
 
     # Raw SEP prices and the TICKERS columns needed for identifiers

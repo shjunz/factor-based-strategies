@@ -27,6 +27,16 @@ def risk_input_data(data, signal_session):
     -------
     failures : list of str
         Empty if the data is usable.
+
+    Examples
+    --------
+    >>> from datetime import date
+    >>> data = pd.DataFrame({"SPY": [470.0, 472.0]},
+    ...                     index=pd.to_datetime(["2024-01-02", "2024-01-03"]))
+    >>> risk_input_data(data, date(2024, 1, 3))
+    []
+    >>> risk_input_data(data, date(2024, 1, 4))
+    ['stale data: last session 2024-01-03, expected 2024-01-04']
     """
 
     # No rows at all

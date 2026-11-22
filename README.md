@@ -50,8 +50,8 @@ make install
 # 2. 生成 .env，再打开 .env 填入 API key（等号两边不要有空格）
 make env
 
-# 3. 启动后端
-make api
+# 3. 用示例策略干跑一次：下载数据、算权重、生成计划订单和报告，不下单
+.venv/bin/python -m fbs.live rebalance strategy_example --asof 2026-10-30
 ```
 
 #### Windows
@@ -70,48 +70,20 @@ if (Test-Path .env) { ".env already exists, left unchanged" } else { Set-Content
 
 # 3. 打开 .env 填入 API key（等号两边不要有空格）
 
-# 4. 启动后端
-.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 127.0.0.1 --port 8000 --reload
+# 4. 用示例策略干跑一次：下载数据、算权重、生成计划订单和报告，不下单
+.venv\Scripts\python -m fbs.live rebalance strategy_example --asof 2026-10-30
 ```
 
 不需要激活虚拟环境（`activate`），直接用 `.venv\Scripts\` 下的程序即可，这样也避开了 PowerShell 默认禁止运行脚本的限制。
 
-第 4 步启动后，打开 http://127.0.0.1:8000/docs 可以看到全部接口(按 Ctrl+C 停止) 
+`.env` 里要填的 key：
 
-**下载数据只用 `POST /api/downloads` 这一个接口。** 步骤：
+| 变量 | 谁用 | 什么时候需要 |
+|---|---|---|
+| `NASDAQ_DATA_LINK_API_KEY` | [fbs.etl](src/fbs/etl/README.md) 下载 Sharadar 数据 | 一开始就要 |
+| `ALPACA_账户名_KEY`、`ALPACA_账户名_SECRET` | [fbs.live](src/fbs/live/README.md) 连接 Alpaca paper 账户，账户名是策略 config.yaml 的 `paper.account` | 干跑和 paper trading（干跑也会读真实账户） |
 
-1. 展开 `downloads` 下的 `POST /api/downloads`，点 **Try it out**
-2. Request body 里已经填好一个能直接运行的模板（SPY 在 2024 年 1 月的 SFP 日线），按需要修改后点 **Execute**：
-
-   ```json
-   {
-     "product": "fund_prices",
-     "table": "SFP",
-     "filters": {"ticker": "SPY", "date": {"gte": "2024-01-01", "lte": "2024-01-31"}}
-   }
-   ```
-
-3. 返回结果里有 `job_id`。用 `GET /api/downloads/{job_id}` 查进度：`status` 变成 `done` 后，`path` 就是文件位置
-
-请求参数：
-
-| 参数 | 是否必填 | 含义 | 取值 |
-|---|---|---|---|
-| `product` | 必填 | 产品 | `core_us_fundamentals`、`core_us_insiders`、`core_us_institutional_investors`、`equity_prices`、`fund_prices` 五个之一 |
-| `table` | 必填 | 表代码，必须属于 `product` | `GET /api/tables` 列出每个产品有哪些表；各表的含义见 [data/data_library.md](data/data_library.md) |
-| `filters` | 选填 | 按列过滤，不填就是下载整张表 | 只有可过滤列能用，见 `GET /api/tables/{table}/schema` 返回的 `filters` |
-| `columns` | 选填 | 只下载这些列，不填就是全部列 | `GET /api/tables/{table}/schema` 返回的 `columns` |
-| `overwrite` | 选填，默认 `false` | 当天已经下载过同样的文件时，是否重新下载 | `true` / `false` |
-
-`filters` 中每一列的值有三种写法：
-
-| 写法 | 例子 |
-|---|---|
-| 单个值 | `"ticker": "SPY"` |
-| 多个值 | `"ticker": ["SPY", "QQQ"]` |
-| 范围，可用 `gt`、`gte`、`lt`、`lte`，日期写成 `YYYY-MM-DD` | `"date": {"gte": "2024-01-01", "lte": "2024-01-31"}` |
-
-
+AWS 上不用 `.env`，key 存在 Secrets Manager，作为环境变量注入。干跑的结果在 `strategy/strategy_example/records/`；新建策略、paper trading 和上线的步骤见 [strategy/README.md](strategy/README.md)。
 
 ## 常用命令
 
@@ -124,9 +96,11 @@ if (Test-Path .env) { ".env already exists, left unchanged" } else { Set-Content
 | `make lock` | 手动改了 `pyproject.toml` 后，重新生成 `uv.lock` |
 | `make upgrade` | 把所有包升级到允许范围内的最新版，重写 `uv.lock` 并同步 `.venv` |
 | `make env` | 生成只含 `NASDAQ_DATA_LINK_API_KEY=` 一行的 `.env`，已存在时不覆盖 |
-| `make api` | 启动后端，修改代码后自动重启，只能本机访问 |
-| `make api-prod` | 启动后端，不自动重启，其他机器也能访问（部署用） |
-| `make api PORT=9000` | 换端口启动 |
+| `python -m fbs.live 命令 策略名` | 实盘交易：`rebalance`、`status`、`performance`、`halt`、`flatten`，见 [src/fbs/live/README.md](src/fbs/live/README.md) |
+| `python -m fbs.etl.sharadar.pipeline` | 把 `data/bronze/` 下的 SEP 清洗成 `data/gold/`，见 [src/fbs/etl/README.md](src/fbs/etl/README.md) |
+| `make diagram-tools` | 下载画 C4 图的工具（Structurizr CLI、PlantUML），每台机器一次，需要 Java |
+| `make diagrams` | 由 `docs/C4_Architecture/workspace.dsl` 重新生成 C4 图 SVG |
+| `make data-diagrams` | 由 `docs/Data_architecture/*.puml` 重新生成数据架构图 SVG |
 | `make clean-bronze` | 删除 `data/bronze/` 中的全部下载数据，执行前需要输入 `y` 确认 |
 | `make clean` | 删除 `.venv` 和构建产物，之后需要重新 `make install` |
 
@@ -138,9 +112,7 @@ Windows 下对应的 PowerShell 命令：
 | `make lock` | `uv lock` |
 | `make upgrade` | `uv lock --upgrade`，再 `uv sync --locked --extra live` |
 | `make env` | `if (Test-Path .env) { ".env already exists, left unchanged" } else { Set-Content .env "NASDAQ_DATA_LINK_API_KEY=" -Encoding ascii }` |
-| `make api` | `.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 127.0.0.1 --port 8000 --reload` |
-| `make api-prod` | `.venv\Scripts\uvicorn fbs.api.main:app --app-dir src --env-file .env --host 0.0.0.0 --port 8000` |
-| `make api PORT=9000` | 把 `make api` 那条命令里的 `--port 8000` 改成 `--port 9000` |
+| `python -m ...` | 把 `python` 换成 `.venv\Scripts\python` |
 | `make clean-bronze` | `if ((Read-Host "Delete everything in data/bronze? [y/N]") -eq 'y') { Get-ChildItem data\bronze \| Remove-Item -Recurse -Force }` |
 | `make clean` | `Remove-Item -Recurse -Force .venv, build, dist, src\*.egg-info -ErrorAction SilentlyContinue`，再 `Get-ChildItem -Recurse -Directory -Filter __pycache__ \| Remove-Item -Recurse -Force` |
 
@@ -148,9 +120,9 @@ Windows 下对应的 PowerShell 命令：
 
 | 目录 | 内容 |
 |---|---|
-| `src/fbs/etl/` | 数据下载：提取、变换、存储（[README](src/fbs/etl/README.md)） |
-| `src/fbs/factor/` | 因子算子 |
-| `src/fbs/sample/` | 样本构建：前向收益等 |
+| `src/fbs/etl/` | 数据下载：抽取、代码映射、格式统一、写入（[README](src/fbs/etl/README.md)） |
+| `src/fbs/factor/` | 因子算子：`delay`、`ts_mean`、`ts_spearman` 等时间序列和逐元素运算 |
+| `src/fbs/sample/` | 样本构建：前向收益、波动率调整收益 |
 | `src/fbs/backtesting/` | 回测（[README](src/fbs/backtesting/README.md)） |
 | `src/fbs/live/` | 实盘交易：Alpaca paper trading（[README](src/fbs/live/README.md)） |
 | `src/fbs/risk/` | 风控（[README](src/fbs/risk/README.md)） |
@@ -158,4 +130,5 @@ Windows 下对应的 PowerShell 命令：
 | `src/fbs/research/` | 策略研究：`eval/` 因子评价、`combination_factor/` 因子组合（[README](src/fbs/research/README.md)） |
 | `strategy/` | 每个策略一个文件夹（[README](strategy/README.md)） |
 | `docs/C4_Architecture/` | C4 架构图：`workspace.dsl` 和生成的 SVG |
-| `data/bronze/`、`data/silver/`、`data/gold/` | 原始数据、中间数据、清洗数据，只保存在本地 |
+| `docs/Data_architecture/` | 数据架构：实体关系、数据字典、S3 布局、JSON Schema、生命周期（[README](docs/Data_architecture/README.md)） |
+| `data/bronze/`、`data/silver/`、`data/gold/` | 仓库共享的原始数据、中间数据、清洗数据，只保存在本地；策略自己的数据在 `strategy/{name}/data/` |

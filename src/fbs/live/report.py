@@ -68,6 +68,21 @@ def _table(ax, rows, header, title, col_widths=None):
         Title above the table.
     col_widths : list of float, optional
         Column widths as fractions of the axis width; equal widths if None.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    >>> fig, ax = plt.subplots()
+    >>> _table(ax, [["SPY", "50.00%"]], ["Symbol", "Weight"], "Target weights")
+    >>> len(ax.tables), ax.get_title(loc="left")
+    (1, 'Target weights')
+    >>> fig, ax = plt.subplots()
+    >>> _table(ax, [], ["Checks"], "Checks")
+    >>> [t.get_text() for t in ax.texts]
+    ['none']
     """
 
     ax.axis("off")
@@ -97,6 +112,26 @@ def _run_summary_page(pdf, strategy, record):
         The loaded strategy.
     record : dict
         The run record written by runner.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from pathlib import Path
+    >>> from fbs.live.loader import load_strategy
+    >>> strategy = load_strategy("strategy_example")
+    >>> record = {"mode": "dryrun", "signal_session": "2024-12-30",
+    ...           "exec_session": "2024-12-31", "run_at": "2024-12-31T15:00:00+00:00",
+    ...           "status": "planned", "turnover": 0.26, "failures": [], "notes": [],
+    ...           "targets": {"SPY": 0.5, "QQQ": 0.5},
+    ...           "orders": [{"side": "buy", "symbol": "QQQ", "qty": 125, "reason": "open"}]}
+    >>> with PdfPages(Path(tempfile.mkdtemp()) / "run.pdf") as pdf:
+    ...     _run_summary_page(pdf, strategy, record)
+    ...     pdf.get_pagecount()
+    1
     """
 
     fig = plt.figure(figsize=A4)
@@ -159,6 +194,24 @@ def _dry_run_backtest_page(pdf, bt, rule, split):
         config.yaml rebalance, for the title.
     split : dict or None
         config.yaml split, None for no split.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from pathlib import Path
+    >>> rng = np.random.default_rng(0)
+    >>> bt = pd.DataFrame({"strategy": rng.normal(0.0005, 0.01, 60),
+    ...                    "benchmark": rng.normal(0.0003, 0.01, 60), "turnover": 0.0},
+    ...                   index=pd.bdate_range("2023-01-02", periods=60))
+    >>> with PdfPages(Path(tempfile.mkdtemp()) / "backtest.pdf") as pdf:
+    ...     _dry_run_backtest_page(pdf, bt, "M",
+    ...                            {"is_end": "2023-02-15", "embargo_sessions": 5})
+    ...     pdf.get_pagecount()
+    1
     """
 
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=A4, gridspec_kw={"height_ratios": [3, 1.3, 1.6]})
@@ -229,6 +282,34 @@ def write_run_report(path, strategy, record, prices, weights):
     -------
     path : Path
         The written file.
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from pathlib import Path
+    >>> from fbs.live.loader import load_strategy
+    >>> strategy = load_strategy("strategy_example")
+    >>> record = {"mode": "dryrun", "signal_session": "2024-12-30",
+    ...           "exec_session": "2024-12-31", "run_at": "2024-12-31T15:00:00+00:00",
+    ...           "status": "planned", "turnover": 0.26, "failures": [], "notes": [],
+    ...           "targets": {"SPY": 0.5, "QQQ": 0.5},
+    ...           "orders": [{"side": "buy", "symbol": "QQQ", "qty": 125, "reason": "open"}]}
+    >>> folder = Path(tempfile.mkdtemp())
+
+    A run blocked before fetching has the summary page only:
+
+    >>> write_run_report(folder / "2024-12-31-dryrun.pdf", strategy, record, None, None).name
+    '2024-12-31-dryrun.pdf'
+
+    With prices and weights, the backtest page follows:
+
+    >>> idx = pd.bdate_range("2024-10-01", periods=60)
+    >>> prices = pd.DataFrame({"SPY": np.linspace(570, 590, 60),
+    ...                        "QQQ": np.linspace(490, 515, 60)}, index=idx)
+    >>> weights = pd.DataFrame(0.5, index=idx, columns=prices.columns)
+    >>> write_run_report(folder / "2024-12-31-rebalance.pdf", strategy, record,
+    ...                  prices, weights).exists()
+    True
     """
 
     rule = strategy.config["rebalance"]
@@ -243,54 +324,6 @@ def write_run_report(path, strategy, record, prices, weights):
 
 # %%
 # Live report: after going live
-
-# Live daily returns
-def live_returns(equity, capital, first_exec):
-    """
-    Daily returns of the paper account on config.yaml paper.capital.
-
-    Parameters
-    ----------
-    equity : pd.Series
-        Closing account equity per session.
-    capital : float
-        config.yaml paper.capital in USD.
-    first_exec : date
-        Execution session of the first submitted rebalance.
-
-    Returns
-    -------
-    r : pd.Series
-        Daily returns from the session after `first_exec`, the first session
-        that holds the positions for a whole day.
-    """
-
-    r = (equity.diff() / capital).dropna()
-    r = r[r.index > pd.Timestamp(first_exec)]
-
-    return r
-
-# Live against backtest
-def compare(live, bt):
-    """
-    Live, backtest and benchmark daily returns on the sessions all of them have.
-
-    Parameters
-    ----------
-    live : pd.Series
-        Output of live_returns.
-    bt : pd.DataFrame
-        Output of backtest.
-
-    Returns
-    -------
-    cmp : pd.DataFrame
-        Index = session dates, Columns = live, backtest, benchmark.
-    """
-
-    cmp = pd.DataFrame({"live": live, "backtest": bt["strategy"], "benchmark": bt["benchmark"]}).dropna()
-
-    return cmp
 
 # Fill quality of each order
 def executions(orders, closes, name):
@@ -313,6 +346,23 @@ def executions(orders, closes, name):
         Columns = session, symbol, side, qty, filled_qty, fill, close,
         notional, slippage_bps, status. slippage_bps > 0 means the fill was
         worse than the close.
+
+    Examples
+    --------
+    >>> from types import SimpleNamespace as Order
+    >>> orders = [Order(client_order_id="demo-2024-12-31-SPY-open", side="buy",
+    ...                 symbol="SPY", qty="10", filled_qty="10",
+    ...                 filled_avg_price="586.37", status="filled"),
+    ...           Order(client_order_id="demo-2024-12-31-QQQ-open", side="sell",
+    ...                 symbol="QQQ", qty="5", filled_qty="0",
+    ...                 filled_avg_price=None, status="canceled")]
+    >>> closes = pd.DataFrame({"SPY": [586.08], "QQQ": [511.23]},
+    ...                       index=pd.to_datetime(["2024-12-31"]))
+    >>> ex = executions(orders, closes, "demo")
+    >>> ex[["symbol", "side", "fill", "close", "slippage_bps", "status"]].round(2)
+      symbol  side    fill   close  slippage_bps    status
+    0    SPY   buy  586.37  586.08          4.95    filled
+    1    QQQ  sell     NaN  511.23           NaN  canceled
     """
 
     rows = []
@@ -349,6 +399,21 @@ def execution_summary(ex):
     -------
     s : dict
         orders, filled, not_filled, fill_rate, slippage_bps, slippage_usd.
+
+    Examples
+    --------
+    >>> from types import SimpleNamespace as Order
+    >>> orders = [Order(client_order_id="demo-2024-12-31-SPY-open", side="buy",
+    ...                 symbol="SPY", qty="10", filled_qty="10",
+    ...                 filled_avg_price="586.37", status="filled"),
+    ...           Order(client_order_id="demo-2024-12-31-QQQ-open", side="sell",
+    ...                 symbol="QQQ", qty="5", filled_qty="0",
+    ...                 filled_avg_price=None, status="canceled")]
+    >>> closes = pd.DataFrame({"SPY": [586.08], "QQQ": [511.23]},
+    ...                       index=pd.to_datetime(["2024-12-31"]))
+    >>> s = execution_summary(executions(orders, closes, "demo"))
+    >>> {k: round(float(v), 2) for k, v in s.items()}
+    {'orders': 2.0, 'filled': 1.0, 'not_filled': 1.0, 'fill_rate': 0.67, 'slippage_bps': 4.95, 'slippage_usd': 2.9}
     """
 
     priced = ex[ex["filled_qty"] > 0].dropna(subset=["slippage_bps"])
@@ -379,6 +444,25 @@ def _live_returns_page(pdf, strategy, info, cmp):
         Header lines.
     cmp : pd.DataFrame
         Output of compare.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from pathlib import Path
+    >>> from fbs.live.loader import load_strategy
+    >>> strategy = load_strategy("strategy_example")
+    >>> rng = np.random.default_rng(0)
+    >>> cmp = pd.DataFrame(rng.normal(0.0005, 0.01, (20, 3)),
+    ...                    index=pd.bdate_range("2024-12-02", periods=20),
+    ...                    columns=["live", "backtest", "benchmark"])
+    >>> with PdfPages(Path(tempfile.mkdtemp()) / "live.pdf") as pdf:
+    ...     _live_returns_page(pdf, strategy, ["Live since 2024-12-02"], cmp)
+    ...     pdf.get_pagecount()
+    1
     """
 
     fig = plt.figure(figsize=A4)
@@ -432,6 +516,33 @@ def _live_execution_page(pdf, cmp, ex, summary):
         Output of executions.
     summary : dict
         Output of execution_summary.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from pathlib import Path
+    >>> rng = np.random.default_rng(0)
+    >>> cmp = pd.DataFrame(rng.normal(0.0005, 0.01, (20, 3)),
+    ...                    index=pd.bdate_range("2024-12-02", periods=20),
+    ...                    columns=["live", "backtest", "benchmark"])
+    >>> from types import SimpleNamespace as Order
+    >>> orders = [Order(client_order_id="demo-2024-12-31-SPY-open", side="buy",
+    ...                 symbol="SPY", qty="10", filled_qty="10",
+    ...                 filled_avg_price="586.37", status="filled"),
+    ...           Order(client_order_id="demo-2024-12-31-QQQ-open", side="sell",
+    ...                 symbol="QQQ", qty="5", filled_qty="0",
+    ...                 filled_avg_price=None, status="canceled")]
+    >>> closes = pd.DataFrame({"SPY": [586.08], "QQQ": [511.23]},
+    ...                       index=pd.to_datetime(["2024-12-31"]))
+    >>> ex = executions(orders, closes, "demo")
+    >>> with PdfPages(Path(tempfile.mkdtemp()) / "live.pdf") as pdf:
+    ...     _live_execution_page(pdf, cmp, ex, execution_summary(ex))
+    ...     pdf.get_pagecount()
+    1
     """
 
     fig = plt.figure(figsize=A4)
@@ -489,6 +600,30 @@ def write_live_report(path, strategy, info, cmp, ex):
     -------
     path : Path
         The written file.
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from pathlib import Path
+    >>> from fbs.live.loader import load_strategy
+    >>> strategy = load_strategy("strategy_example")
+    >>> rng = np.random.default_rng(0)
+    >>> cmp = pd.DataFrame(rng.normal(0.0005, 0.01, (20, 3)),
+    ...                    index=pd.bdate_range("2024-12-02", periods=20),
+    ...                    columns=["live", "backtest", "benchmark"])
+    >>> from types import SimpleNamespace as Order
+    >>> orders = [Order(client_order_id="demo-2024-12-31-SPY-open", side="buy",
+    ...                 symbol="SPY", qty="10", filled_qty="10",
+    ...                 filled_avg_price="586.37", status="filled"),
+    ...           Order(client_order_id="demo-2024-12-31-QQQ-open", side="sell",
+    ...                 symbol="QQQ", qty="5", filled_qty="0",
+    ...                 filled_avg_price=None, status="canceled")]
+    >>> closes = pd.DataFrame({"SPY": [586.08], "QQQ": [511.23]},
+    ...                       index=pd.to_datetime(["2024-12-31"]))
+    >>> path = Path(tempfile.mkdtemp()) / "2024-12-31-performance.pdf"
+    >>> write_live_report(path, strategy, ["Live since 2024-12-02"], cmp,
+    ...                   executions(orders, closes, "demo")).name
+    '2024-12-31-performance.pdf'
     """
 
     with PdfPages(path) as pdf:

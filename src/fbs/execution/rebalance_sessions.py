@@ -25,6 +25,16 @@ def execution_rebalance_sessions(sessions, rule):
     rebalance : set of date
         Rebalance sessions. The last session of `sessions` is never one for W
         or M, since its next session is unknown.
+
+    Examples
+    --------
+    >>> from datetime import date
+    >>> sessions = [date(2024, 1, 29), date(2024, 1, 30), date(2024, 1, 31),
+    ...             date(2024, 2, 1), date(2024, 2, 2), date(2024, 2, 5)]
+    >>> sorted(execution_rebalance_sessions(sessions, "W"))
+    [datetime.date(2024, 2, 2)]
+    >>> sorted(execution_rebalance_sessions(sessions, "M"))
+    [datetime.date(2024, 1, 31)]
     """
 
     # Every session

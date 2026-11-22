@@ -31,6 +31,21 @@ def rank_ic(signal, fwd_ret):
     -------
     rankic : pd.Series
         Rank IC per timestamp.
+
+    Examples
+    --------
+    >>> idx = pd.date_range("2024-01-01", periods=3)
+    >>> signal = pd.DataFrame([[1, 2, 3, 4, 5], [5, 4, 3, 2, 1], [1, 3, 2, 5, 4]],
+    ...                       index=idx, columns=list("ABCDE"), dtype=float)
+    >>> fwd_ret = pd.DataFrame([[.01, .02, .03, .04, .05],
+    ...                         [.01, .02, .03, .04, .05],
+    ...                         [.02, .01, .03, .05, .04]],
+    ...                        index=idx, columns=list("ABCDE"))
+    >>> rank_ic(signal, fwd_ret)
+    2024-01-01    1.0
+    2024-01-02   -1.0
+    2024-01-03    0.7
+    Freq: D, dtype: float64
     """
 
     # Align signal and forward return
@@ -60,6 +75,14 @@ def nw_lag(x):
     -------
     lag : int
         Lag for the Newey-West standard error.
+
+    Examples
+    --------
+    >>> ic = pd.Series(np.random.default_rng(0).normal(0.05, 0.1, 250))
+    >>> nw_lag(ic)
+    4
+    >>> nw_lag(np.ones(10))
+    2
     """
     x = np.asarray(x, dtype=float)
     T = len(x)
@@ -97,6 +120,13 @@ def nw_test(x):
     -------
     result : dict
         Test summary.
+
+    Examples
+    --------
+    >>> ic = pd.Series(np.random.default_rng(0).normal(0.05, 0.1, 250))
+    >>> result = nw_test(ic)
+    >>> {k: round(float(v), 4) for k, v in result.items()}
+    {'mean': 0.0494, 'lag': 4.0, 'se': 0.0068, 't': 7.2388, 'p': 0.0, 'ci_low': 0.036, 'ci_high': 0.0628}
     """
     x = np.asarray(x, dtype=float)
     lag = nw_lag(x)
@@ -132,6 +162,13 @@ def summary_rankic(ic):
     -------
     summary : pd.DataFrame
         Summary statistics.
+
+    Examples
+    --------
+    >>> ic = pd.Series(np.random.default_rng(0).normal(0.05, 0.1, 250))
+    >>> summary_rankic(ic)[["mean", "lag", "t", "ir", "win_rate"]].round(3)
+        mean  lag      t     ir  win_rate
+    0  0.049    4  7.239  0.485      0.68
     """
     result = nw_test(ic)
     summary = pd.DataFrame(
@@ -174,6 +211,26 @@ def bucket_returns(signal, fwd_ret, n_quantiles=5, winsor=0.0):
     -------
     buckets : pd.DataFrame
         Bucketed forward returns. Index = timestamp, Columns = bucket number.
+
+    Examples
+    --------
+    >>> idx = pd.date_range("2024-01-01", periods=3)
+    >>> signal = pd.DataFrame([[1, 2, 3, 4, 5], [5, 4, 3, 2, 1], [1, 3, 2, 5, 4]],
+    ...                       index=idx, columns=list("ABCDE"), dtype=float)
+    >>> fwd_ret = pd.DataFrame([[.01, .02, .03, .04, .05],
+    ...                         [.01, .02, .03, .04, .05],
+    ...                         [.02, .01, .03, .05, .04]],
+    ...                        index=idx, columns=list("ABCDE"))
+    >>> bucket_returns(signal, fwd_ret, n_quantiles=5)
+                   1     2     3     4     5
+    2024-01-01  0.01  0.02  0.03  0.04  0.05
+    2024-01-02  0.05  0.04  0.03  0.02  0.01
+    2024-01-03  0.02  0.03  0.01  0.04  0.05
+    >>> bucket_returns(signal, fwd_ret, n_quantiles=2)
+                    1         2
+    2024-01-01  0.015  0.040000
+    2024-01-02  0.045  0.020000
+    2024-01-03  0.025  0.033333
     """
 
     # Align signal and forward return
@@ -217,6 +274,21 @@ def quantile_spread(buckets):
     -------
     spread : pd.Series
         Quantile spread per timestamp.
+
+    Examples
+    --------
+    >>> idx = pd.date_range("2024-01-01", periods=3)
+    >>> signal = pd.DataFrame([[1, 2, 3, 4, 5], [5, 4, 3, 2, 1], [1, 3, 2, 5, 4]],
+    ...                       index=idx, columns=list("ABCDE"), dtype=float)
+    >>> fwd_ret = pd.DataFrame([[.01, .02, .03, .04, .05],
+    ...                         [.01, .02, .03, .04, .05],
+    ...                         [.02, .01, .03, .05, .04]],
+    ...                        index=idx, columns=list("ABCDE"))
+    >>> quantile_spread(bucket_returns(signal, fwd_ret, n_quantiles=5))
+    2024-01-01    0.020
+    2024-01-02   -0.020
+    2024-01-03    0.015
+    Freq: D, dtype: float64
     """
 
     # Long-short
@@ -240,6 +312,13 @@ def summary_spread(spread):
     -------
     summary : pd.DataFrame
         Summary statistics.
+
+    Examples
+    --------
+    >>> spread = pd.Series(np.random.default_rng(1).normal(0.002, 0.01, 250))
+    >>> summary_spread(spread).round(3)
+        mean  lag      t
+    0  0.001    4  2.188
     """
     result = nw_test(spread)
     summary = pd.DataFrame(
@@ -270,6 +349,21 @@ def fama_macbeth(signal, fwd_ret):
     -------
     factor_ret : pd.Series
         Factor return per timestamp.
+
+    Examples
+    --------
+    >>> idx = pd.date_range("2024-01-01", periods=3)
+    >>> signal = pd.DataFrame([[1, 2, 3, 4, 5], [5, 4, 3, 2, 1], [1, 3, 2, 5, 4]],
+    ...                       index=idx, columns=list("ABCDE"), dtype=float)
+    >>> fwd_ret = pd.DataFrame([[.01, .02, .03, .04, .05],
+    ...                         [.01, .02, .03, .04, .05],
+    ...                         [.02, .01, .03, .05, .04]],
+    ...                        index=idx, columns=list("ABCDE"))
+    >>> fama_macbeth(signal, fwd_ret).round(4)
+    2024-01-01    0.0158
+    2024-01-02   -0.0158
+    2024-01-03    0.0111
+    Freq: D, dtype: float64
     """
 
     # Align signal and forward return
@@ -303,6 +397,13 @@ def summary_fama_macbeth(factor_ret):
     -------
     summary : pd.DataFrame
         Summary statistics.
+
+    Examples
+    --------
+    >>> factor_ret = pd.Series(np.random.default_rng(1).normal(0.002, 0.01, 250))
+    >>> summary_fama_macbeth(factor_ret).round(3)
+        mean  lag      t
+    0  0.001    4  2.188
     """
     result = nw_test(factor_ret)
     summary = pd.DataFrame(
@@ -333,6 +434,13 @@ def reverse_check(ic, spread):
     -------
     reverse_flag : bool
         True if both the mean Rank IC and the mean quantile spread are negative.
+
+    Examples
+    --------
+    >>> reverse_check(pd.Series([-0.02, -0.01]), pd.Series([-0.001, 0.0]))
+    True
+    >>> reverse_check(pd.Series([0.02, 0.01]), pd.Series([-0.001, 0.0]))
+    False
     """
 
     # Both mean Rank IC and mean quantile spread are negative
@@ -355,6 +463,13 @@ def u_shape_check(buckets):
     -------
     u_shape_flag : bool
         True if the factor is U-shaped or inverted U-shaped.
+
+    Examples
+    --------
+    >>> u_shape_check(pd.DataFrame({1: [0.03], 2: [0.0], 3: [0.01], 4: [0.02]}))
+    True
+    >>> u_shape_check(pd.DataFrame({1: [0.0], 2: [0.01], 3: [0.02], 4: [0.03]}))
+    False
     """
 
     # Mean forward return of each bucket over time
@@ -394,6 +509,21 @@ def ic_decay(signal, fwd_rets):
     -------
     decay : pd.Series
         Mean Rank IC per k.
+
+    Examples
+    --------
+    >>> idx = pd.date_range("2024-01-01", periods=3)
+    >>> signal = pd.DataFrame([[1, 2, 3, 4, 5], [5, 4, 3, 2, 1], [1, 3, 2, 5, 4]],
+    ...                       index=idx, columns=list("ABCDE"), dtype=float)
+    >>> fwd_ret = pd.DataFrame([[.01, .02, .03, .04, .05],
+    ...                         [.01, .02, .03, .04, .05],
+    ...                         [.02, .01, .03, .05, .04]],
+    ...                        index=idx, columns=list("ABCDE"))
+    >>> fwd_rets = pd.concat({0: fwd_ret, 1: fwd_ret.shift(-1)}, axis=1)
+    >>> ic_decay(signal, fwd_rets)
+    0    0.233333
+    1    0.100000
+    dtype: float64
     """
 
     # Mean Rank IC for each k
@@ -420,6 +550,14 @@ def ic_half_life(decay):
     -------
     result : dict
         lambda, half_life (np.inf if lambda <= 0).
+
+    Examples
+    --------
+    >>> result = ic_half_life(pd.Series([0.08, 0.04, 0.02, 0.01]))
+    >>> {k: round(float(v), 4) for k, v in result.items()}
+    {'lambda': 0.6931, 'half_life': 1.0}
+    >>> ic_half_life(pd.Series([0.05, 0.05, 0.06]))["half_life"]
+    inf
     """
 
     # IC(0) is the mean Rank IC at k = 0
@@ -427,6 +565,29 @@ def ic_half_life(decay):
 
     # Decay model
     def model(x, lam):
+        """
+        Exponential decay IC(k) = IC(0) * exp(-lam * k), with IC(0) fixed to
+        the observed mean Rank IC at k = 0.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            Lags k.
+        lam : float
+            Decay rate per bar.
+
+        Returns
+        -------
+        ic : np.ndarray
+            Modelled mean Rank IC per k.
+
+        Examples
+        --------
+        With ic0 = 0.08:
+
+        >>> model(np.array([0.0, 1.0]), np.log(2))  # doctest: +SKIP
+        array([0.08, 0.04])
+        """
         return ic0 * np.exp(-lam * x)
     
     # Nonlinear least squares fit of lambda
@@ -461,6 +622,14 @@ def quantile_cvar(spread, worst=0.05):
     -------
     cvar : float
         Mean long-short spread over the worst bars.
+
+    Examples
+    --------
+    >>> spread = pd.Series([0.01, -0.03, 0.02, -0.01, 0.0])
+    >>> float(quantile_cvar(spread, worst=0.4))
+    -0.02
+    >>> float(quantile_cvar(spread))
+    -0.03
     """
 
     # Number of worst bars
@@ -492,6 +661,16 @@ def quantile_turnover(signal, n_quantiles=5):
     turnover : pd.DataFrame
         Turnover of the top and bottom buckets. Index = timestamp,
         Columns = top, bottom.
+
+    Examples
+    --------
+    >>> signal = pd.DataFrame([[1, 2, 3, 4, 5], [1, 2, 3, 5, 4], [1, 2, 3, 5, 4]],
+    ...                       index=pd.date_range("2024-01-01", periods=3),
+    ...                       columns=list("ABCDE"), dtype=float)
+    >>> quantile_turnover(signal, n_quantiles=5)
+                top  bottom
+    2024-01-02  1.0     0.0
+    2024-01-03  0.0     0.0
     """
 
     # Assign buckets by cross-sectional percentile rank
@@ -528,6 +707,13 @@ def summary_turnover(turnover):
     -------
     summary : pd.DataFrame
         Summary statistics.
+
+    Examples
+    --------
+    >>> turnover = pd.DataFrame({"top": [1.0, 0.0], "bottom": [0.0, 0.0]})
+    >>> summary_turnover(turnover)
+       top  bottom  mean
+    0  0.5     0.0  0.25
     """
     top, bottom = turnover["top"].mean(), turnover["bottom"].mean()
     summary = pd.DataFrame(
@@ -560,6 +746,19 @@ def quantile_equity(spread, index, capital=1.0):
     -------
     equity : pd.Series
         Equity per base bar.
+
+    Examples
+    --------
+    >>> bars = pd.date_range("2024-01-01", periods=4)
+    >>> spread = pd.Series([0.1, -0.05], index=bars[[0, 2]])
+    >>> quantile_equity(spread, bars)
+    2024-01-01    1.000
+    2024-01-02    1.100
+    2024-01-03    1.100
+    2024-01-04    1.045
+    Freq: D, dtype: float64
+    >>> quantile_equity(spread, bars, capital=100).iloc[-1]
+    np.float64(104.5)
     """
 
     # Next base bar of each base bar
@@ -595,6 +794,13 @@ def quantile_sharpe(spread, index, bars_per_year):
     -------
     sharpe : float
         Annualized Sharpe ratio.
+
+    Examples
+    --------
+    >>> bars = pd.date_range("2024-01-01", periods=6)
+    >>> spread = pd.Series([0.01, -0.005, 0.02, 0.0, 0.01], index=bars[:5])
+    >>> round(float(quantile_sharpe(spread, bars, bars_per_year=252)), 4)
+    11.4008
     """
 
     # Returns of the equity curve
@@ -625,6 +831,13 @@ def quantile_max_drawdown(spread, index):
     -------
     max_drawdown : float
         Largest peak-to-trough loss as a percentage of the peak.
+
+    Examples
+    --------
+    >>> bars = pd.date_range("2024-01-01", periods=4)
+    >>> spread = pd.Series([0.1, -0.05], index=bars[[0, 2]])
+    >>> round(float(quantile_max_drawdown(spread, bars)), 4)
+    -5.0
     """
 
     # Equity curve, initial capital does not matter for drawdown
@@ -663,6 +876,24 @@ def risk_profile(spread, index, risk_factors, freq):
     result : dict
         coef, se, t : pd.Series per alpha and risk factor;
         r2_adj : float, adjusted R-squared.
+
+    Examples
+    --------
+    >>> rng = np.random.default_rng(0)
+    >>> bars = pd.bdate_range("2020-01-01", "2023-12-29")
+    >>> spread = pd.Series(rng.normal(0.0005, 0.01, len(bars)), index=bars)
+    >>> monthly = (1 + spread).resample("ME").prod() - 1
+    >>> risk_factors = pd.DataFrame(
+    ...     {"MKT": monthly.values * 0.5 + rng.normal(0, 0.01, len(monthly)),
+    ...      "SMB": rng.normal(0, 0.02, len(monthly))}, index=monthly.index)
+    >>> result = risk_profile(spread, bars, risk_factors, "ME")
+    >>> result["coef"].round(3)
+    alpha    0.002
+    MKT      1.442
+    SMB     -0.042
+    dtype: float64
+    >>> round(float(result["r2_adj"]), 3)
+    0.51
     """
 
     # Returns of the equity curve

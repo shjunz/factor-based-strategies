@@ -124,6 +124,16 @@ def credentials(account):
     ------
     RuntimeError
         If either variable is missing.
+
+    Examples
+    --------
+    Reads the keys of config.yaml paper.account STRATEGY_EXAMPLE:
+
+    >>> key, secret = credentials("STRATEGY_EXAMPLE")  # doctest: +SKIP
+    >>> credentials("no_such_account")  # doctest: +SKIP
+    Traceback (most recent call last):
+    ...
+    RuntimeError: set ALPACA_NO_SUCH_ACCOUNT_KEY and ALPACA_NO_SUCH_ACCOUNT_SECRET ...
     """
 
     # Read the two variables, loading .env first
@@ -154,6 +164,38 @@ class AlpacaBroker:
     """
 
     def __init__(self, account, mode="paper"):
+        """
+        Connect the trading and market data clients of one paper account.
+
+        Parameters
+        ----------
+        account : str
+            Account name from config.yaml paper.account.
+        mode : str
+            Must be "paper".
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If `mode` is not "paper".
+        RuntimeError
+            If the API keys are missing, or the client does not point at the
+            Alpaca paper endpoint.
+
+        Examples
+        --------
+        Needs the account's API keys and calls Alpaca:
+
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> AlpacaBroker("STRATEGY_EXAMPLE", mode="live")  # doctest: +SKIP
+        Traceback (most recent call last):
+        ...
+        ValueError: AlpacaBroker only supports mode='paper'
+        """
         from alpaca.data.historical import StockHistoricalDataClient
         from alpaca.trading.client import TradingClient
 
@@ -176,10 +218,20 @@ class AlpacaBroker:
         """
         Alpaca market clock.
 
+        Parameters
+        ----------
+        None
+
         Returns
         -------
         clock : alpaca Clock
             .timestamp, .is_open, .next_open, .next_close.
+
+        Examples
+        --------
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> broker.clock().is_open  # doctest: +SKIP
+        False
         """
 
         clock = self._trading.get_clock()
@@ -200,6 +252,13 @@ class AlpacaBroker:
         -------
         sessions : list of date
             Session dates, ascending.
+
+        Examples
+        --------
+        >>> from datetime import date
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> broker.sessions(date(2024, 12, 23), date(2024, 12, 27))  # doctest: +SKIP
+        [datetime.date(2024, 12, 23), datetime.date(2024, 12, 24), datetime.date(2024, 12, 26), datetime.date(2024, 12, 27)]
         """
 
         from alpaca.trading.requests import GetCalendarRequest
@@ -214,10 +273,20 @@ class AlpacaBroker:
         """
         Current account summary.
 
+        Parameters
+        ----------
+        None
+
         Returns
         -------
         state : AccountState
             Equity, buying power, status and block flags.
+
+        Examples
+        --------
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> broker.account()  # doctest: +SKIP
+        AccountState(equity=100000.0, buying_power=200000.0, status='AccountStatus.ACTIVE', trading_blocked=False, account_blocked=False)
         """
 
         a = self._trading.get_account()
@@ -231,10 +300,20 @@ class AlpacaBroker:
         """
         Open positions.
 
+        Parameters
+        ----------
+        None
+
         Returns
         -------
         positions : dict of str to int
             Shares held per symbol, negative for shorts.
+
+        Examples
+        --------
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> broker.positions()  # doctest: +SKIP
+        {'QQQ': 125, 'SPY': 100}
         """
 
         positions = {p.symbol: int(float(p.qty)) for p in self._trading.get_all_positions()}
@@ -255,6 +334,14 @@ class AlpacaBroker:
         -------
         info : AssetInfo
             All False if Alpaca does not know the symbol.
+
+        Examples
+        --------
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> broker.asset("SPY")  # doctest: +SKIP
+        AssetInfo(tradable=True, shortable=True, easy_to_borrow=True)
+        >>> broker.asset("NOT_A_SYMBOL")  # doctest: +SKIP
+        AssetInfo(tradable=False, shortable=False, easy_to_borrow=False)
         """
 
         # Unknown symbols are not tradable
@@ -283,6 +370,14 @@ class AlpacaBroker:
         -------
         prices : dict of str to float
             Latest price per symbol. Symbols without a trade are left out.
+
+        Examples
+        --------
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> broker.latest_prices(["SPY", "QQQ"])  # doctest: +SKIP
+        {'SPY': 591.15, 'QQQ': 515.29}
+        >>> broker.latest_prices([])  # doctest: +SKIP
+        {}
         """
 
         from alpaca.data.requests import StockLatestTradeRequest
@@ -310,6 +405,14 @@ class AlpacaBroker:
         -------
         orders : list of alpaca Order
             Matching orders, any status, oldest first.
+
+        Examples
+        --------
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> orders = broker.orders_with_prefix(
+        ...     "strategy_example-", datetime(2024, 12, 1, tzinfo=NY))  # doctest: +SKIP
+        >>> [o.client_order_id for o in orders]  # doctest: +SKIP
+        ['strategy_example-2024-12-31-SPY-adjust']
         """
 
         from alpaca.common.enums import Sort
@@ -345,6 +448,15 @@ class AlpacaBroker:
         equity : pd.Series
             Index = session dates (Timestamp), values = equity in USD. Days
             before the account was funded are left out.
+
+        Examples
+        --------
+        >>> from datetime import date
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> broker.equity_history(date(2024, 12, 30))  # doctest: +SKIP
+        2024-12-30    100000.00
+        2024-12-31    100412.37
+        dtype: float64
         """
 
         import pandas as pd
@@ -375,6 +487,17 @@ class AlpacaBroker:
         -------
         closes : pd.DataFrame
             Index = session dates (Timestamp), Columns = symbols.
+
+        Examples
+        --------
+        >>> from datetime import date
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> broker.daily_closes(["SPY", "QQQ"], date(2024, 12, 30),
+        ...                     date(2024, 12, 31))  # doctest: +SKIP
+        symbol         QQQ     SPY
+        day
+        2024-12-30  515.61  588.22
+        2024-12-31  511.23  586.08
         """
 
         import pandas as pd
@@ -411,6 +534,14 @@ class AlpacaBroker:
         -------
         status : str
             Alpaca order status after submission.
+
+        Examples
+        --------
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> intent = OrderIntent("SPY", "buy", 10,
+        ...                      "strategy_example-2024-12-31-SPY-open", 0.06, "open")
+        >>> broker.submit_moc(intent)  # doctest: +SKIP
+        'OrderStatus.ACCEPTED'
         """
 
         from alpaca.trading.enums import OrderSide, TimeInForce
@@ -431,6 +562,19 @@ class AlpacaBroker:
     def cancel_all(self):
         """
         Cancel every open order in the account.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> broker.cancel_all()  # doctest: +SKIP
         """
 
         self._trading.cancel_orders()
@@ -439,6 +583,19 @@ class AlpacaBroker:
     def close_all_positions(self):
         """
         Cancel open orders and close every position in the account.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> broker.close_all_positions()  # doctest: +SKIP
         """
 
         self._trading.close_all_positions(cancel_orders=True)

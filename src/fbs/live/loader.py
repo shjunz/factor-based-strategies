@@ -88,6 +88,18 @@ def _import(path, module_name):
     -------
     module : module
         The imported module.
+
+    Raises
+    ------
+    ImportError
+        If `path` cannot be loaded as a module.
+
+    Examples
+    --------
+    >>> module = _import(STRATEGY_ROOT / "strategy_example" / "weights.py",
+    ...                  "fbs_strategy_strategy_example_weights")
+    >>> callable(module.compute)
+    True
     """
 
     spec = importlib.util.spec_from_file_location(module_name, path)
@@ -112,6 +124,17 @@ def _read_yaml(path):
     -------
     content : dict
         Parsed content, {} for an empty file.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist.
+
+    Examples
+    --------
+    >>> config = _read_yaml(STRATEGY_ROOT / "strategy_example" / "config.yaml")
+    >>> config["rebalance"]
+    'M'
     """
 
     if not path.exists():
@@ -134,6 +157,23 @@ def _require(mapping, keys, where):
         Required keys.
     where : str
         Section name for the error message.
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    ValueError
+        If a key in `keys` is not in `mapping`.
+
+    Examples
+    --------
+    >>> _require({"universe": [], "rebalance": "M"}, ("universe", "rebalance"), "config.yaml")
+    >>> _require({"universe": []}, ("universe", "rebalance", "paper"), "config.yaml")
+    Traceback (most recent call last):
+    ...
+    ValueError: config.yaml is missing keys: rebalance, paper
     """
 
     missing = [k for k in keys if k not in mapping]
@@ -149,6 +189,25 @@ def _check_split(config):
     ----------
     config : dict
         config.yaml.
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    ValueError
+        If split is not a mapping, lacks a key, is_end is not a date after
+        backtest_start, or embargo_sessions is shorter than one holding period.
+
+    Examples
+    --------
+    >>> _check_split({"rebalance": "M"})
+    >>> _check_split({"rebalance": "M",
+    ...               "split": {"is_end": dt.date(2023, 12, 29), "embargo_sessions": 5}})
+    Traceback (most recent call last):
+    ...
+    ValueError: config.yaml split.embargo_sessions must be an integer >= 21 for rebalance M
     """
 
     split = config.get("split")
@@ -200,6 +259,16 @@ def load_strategy(name):
         the optional split block).
     TypeError
         If data.py or weights.py lacks its function.
+
+    Examples
+    --------
+    >>> strategy = load_strategy("strategy_example")
+    >>> strategy.name, strategy.config["rebalance"]
+    ('strategy_example', 'M')
+    >>> load_strategy("no_such_strategy")
+    Traceback (most recent call last):
+    ...
+    FileNotFoundError: no strategy folder strategy/no_such_strategy
     """
 
     # Folder

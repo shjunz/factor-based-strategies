@@ -27,6 +27,19 @@ def main(argv=None):
     -------
     code : int
         Process exit code: 0 on success, 1 on a failed or blocked run.
+
+    Examples
+    --------
+    flatten without --yes only prints a warning:
+
+    >>> main(["flatten", "strategy_example"])
+    flatten closes every position in this strategy's paper account; re-run with --yes
+    1
+
+    A dry-run rebalance, the same as python -m fbs.live rebalance strategy_example:
+
+    >>> main(["rebalance", "strategy_example"])  # doctest: +SKIP
+    0
     """
 
     # One sub-command per action, each taking the strategy folder name

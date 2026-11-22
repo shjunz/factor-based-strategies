@@ -168,24 +168,6 @@ def _figi_map(symbols):
 # %%
 # Local Store
 
-# Sync state read
-def _load_state():
-    """
-    Sync state of the local store.
-
-    Returns
-    -------
-    state : dict
-        strategy: this strategy.
-        synced: ISO date of the last sync, None if never synced.
-        coverage: ticker -> ISO date from which the store holds its rows.
-    """
-
-    if not STATE_FILE.exists():
-        return {"strategy": STRATEGY, "synced": None, "coverage": {}}
-
-    return {**json.loads(STATE_FILE.read_text()), "strategy": STRATEGY}
-
 # Latest gold file read
 def _load_gold():
     """
@@ -284,7 +266,12 @@ def _sync(universe, start, figi):
         The updated gold store.
     """
 
-    state = _load_state()
+    # Sync state: synced = ISO date of the last sync (None if never synced),
+    # coverage = ticker -> ISO date from which the store holds its rows
+    state = {"synced": None, "coverage": {}}
+    if STATE_FILE.exists():
+        state = json.loads(STATE_FILE.read_text())
+    state["strategy"] = STRATEGY
     coverage = state["coverage"]
     first = start.isoformat()
 

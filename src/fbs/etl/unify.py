@@ -18,10 +18,6 @@ STANDARD_FIELDS = {
 # %%
 # Field Names
 
-# Field name mapping table of a data provider: src/fbs/etl/{provider}/metadata/field_map.csv
-def field_map_path(provider):
-    return Path(__file__).parent / provider.lower() / "metadata" / "field_map.csv"
-
 # Field renaming
 def rename_fields(raw, provider, dataset):
     """
@@ -42,10 +38,18 @@ def rename_fields(raw, provider, dataset):
     renamed : pd.DataFrame
         Raw data with standard field names. Index = row number, Columns =
         standard names for mapped fields, source names for the rest.
+
+    Examples
+    --------
+    >>> raw = pd.DataFrame({"ticker": ["AAPL"], "date": ["2024-01-02"],
+    ...                     "closeadj": [184.0], "closeunadj": [185.6]})
+    >>> rename_fields(raw, "Sharadar", "SEP").columns.tolist()
+    ['ticker', 'timestamp', 'close_adj', 'close_raw']
     """
 
-    # Look up the standard names of this dataset's fields in field_map
-    field_map = pd.read_csv(field_map_path(provider))
+    # Look up the standard names of this dataset's fields in the provider's
+    # field map, src/fbs/etl/{provider}/metadata/field_map.csv
+    field_map = pd.read_csv(Path(__file__).parent / provider.lower() / "metadata" / "field_map.csv")
     rows = (field_map["provider"] == provider.lower()) & (field_map["dataset"] == dataset)
     mapping = field_map.loc[rows].set_index("source_field")["field"]
 
@@ -76,6 +80,20 @@ def map_date_timestamps(dates, calendar):
     ------
     ValueError
         If a date is not a session of the calendar.
+
+    Examples
+    --------
+    >>> dates = pd.Series(pd.to_datetime(["2024-01-02", "2024-07-03", "2024-11-29"]))
+    >>> map_date_timestamps(dates, "XNYS")
+    0   2024-01-02 21:00:00+00:00
+    1   2024-07-03 17:00:00+00:00
+    2   2024-11-29 18:00:00+00:00
+    dtype: datetime64[ns, UTC]
+    >>> map_date_timestamps(pd.Series(pd.to_datetime(["2024-01-05", "2024-01-06"])),
+    ...                     "XNYS")
+    Traceback (most recent call last):
+    ...
+    ValueError: dates not XNYS sessions: ['2024-01-06']
     """
 
     # Get close timestamps of all sessions from the first date to one day after

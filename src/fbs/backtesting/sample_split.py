@@ -32,6 +32,15 @@ def split_segments(bt, split):
     -------
     segments : pd.Series
         Index = bt.index, values "IS", "Embargo", "OOS"; all "Full" without a split.
+
+    Examples
+    --------
+    >>> bt = pd.DataFrame({"strategy": 0.0},
+    ...                   index=pd.bdate_range("2024-01-01", periods=5))
+    >>> split_segments(bt, {"is_end": "2024-01-02", "embargo_sessions": 1}).tolist()
+    ['IS', 'IS', 'Embargo', 'OOS', 'OOS']
+    >>> split_segments(bt, None).unique().tolist()
+    ['Full']
     """
 
     if not split:

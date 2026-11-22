@@ -99,6 +99,13 @@ def parse_date(text):
     -------
     day : date or None
         None if `text` is empty.
+
+    Examples
+    --------
+    >>> parse_date("2024-12-31")
+    datetime.date(2024, 12, 31)
+    >>> parse_date(None) is None
+    True
     """
 
     day = datetime.strptime(text, "%Y-%m-%d").date() if text else None
@@ -121,6 +128,22 @@ def _write_record(strategy, record):
     -------
     path : Path
         The written file.
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from dataclasses import replace
+    >>> from pathlib import Path
+    >>> folder = Path(tempfile.mkdtemp()) / "strategy" / "demo"
+    >>> folder.mkdir(parents=True)
+    >>> demo = replace(load_strategy("strategy_example"), name="demo", folder=folder)
+    >>> record = {"mode": "dry_run", "signal_session": "2024-12-30",
+    ...           "exec_session": "2024-12-31", "run_at": "2024-12-31T10:00:00-05:00",
+    ...           "status": "dry_run", "failures": [], "notes": [],
+    ...           "targets": {"SPY": 0.5}, "orders": [], "submitted": []}
+    >>> _write_record(demo, record).name
+    record: strategy/demo/records/2024-12-31-dryrun.json
+    '2024-12-31-dryrun.json'
     """
 
     folder = strategy.folder / "records"
@@ -153,6 +176,28 @@ def _write_run_report(strategy, record_path, record, signal, data, frame):
         The run's data, None if it was blocked before fetching.
     frame : pd.DataFrame or None
         The run's weights, None if it was blocked before computing them.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from dataclasses import replace
+    >>> from pathlib import Path
+    >>> folder = Path(tempfile.mkdtemp()) / "strategy" / "demo"
+    >>> folder.mkdir(parents=True)
+    >>> demo = replace(load_strategy("strategy_example"), name="demo", folder=folder)
+    >>> record = {"mode": "dry_run", "signal_session": "2024-12-30",
+    ...           "exec_session": "2024-12-31", "run_at": "2024-12-31T10:00:00-05:00",
+    ...           "status": "dry_run", "failures": [], "notes": [],
+    ...           "targets": {"SPY": 0.5}, "orders": [], "submitted": []}
+    >>> from datetime import date
+    >>> path = _write_record(demo, record)
+    record: strategy/demo/records/2024-12-31-dryrun.json
+    >>> _write_run_report(demo, path, record, date(2024, 12, 30), None, None)
+    report: strategy/demo/records/2024-12-31-dryrun.pdf
     """
 
     try:
@@ -192,6 +237,25 @@ def _pick_sessions(clock, sessions, asof, submit):
     -------
     signal, exec_session : date
         Signal session t and execution session t+1.
+
+    Examples
+    --------
+    >>> from datetime import date
+    >>> sessions = [date(2024, 12, 27), date(2024, 12, 30), date(2024, 12, 31), date(2025, 1, 2)]
+    >>> from types import SimpleNamespace as Clock
+    >>> open_clock = Clock(timestamp=datetime(2024, 12, 31, 10, 0, tzinfo=NY), is_open=True,
+    ...                    next_open=datetime(2025, 1, 2, 9, 30, tzinfo=NY),
+    ...                    next_close=datetime(2024, 12, 31, 16, 0, tzinfo=NY))
+
+    Market open on 2024-12-31: execute today, signal is the session before.
+
+    >>> _pick_sessions(open_clock, sessions, None, submit=False)
+    (datetime.date(2024, 12, 30), datetime.date(2024, 12, 31))
+
+    Dry run for a past signal session:
+
+    >>> _pick_sessions(open_clock, sessions, date(2024, 12, 27), submit=False)
+    (datetime.date(2024, 12, 27), datetime.date(2024, 12, 30))
     """
 
     # Dry run for a past signal session
@@ -234,6 +298,28 @@ def _target_weights(strategy, sessions, signal):
         Non-zero target weights of the signal session.
     failures : list of str
         Data and weights check failures.
+
+    Examples
+    --------
+    >>> from datetime import date
+    >>> sessions = [date(2024, 12, 27), date(2024, 12, 30), date(2024, 12, 31), date(2025, 1, 2)]
+    >>> from dataclasses import replace
+    >>> from types import SimpleNamespace as Module
+    >>> prices = pd.DataFrame({"SPY": [595.0, 588.0], "QQQ": [522.0, 515.0]},
+    ...                       index=pd.to_datetime(["2024-12-27", "2024-12-30"]))
+    >>> s = load_strategy("strategy_example")
+    >>> demo = replace(s, config={**s.config, "lookback_sessions": 2},
+    ...                paper={**s.paper, "limits": {**s.paper["limits"], "max_weight": 0.5}},
+    ...                data=Module(fetch=lambda config, start, end: prices),
+    ...                weights=Module(compute=lambda data, params: data * 0 + 0.5))
+    >>> data, frame, weights, failures = _target_weights(demo, sessions, date(2024, 12, 30))
+    >>> weights.to_dict(), failures
+    ({'SPY': 0.5, 'QQQ': 0.5}, [])
+
+    Data that stops before the signal session blocks the run:
+
+    >>> _target_weights(demo, sessions, date(2024, 12, 31))[3]
+    ['stale data: last session 2024-12-30, expected 2024-12-31']
     """
 
     # Data for the last lookback_sessions sessions up to the signal session
@@ -280,6 +366,24 @@ def _plan(strategy, broker, weights, exec_session):
         Dropped symbols, skipped trades and scaling.
     failures : list of str
         Account check failures.
+
+    Examples
+    --------
+    >>> from dataclasses import replace
+    >>> from datetime import date
+    >>> from types import SimpleNamespace as Broker
+    >>> from fbs.live.broker import AccountState, AssetInfo
+    >>> broker = Broker(
+    ...     account=lambda: AccountState(100_000, 200_000, "AccountStatus.ACTIVE", False, False),
+    ...     positions=lambda: {"SPY": 100},
+    ...     asset=lambda symbol: AssetInfo(True, True, True),
+    ...     latest_prices=lambda symbols: {"SPY": 500.0, "QQQ": 400.0})
+    >>> s = load_strategy("strategy_example")
+    >>> demo = replace(s, name="demo", paper={**s.paper, "capital": 100_000})
+    >>> orders, prices, notes, failures = _plan(demo, broker, pd.Series({"SPY": 0.5, "QQQ": 0.5}),
+    ...                                         date(2024, 12, 31))
+    >>> [(o.side, o.symbol, o.qty, o.client_order_id) for o in orders], failures
+    ([('buy', 'QQQ', 125, 'demo-2024-12-31-QQQ-adjust')], [])
     """
 
     limits = strategy.paper["limits"]
@@ -320,6 +424,21 @@ def _submit_gate(strategy, clock):
     -------
     gate : list of str
         Empty if orders may be sent.
+
+    Examples
+    --------
+    >>> from types import SimpleNamespace as Clock
+    >>> open_clock = Clock(timestamp=datetime(2024, 12, 31, 10, 0, tzinfo=NY), is_open=True,
+    ...                    next_open=datetime(2025, 1, 2, 9, 30, tzinfo=NY),
+    ...                    next_close=datetime(2024, 12, 31, 16, 0, tzinfo=NY))
+    >>> from dataclasses import replace
+    >>> s = load_strategy("strategy_example")
+    >>> _submit_gate(replace(s, paper={**s.paper, "enabled": True}), open_clock)
+    []
+    >>> late = Clock(timestamp=datetime(2024, 12, 31, 15, 50, tzinfo=NY), is_open=True,
+    ...              next_close=datetime(2024, 12, 31, 16, 0, tzinfo=NY))
+    >>> _submit_gate(replace(s, paper={**s.paper, "enabled": False}), late)
+    ['config.yaml paper.enabled is false', 'only 10 min to the close; MOC cut-off buffer is 15 min']
     """
 
     gate = []
@@ -354,6 +473,20 @@ def _submit(broker, orders, prefix, since):
     -------
     submitted : list of dict
         client_order_id and status of each order.
+
+    Examples
+    --------
+    >>> from types import SimpleNamespace as Broker
+    >>> from fbs.live.broker import OrderIntent
+    >>> broker = Broker(
+    ...     orders_with_prefix=lambda prefix, since: [
+    ...         Broker(client_order_id="demo-2024-12-31-SPY-adjust")],
+    ...     submit_moc=lambda order: "OrderStatus.ACCEPTED")
+    >>> orders = [OrderIntent("SPY", "buy", 10, "demo-2024-12-31-SPY-adjust", 0.5, "adjust"),
+    ...           OrderIntent("QQQ", "buy", 125, "demo-2024-12-31-QQQ-adjust", 0.5, "adjust")]
+    >>> _submit(broker, orders, "demo-2024-12-31-", datetime(2024, 12, 28, tzinfo=NY))
+      demo-2024-12-31-QQQ-adjust: OrderStatus.ACCEPTED
+    [{'client_order_id': 'demo-2024-12-31-SPY-adjust', 'status': 'already_present'}, {'client_order_id': 'demo-2024-12-31-QQQ-adjust', 'status': 'OrderStatus.ACCEPTED'}]
     """
 
     # Orders already sent for this session, e.g. by an earlier run
@@ -397,6 +530,19 @@ def rebalance(name, submit=False, asof=None, force=False):
     code : int
         Process exit code: 0 for a dry run, a submitted run or nothing to do,
         1 for a blocked or partly rejected run.
+
+    Examples
+    --------
+    Needs the Alpaca and data API keys, so these calls are not run here:
+
+    >>> rebalance("strategy_example")  # doctest: +SKIP
+    strategy_example: signal session 2024-12-30, execution at the close of 2024-12-31
+    ...
+    0
+    >>> rebalance("strategy_example", asof=date(2024, 11, 29), force=True)  # doctest: +SKIP
+    strategy_example: signal session 2024-11-29, execution at the close of 2024-12-02
+    ...
+    0
     """
 
     s = load_strategy(name)
@@ -485,6 +631,16 @@ def status(name):
     -------
     code : int
         Always 0.
+
+    Examples
+    --------
+    Needs the account's API keys and calls Alpaca:
+
+    >>> status("strategy_example")  # doctest: +SKIP
+    strategy_example · account STRATEGY_EXAMPLE · equity 100,412.37 · buying power 191,204.11 · status AccountStatus.ACTIVE
+    positions (2): QQQ 125, SPY 100
+      strategy_example-2024-12-31-QQQ-adjust: OrderStatus.FILLED filled 125 @ 511.20
+    0
     """
 
     s = load_strategy(name)
@@ -521,6 +677,24 @@ def _first_exec(strategy):
     -------
     day : date or None
         None if no rebalance has been submitted yet.
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from dataclasses import replace
+    >>> from pathlib import Path
+    >>> folder = Path(tempfile.mkdtemp()) / "strategy" / "demo"
+    >>> folder.mkdir(parents=True)
+    >>> demo = replace(load_strategy("strategy_example"), name="demo", folder=folder)
+    >>> _first_exec(demo) is None
+    True
+    >>> (folder / "records").mkdir()
+    >>> _ = (folder / "records" / "2024-12-31-rebalance.json").write_text(
+    ...     json.dumps({"status": "submitted", "exec_session": "2024-12-31"}))
+    >>> _ = (folder / "records" / "2025-01-31-rebalance.json").write_text(
+    ...     json.dumps({"status": "blocked", "exec_session": "2025-01-31"}))
+    >>> _first_exec(demo)
+    datetime.date(2024, 12, 31)
     """
 
     days = []
@@ -551,6 +725,18 @@ def performance(name, start=None):
     -------
     code : int
         0 if the PDF was written, 1 if there is nothing to compare yet.
+
+    Examples
+    --------
+    Needs the Alpaca and data API keys, so these calls are not run here:
+
+    >>> performance("strategy_example")  # doctest: +SKIP
+    strategy_example: live 0.41%, backtest 0.38%, equal-weight 0.12% over 2 sessions; tracking error 0.52%
+    orders 2, not fully filled 0, slippage 0.6 bps (3 USD)
+    report: strategy/strategy_example/records/2024-12-31-performance.pdf
+    0
+    >>> performance("strategy_example", start=date(2024, 12, 2))  # doctest: +SKIP
+    0
     """
 
     from fbs.live import report
@@ -572,15 +758,19 @@ def performance(name, start=None):
                   and clock.next_open.astimezone(NY).date() > now.date())
     last = now.date() if done_today else max(d for d in sessions if d < now.date())
 
-    # Live returns from account equity
-    live = report.live_returns(broker.equity_history(first), capital, first)
+    # Live daily returns = change in account equity / paper.capital, from the
+    # session after the first trade (the first one holding positions all day)
+    equity = broker.equity_history(first)
+    live = (equity.diff() / capital).dropna()
+    live = live[live.index > pd.Timestamp(first)]
 
     # Backtest of the same sessions, with lookback_sessions of history before the first trade
     before = [d for d in sessions if d <= first]
     data = s.data.fetch(s.config, before[max(0, len(before) - lookback)], last)
     frame = s.weights.compute(data, s.config["params"])
     bt = report.backtest(data, frame, s.config["rebalance"])
-    cmp = report.compare(live, bt)
+    # Live, backtest and benchmark returns on the sessions all of them have
+    cmp = pd.DataFrame({"live": live, "backtest": bt["strategy"], "benchmark": bt["benchmark"]}).dropna()
     if len(cmp) < 2:
         print(f"{name}: fewer than 2 sessions with both live and backtest returns since {first}; nothing to compare")
         return 1
@@ -631,6 +821,17 @@ def halt(name, flatten=False):
     -------
     code : int
         Always 0.
+
+    Examples
+    --------
+    Needs the account's API keys and calls Alpaca:
+
+    >>> halt("strategy_example")  # doctest: +SKIP
+    strategy_example: cancelled all open orders; set paper.enabled: false in config.yaml to stop future runs
+    0
+    >>> halt("strategy_example", flatten=True)  # doctest: +SKIP
+    strategy_example: cancelled open orders and sent orders to close all positions
+    0
     """
 
     s = load_strategy(name)

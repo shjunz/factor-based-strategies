@@ -24,6 +24,28 @@ GOLD_DIR = DATA_DIR / "gold"
 
 # File-name text of a single filter value: dates as YYYYMMDD
 def _scalar(value):
+    """
+    File-name text of a single filter value, with dates as YYYYMMDD and path
+    separators and whitespace replaced by "-".
+
+    Parameters
+    ----------
+    value : datetime.date, str or scalar
+        One filter value.
+
+    Returns
+    -------
+    text : str
+        File-name text of `value`.
+
+    Examples
+    --------
+    >>> _scalar(date(2024, 1, 5)), _scalar("2024-01-05")
+    ('20240105', '20240105')
+    >>> _scalar("BRK/B")
+    'BRK-B'
+    """
+
     if isinstance(value, date):
         return f"{value:%Y%m%d}"
     text = str(value)
@@ -33,6 +55,29 @@ def _scalar(value):
 
 # File-name text of a filter: a range as start-end, a list joined by commas
 def _filter_token(value):
+    """
+    File-name text of one filter: a {"gte", "lte"} range as start-end (either
+    side may be empty), other operators as {op}{value} joined by commas, and a
+    list sorted and joined by commas.
+
+    Parameters
+    ----------
+    value : dict, list, tuple or scalar
+        Filter value of one column.
+
+    Returns
+    -------
+    token : str
+        File-name text of `value`.
+
+    Examples
+    --------
+    >>> _filter_token({"gte": "2024-01-01", "lte": "2024-12-31"})
+    '20240101-20241231'
+    >>> _filter_token({"gte": "2024-01-01"}), _filter_token(["SPY", "QQQ"])
+    ('20240101-', 'QQQ,SPY')
+    """
+
     if isinstance(value, dict):
         if set(value) <= {"gte", "lte"}:
             return f"{_scalar(value.get('gte', ''))}-{_scalar(value.get('lte', ''))}"

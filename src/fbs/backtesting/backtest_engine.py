@@ -37,6 +37,18 @@ def backtest(prices, weights, rule):
     bt : pd.DataFrame
         Index = session dates from the first invested session + 2, Columns =
         strategy, benchmark (daily returns) and turnover.
+
+    Examples
+    --------
+    >>> idx = pd.bdate_range("2024-01-01", periods=5)
+    >>> prices = pd.DataFrame({"SPY": [100, 101, 102, 101, 103],
+    ...                        "QQQ": [50, 50, 51, 52, 52]}, index=idx)
+    >>> weights = pd.DataFrame({"SPY": [0, 1, 1, 0.5, 0.5],
+    ...                         "QQQ": [0, 0, 0, 0.5, 0.5]}, index=idx)
+    >>> backtest(prices, weights, "D").round(4)
+                strategy  benchmark  turnover
+    2024-01-04   -0.0098     0.0049       0.0
+    2024-01-05    0.0198     0.0099       0.5
     """
 
     # Daily returns

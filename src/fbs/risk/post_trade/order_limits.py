@@ -26,6 +26,18 @@ def risk_orders(orders, prices, turnover, limits):
     -------
     failures : list of str
         Empty if all limits hold.
+
+    Examples
+    --------
+    >>> from fbs.live.broker import OrderIntent
+    >>> orders = [OrderIntent("IWM", "sell", 10, "demo-2024-01-03-IWM-close", 0.0, "close"),
+    ...           OrderIntent("QQQ", "buy", 125, "demo-2024-01-03-QQQ-adjust", 0.5, "adjust")]
+    >>> prices = {"IWM": 200.0, "QQQ": 400.0}
+    >>> limits = {"max_orders": 1, "max_order_notional": 20_000, "max_turnover": 0.5}
+    >>> risk_orders(orders, prices, turnover=0.26, limits=limits)
+    ['2 orders > max_orders 1', 'QQQ order 50,000 > max_order_notional 20000']
+    >>> risk_orders(orders[:1], prices, turnover=0.01, limits=limits)
+    []
     """
 
     failures = []

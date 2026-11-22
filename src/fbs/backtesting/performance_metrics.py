@@ -31,6 +31,15 @@ def metrics(r):
     -------
     m : dict of str to float
         The four metrics, all NaN for fewer than 2 returns or zero volatility.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> m = metrics(pd.Series([0.01, -0.02, 0.015, 0.005]))
+    >>> {k: round(float(v), 4) for k, v in m.items()}
+    {'Annual return': 0.8336, 'Annual vol': 0.2468, 'Sharpe': 2.5529, 'Max drawdown': -0.02}
+    >>> metrics(pd.Series([0.01]))["Sharpe"]
+    nan
     """
 
     # Not enough data

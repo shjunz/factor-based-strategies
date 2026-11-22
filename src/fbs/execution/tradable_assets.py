@@ -33,6 +33,20 @@ def execution_remove_invalid_assets(weights, assets, allow_shorts):
         Weights that can be traded.
     notes : list of str
         One line per dropped symbol.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from fbs.live.broker import AssetInfo
+    >>> assets = {"SPY": AssetInfo(tradable=True, shortable=True, easy_to_borrow=True),
+    ...           "XYZ": AssetInfo(tradable=False, shortable=False, easy_to_borrow=False),
+    ...           "GME": AssetInfo(tradable=True, shortable=True, easy_to_borrow=False)}
+    >>> weights = pd.Series({"SPY": 0.6, "XYZ": 0.2, "GME": -0.2, "QQQ": float("nan")})
+    >>> targets, notes = execution_remove_invalid_assets(weights, assets, allow_shorts=True)
+    >>> targets
+    {'SPY': 0.6}
+    >>> notes
+    ['XYZ: not tradable on Alpaca, target set to 0', 'GME: short not allowed or not borrowable, target set to 0']
     """
 
     targets, notes = {}, []

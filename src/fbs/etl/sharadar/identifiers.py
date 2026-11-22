@@ -35,6 +35,23 @@ def add_instrument_id(raw, tickers, table):
         If a ticker maps to more than one permaticker in TICKERS for the table.
         If a permaticker maps to more than one ticker in TICKERS for the table.
         If a row has no instrument_id.
+
+    Examples
+    --------
+    >>> raw = pd.DataFrame({"ticker": ["AAPL", "MSFT"],
+    ...                     "date": ["2024-01-02", "2024-01-02"]})
+    >>> tickers = pd.DataFrame({"table": ["SEP", "SEP", "SFP"],
+    ...                         "ticker": ["AAPL", "MSFT", "SPY"],
+    ...                         "permaticker": [199059, 198508, 118691]})
+    >>> add_instrument_id(raw, tickers, "SEP")
+      ticker        date  instrument_id
+    0   AAPL  2024-01-02         199059
+    1   MSFT  2024-01-02         198508
+    >>> add_instrument_id(pd.DataFrame({"ticker": ["SPY"], "date": ["2024-01-02"]}),
+    ...                   tickers, "SEP")
+    Traceback (most recent call last):
+    ...
+    ValueError: tickers not in TICKERS: ['SPY']
     """
 
     # Find tickers and permaticker pairs for this table

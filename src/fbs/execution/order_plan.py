@@ -48,6 +48,25 @@ def execution_plan_orders(targets, positions, prices, capital, buying_power, min
         Sells, then buys.
     notes : list of str
         Skipped trades and scaling.
+
+    Examples
+    --------
+    >>> from datetime import date
+    >>> prices = {"SPY": 500.0, "QQQ": 400.0, "IWM": 200.0}
+    >>> orders, notes = execution_plan_orders(
+    ...     {"SPY": 0.5, "QQQ": 0.5}, {"SPY": 100, "IWM": 10}, prices,
+    ...     capital=100_000, buying_power=100_000, min_order_notional=100,
+    ...     strategy="demo", exec_session=date(2024, 1, 3))
+    >>> [(o.side, o.symbol, o.qty, o.client_order_id) for o in orders]
+    [('sell', 'IWM', 10, 'demo-2024-01-03-IWM-close'), ('buy', 'QQQ', 125, 'demo-2024-01-03-QQQ-adjust')]
+
+    Buys are scaled down when buying power is short:
+
+    >>> orders, notes = execution_plan_orders(
+    ...     {"SPY": 1.0}, {}, prices, capital=100_000, buying_power=50_000,
+    ...     min_order_notional=100, strategy="demo", exec_session=date(2024, 1, 3))
+    >>> [(o.side, o.symbol, o.qty) for o in orders], notes
+    ([('buy', 'SPY', 100)], ['buys scaled by 0.500: cost 100,000 > available 50,000'])
     """
 
     notes = []
@@ -124,6 +143,15 @@ def execution_turnover(orders, prices, capital):
     -------
     to : float
         Turnover, 0 if capital is 0.
+
+    Examples
+    --------
+    >>> orders = [OrderIntent("IWM", "sell", 10, "demo-2024-01-03-IWM-close", 0.0, "close"),
+    ...           OrderIntent("QQQ", "buy", 125, "demo-2024-01-03-QQQ-adjust", 0.5, "adjust")]
+    >>> execution_turnover(orders, {"IWM": 200.0, "QQQ": 400.0}, 100_000)
+    0.26
+    >>> execution_turnover(orders, {"IWM": 200.0, "QQQ": 400.0}, 0)
+    0.0
     """
 
     traded = sum(o.qty * prices.get(o.symbol, 0.0) for o in orders)

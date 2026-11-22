@@ -33,6 +33,16 @@ def risk_weights(weights, limits):
     -------
     failures : list of str
         Empty if all limits hold.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> limits = {"max_gross": 1.0, "max_net": 1.0, "max_weight": 0.5,
+    ...           "allow_shorts": False}
+    >>> risk_weights(pd.Series({"SPY": 0.5, "QQQ": 0.5}), limits)
+    []
+    >>> risk_weights(pd.Series({"SPY": 0.8, "QQQ": -0.4}), limits)
+    ['gross 1.200 > max_gross 1.0', 'max weight 0.800 > max_weight 0.5', 'negative weights but allow_shorts is false']
     """
 
     w = weights.dropna().astype(float)

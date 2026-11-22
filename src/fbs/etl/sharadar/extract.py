@@ -27,22 +27,6 @@ DATE_COLUMNS = ["date", "datekey", "calendardate", "reportperiod", "lastupdated"
                 "lastquarter"]
 
 # %%
-# Provider settings
-def provider_config():
-    """
-    Sharadar provider settings from metadata/provider.yaml.
-
-    Returns
-    -------
-    config : dict
-        provider, vendor, api, api_key_env, extractor. api_key_env is the
-        name of the API key environment variable, not the key.
-    """
-
-    with open(PROVIDER_PATH, encoding="utf-8") as f:
-        return yaml.safe_load(f)
-
-# %%
 # Sharadar table download
 def download_table(table, path, /, columns=None, overwrite=False, **filters):
     """
@@ -73,6 +57,20 @@ def download_table(table, path, /, columns=None, overwrite=False, **filters):
     ------
     FileExistsError
         If `path` exists and `overwrite` is False.
+
+    Examples
+    --------
+    Needs the API key in the environment and calls Nasdaq Data Link:
+
+    >>> from fbs.etl.paths import BRONZE_DIR
+    >>> download_table("SFP", BRONZE_DIR / "sharadar_fund_prices" / "SFP" / "x.zip",
+    ...                ticker=["SPY", "QQQ"],
+    ...                date={"gte": "2024-01-01"})  # doctest: +SKIP
+    PosixPath('.../data/bronze/sharadar_fund_prices/SFP/x.zip')
+    >>> download_table("TICKERS", BRONZE_DIR / "sharadar_equity_prices" / "TICKERS" / "y.zip",
+    ...                table="SEP",
+    ...                columns=["table", "ticker", "permaticker"])  # doctest: +SKIP
+    PosixPath('.../data/bronze/sharadar_equity_prices/TICKERS/y.zip')
     """
 
     # Stop if the file already exists
@@ -94,7 +92,8 @@ def download_table(table, path, /, columns=None, overwrite=False, **filters):
     # itself comes from that environment variable (.env locally, Secrets
     # Manager on ECS). Set it here because nasdaqdatalink reads the variable
     # only once at import, possibly before .env was loaded.
-    config = provider_config()
+    with open(PROVIDER_PATH, encoding="utf-8") as f:
+        config = yaml.safe_load(f)
     key = os.environ.get(config["api_key_env"])
     if key:
         nasdaqdatalink.ApiConfig.api_key = key
@@ -134,6 +133,21 @@ def read_table(path, columns=None):
     table : pd.DataFrame
         Sharadar table with date columns parsed as dates and rows sorted by
         SORT_KEYS. Index = row number, Columns = the table's columns.
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> path = Path(tempfile.mkdtemp()) / "SEP.csv"
+    >>> pd.DataFrame({"ticker": ["MSFT", "AAPL", "AAPL"],
+    ...               "date": ["2024-01-02", "2024-01-03", "2024-01-02"],
+    ...               "close": [370.87, 184.25, 185.64]}).to_csv(path, index=False)
+    >>> read_table(path)
+      ticker       date   close
+    0   AAPL 2024-01-02  185.64
+    1   AAPL 2024-01-03  184.25
+    2   MSFT 2024-01-02  370.87
+    >>> read_table(path, columns=["ticker", "close"]).columns.tolist()
+    ['ticker', 'close']
     """
 
     # Read the zipped CSV
