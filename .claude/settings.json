@@ -14,7 +14,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block_env_access.py\"",
+            "command": "uv run --no-project python \"$CLAUDE_PROJECT_DIR/.claude/hooks/block_env_access.py\"",
             "timeout": 10,
             "onFailure": "block"
           }
