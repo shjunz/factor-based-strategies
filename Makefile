@@ -4,11 +4,6 @@
 VENV   := .venv
 BIN    := $(VENV)/bin
 
-# Backend API
-HOST ?= 127.0.0.1
-PORT ?= 8000
-APP  := fbs.api.main:app
-
 # C4 diagrams: Structurizr DSL -> PlantUML -> SVG. Tools are plain Java jars (no brew needed);
 # `make diagram-tools` downloads pinned versions once into TOOLS.
 ARCH  := docs/C4_Architecture
@@ -23,7 +18,7 @@ LAYOUT := $(if $(DOT),-graphvizdot $(DOT),-Playout=smetana)
 STRUCTURIZR_VERSION := 2025.11.09
 PLANTUML_VERSION    := 1.2025.10
 
-.PHONY: help install lock upgrade env clean clean-bronze api api-prod diagram-tools diagrams diagrams-preview data-diagrams
+.PHONY: help install lock upgrade env clean clean-bronze diagram-tools diagrams diagrams-preview data-diagrams
 
 help:  ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-13s %s\n", $$1, $$2}'
@@ -41,12 +36,6 @@ upgrade:  ## Upgrade every package to the newest allowed version and rewrite uv.
 env:  ## Create .env with an empty NASDAQ_DATA_LINK_API_KEY if it does not exist yet
 	@if [ -f .env ]; then echo ".env already exists, left unchanged"; \
 	else printf 'NASDAQ_DATA_LINK_API_KEY=\n' > .env && echo "Created .env, fill in NASDAQ_DATA_LINK_API_KEY"; fi
-
-api:  ## Run the backend API with auto-reload (docs at http://HOST:PORT/docs)
-	$(BIN)/uvicorn $(APP) --app-dir src --env-file .env --host $(HOST) --port $(PORT) --reload
-
-api-prod:  ## Run the backend API without reload, listening on all interfaces
-	$(BIN)/uvicorn $(APP) --app-dir src --env-file .env --host 0.0.0.0 --port $(PORT)
 
 clean:  ## Remove the virtual environment and build artifacts
 	rm -rf $(VENV) build dist src/*.egg-info
