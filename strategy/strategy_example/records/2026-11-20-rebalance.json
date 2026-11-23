@@ -1,0 +1,107 @@
+{
+  "strategy": "strategy_example",
+  "mode": "dry_run",
+  "signal_session": "2026-11-19",
+  "exec_session": "2026-11-20",
+  "run_at": "2026-11-20T10:00:00-05:00",
+  "status": "dry_run",
+  "failures": [],
+  "notes": [],
+  "targets": {
+    "ABBV": 0.095,
+    "COST": 0.095,
+    "HD": 0.095,
+    "KO": 0.095,
+    "LLY": 0.095,
+    "MA": 0.095,
+    "PEP": 0.095,
+    "PG": 0.095,
+    "V": 0.095,
+    "WMT": 0.095
+  },
+  "orders": [
+    {
+      "symbol": "ABBV",
+      "side": "buy",
+      "qty": 33,
+      "client_order_id": "strategy_example-2026-11-20-ABBV-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "COST",
+      "side": "buy",
+      "qty": 9,
+      "client_order_id": "strategy_example-2026-11-20-COST-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "HD",
+      "side": "buy",
+      "qty": 28,
+      "client_order_id": "strategy_example-2026-11-20-HD-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "KO",
+      "side": "buy",
+      "qty": 98,
+      "client_order_id": "strategy_example-2026-11-20-KO-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "LLY",
+      "side": "buy",
+      "qty": 7,
+      "client_order_id": "strategy_example-2026-11-20-LLY-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "MA",
+      "side": "buy",
+      "qty": 15,
+      "client_order_id": "strategy_example-2026-11-20-MA-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "PEP",
+      "side": "buy",
+      "qty": 68,
+      "client_order_id": "strategy_example-2026-11-20-PEP-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "PG",
+      "side": "buy",
+      "qty": 56,
+      "client_order_id": "strategy_example-2026-11-20-PG-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "V",
+      "side": "buy",
+      "qty": 24,
+      "client_order_id": "strategy_example-2026-11-20-V-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "WMT",
+      "side": "buy",
+      "qty": 74,
+      "client_order_id": "strategy_example-2026-11-20-WMT-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    }
+  ],
+  "submitted": [],
+  "backtest_report": "2026-11-20-backtest_IS-20260902-20260930_OOS-20261008-20261119.pdf",
+  "turnover": 0.4767
+}

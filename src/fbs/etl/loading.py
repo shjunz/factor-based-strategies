@@ -33,6 +33,26 @@ def save_clean(clean, path, sources):
     ------
     ValueError
         If (instrument_id, timestamp) is not unique.
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from pathlib import Path
+    >>> import pandas as pd
+    >>> clean = pd.DataFrame({"instrument_id": [2, 1],
+    ...                       "timestamp": pd.to_datetime(["2024-01-03", "2024-01-02"]),
+    ...                       "close": [10.0, 20.0]})
+    >>> path = save_clean(clean, Path(tempfile.mkdtemp()) / "clean.parquet", [])
+    >>> pd.read_parquet(path)
+       instrument_id  timestamp  close
+    0              1 2024-01-02   20.0
+    1              2 2024-01-03   10.0
+    >>> print(path.with_suffix(".json").read_text())
+    {
+      "start": "2024-01-02",
+      "end": "2024-01-03",
+      "sources": []
+    }
     """
 
     # Check that (instrument_id, timestamp) is unique

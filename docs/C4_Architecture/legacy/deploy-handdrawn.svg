@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" width="900" height="400" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Helvetica Neue', Arial, sans-serif">
+  <title>AWS 定时运行</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#545B64"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="400" rx="12" fill="#FFFFFF"/>
+
+  <!-- AWS boundary -->
+  <rect x="16" y="16" width="868" height="368" rx="10" fill="none" stroke="#232F3E" stroke-width="1.5"/>
+  <rect x="16" y="16" width="70" height="24" rx="4" fill="#232F3E"/>
+  <text x="51" y="33" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">AWS</text>
+
+  <!-- EventBridge (left, top) -->
+  <g transform="translate(110,120)">
+    <rect x="-26" y="-26" width="52" height="52" rx="9" fill="#E7157B"/>
+    <circle r="14" fill="none" stroke="#fff" stroke-width="2.2"/>
+    <line x1="0" y1="0" x2="0" y2="-9" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="0" y1="0" x2="7" y2="4" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+    <text y="46" text-anchor="middle" font-size="13" fill="#232F3E" font-weight="600">EventBridge Scheduler</text>
+    <text y="63" text-anchor="middle" font-size="11" fill="#545B64">每个工作日 15:00 ET</text>
+  </g>
+
+  <!-- Secrets Manager (left, bottom) -->
+  <g transform="translate(110,280)">
+    <rect x="-26" y="-26" width="52" height="52" rx="9" fill="#DD344C"/>
+    <circle cx="-5" cy="-4" r="7.5" fill="none" stroke="#fff" stroke-width="2.2"/>
+    <line x1="0" y1="1" x2="12" y2="13" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="8" y1="9" x2="11" y2="6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+    <text y="46" text-anchor="middle" font-size="13" fill="#232F3E" font-weight="600">Secrets Manager</text>
+    <text y="63" text-anchor="middle" font-size="11" fill="#545B64">Alpaca、Nasdaq 密钥</text>
+  </g>
+
+  <!-- Left arrows into Fargate -->
+  <line x1="140" y1="120" x2="276" y2="120" stroke="#545B64" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="208" y="112" text-anchor="middle" font-size="11" fill="#545B64">触发</text>
+  <line x1="140" y1="280" x2="276" y2="280" stroke="#545B64" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="208" y="272" text-anchor="middle" font-size="11" fill="#545B64">环境变量</text>
+
+  <!-- Fargate task (center) -->
+  <rect x="280" y="50" width="350" height="315" rx="10" fill="#FFF7F0" stroke="#ED7100" stroke-width="1.5"/>
+  <g transform="translate(306,76)">
+    <rect x="-15" y="-15" width="30" height="30" rx="6" fill="#ED7100"/>
+    <rect x="-8" y="-8" width="16" height="16" rx="2" fill="none" stroke="#fff" stroke-width="2"/>
+    <line x1="-8" y1="-3" x2="8" y2="-3" stroke="#fff" stroke-width="1.5"/>
+    <line x1="-8" y1="3" x2="8" y2="3" stroke="#fff" stroke-width="1.5"/>
+  </g>
+  <text x="330" y="74" font-size="14" fill="#232F3E" font-weight="700">ECS Fargate 任务</text>
+  <text x="330" y="90" font-size="11" fill="#545B64">临时容器，磁盘在任务结束后清空</text>
+
+  <!-- ① -->
+  <rect x="300" y="108" width="310" height="40" rx="6" fill="#fff" stroke="#ED7100"/>
+  <text x="316" y="133" font-size="13" fill="#232F3E"><tspan font-weight="700">①</tspan>  下载 data/ 到容器磁盘</text>
+  <line x1="455" y1="148" x2="455" y2="178" stroke="#545B64" stroke-width="1.4" marker-end="url(#a)"/>
+
+  <!-- ② -->
+  <rect x="300" y="180" width="310" height="60" rx="6" fill="#fff" stroke="#ED7100"/>
+  <text x="316" y="205" font-size="13" fill="#232F3E"><tspan font-weight="700">②</tspan>  python -m fbs.live rebalance</text>
+  <text x="338" y="225" font-size="12" fill="#545B64">策略名 --submit（见 1.2）</text>
+  <line x1="455" y1="240" x2="455" y2="270" stroke="#545B64" stroke-width="1.4" marker-end="url(#a)"/>
+
+  <!-- ③ -->
+  <rect x="300" y="272" width="310" height="56" rx="6" fill="#fff" stroke="#ED7100"/>
+  <text x="316" y="296" font-size="13" fill="#232F3E"><tspan font-weight="700">③</tspan>  上传 data/、records/</text>
+  <text x="338" y="315" font-size="12" fill="#545B64">② 失败也上传</text>
+
+  <!-- S3 (right) -->
+  <g transform="translate(790,210)">
+    <rect x="-28" y="-28" width="56" height="56" rx="9" fill="#7AA116"/>
+    <path d="M-14,-10 L14,-10 L10,14 L-10,14 Z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>
+    <ellipse cx="0" cy="-10" rx="14" ry="4" fill="#7AA116" stroke="#fff" stroke-width="2.2"/>
+    <text y="48" text-anchor="middle" font-size="13" fill="#232F3E" font-weight="600">Amazon S3</text>
+    <text y="65" text-anchor="middle" font-size="11" fill="#545B64">strategy/策略名/</text>
+    <text y="80" text-anchor="middle" font-size="11" fill="#545B64">data/、records/</text>
+  </g>
+
+  <!-- S3 → ① -->
+  <path d="M790,180 L790,128 L614,128" fill="none" stroke="#545B64" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="700" y="120" text-anchor="middle" font-size="12" fill="#232F3E" font-weight="600">① 下载 data/</text>
+
+  <!-- ③ → S3 -->
+  <path d="M610,300 L720,300 L720,220 L758,220" fill="none" stroke="#545B64" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="745" y="335" text-anchor="middle" font-size="12" fill="#232F3E" font-weight="600">③ 上传 data/、records/</text>
+</svg>

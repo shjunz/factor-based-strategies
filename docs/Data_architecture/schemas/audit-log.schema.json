@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fbs:schema:audit-log:1",
+  "title": "AuditLog 审计日志（计划）",
+  "description": "每个 ECS 任务结束时（失败也一样）写一份，列出这次上传到 S3 的每个对象。用 version_id 可以把文件夹还原到任意一次运行结束时的状态。S3 key: strategy/{name}/_meta/audit/{run_id}.json（策略任务），或 providers/{provider}/_meta/audit/{run_id}.json（共享下载任务）",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_id",
+    "started_at",
+    "finished_at",
+    "exit_code",
+    "git_sha",
+    "objects",
+    "deleted"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:fbs:schema:audit-log:1"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9]{8}T[0-9]{6}Z$",
+      "description": "任务开始时间，UTC，YYYYMMDDTHHMMSSZ"
+    },
+    "strategy": {
+      "type": "string",
+      "description": "策略任务写；共享下载任务不写"
+    },
+    "provider": {
+      "type": "string",
+      "description": "共享下载任务写，例如 sharadar；策略任务不写"
+    },
+    "command": {
+      "type": "string",
+      "description": "容器执行的命令，例如 python -m fbs.live rebalance {name} --submit"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "exit_code": {
+      "type": "integer",
+      "description": "0 = 正常；1 = blocked 或部分拒单；其他 = 异常退出"
+    },
+    "git_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "image_digest": {
+      "type": "string",
+      "description": "容器镜像 digest，sha256:..."
+    },
+    "run_record": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "这次运行写出的 records/*.json 的 key；没写出则为 null"
+    },
+    "objects": {
+      "type": "array",
+      "description": "这次新增或改动的对象",
+      "items": {
+        "$ref": "#/$defs/objectEntry"
+      }
+    },
+    "deleted": {
+      "type": "array",
+      "description": "这次在 S3 上删掉的 key（例如被替换掉的旧 gold 文件）",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "objectEntry": {
+      "type": "object",
+      "required": [
+        "key",
+        "sha256",
+        "size",
+        "version_id"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "S3 key，等于仓库相对路径"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "version_id": {
+          "type": "string",
+          "description": "S3 PutObject 返回的 VersionId"
+        },
+        "content_type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "strategy"
+      ]
+    },
+    {
+      "required": [
+        "provider"
+      ]
+    }
+  ]
+}

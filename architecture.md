@@ -36,7 +36,7 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 
 每个数据源一个包，放该数据源专用的代码；通用模块放在 `etl/` 下，所有数据源共用。
 
-### 数据源包（src/fbs/etl/sharadar/）
+### 数据源包（src/fbs/etl/provider/sharadar/）
 
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
@@ -59,7 +59,7 @@ routers、schemas 按资源一一对应，routers 只处理 HTTP，业务逻辑�
 | 文件 | 章节 | 用途 | 描述 |
 | --- | --- | --- | --- |
 | `data_library.md` | M1.1.2 | 数据卡片 | 每个数据集一张卡片，文件开头为目录 |
-| `dictionary/` | M1.2.2 | 映射表 | field_map.csv |
+| （已移走） | M1.2.2 | 映射表 | field_map.csv 和供应商字典 DD_*_ALL.csv 现在在 `src/fbs/etl/provider/sharadar/metadata/`，随代码提交 |
 | `bronze/{source}_{product}/{dataset}/` | M1.1.3 | 原始数据 | 数据提取的结果，原样保存，文件名为下载日期和过滤条件，旁有同名 `.json` |
 | `silver/` | M1.2 | 中间数据 | 数据变换过程中的中间结果 |
 | `gold/{分类}/` | M1.3.1、M1.3.2 | 清洗数据 | 数据变换的结果，研究直接读取，可选择上传到 S3，旁有同名 `.json` |

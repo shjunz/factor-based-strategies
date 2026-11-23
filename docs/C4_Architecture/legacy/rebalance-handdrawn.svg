@@ -1,0 +1,198 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 880" width="1000" height="880" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Helvetica Neue', Arial, sans-serif">
+  <title>一次 rebalance</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#545B64"/>
+    </marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9AA0A6"/>
+    </marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#C0392B"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="880" rx="12" fill="#FFFFFF"/>
+
+  <!-- ============ Left: Sharadar + strategy folder ============ -->
+  <text x="70" y="24" text-anchor="middle" font-size="12" fill="#545B64" font-weight="600">第三方 API</text>
+  <rect x="15" y="150" width="110" height="60" rx="30" fill="#5A6B86"/>
+  <text x="70" y="177" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">Sharadar</text>
+  <text x="70" y="194" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">SEP</text>
+
+  <rect x="140" y="12" width="165" height="275" rx="8" fill="#F7F8F8" stroke="#AAB7B8" stroke-dasharray="5 3"/>
+  <text x="150" y="30" font-size="12" fill="#545B64" font-weight="600">strategy/策略名/</text>
+
+  <rect x="160" y="42" width="130" height="36" rx="5" fill="#fff" stroke="#AAB7B8"/>
+  <text x="225" y="65" text-anchor="middle" font-size="12" fill="#232F3E">config.yaml</text>
+
+  <!-- data/ cylinder -->
+  <path d="M175,98 L175,128 A50,7 0 0 0 275,128 L275,98" fill="#fff" stroke="#AAB7B8"/>
+  <ellipse cx="225" cy="98" rx="50" ry="7" fill="#fff" stroke="#AAB7B8"/>
+  <text x="225" y="122" text-anchor="middle" font-size="12" fill="#232F3E">data/</text>
+
+  <rect x="160" y="152" width="130" height="58" rx="5" fill="#fff" stroke="#AAB7B8"/>
+  <text x="225" y="186" text-anchor="middle" font-size="12" fill="#232F3E">data.py</text>
+
+  <rect x="160" y="226" width="130" height="46" rx="5" fill="#fff" stroke="#AAB7B8"/>
+  <text x="225" y="254" text-anchor="middle" font-size="12" fill="#232F3E">weights.py</text>
+
+  <!-- data.py → Sharadar (GET), Sharadar → data/ (增量下载), data/ → data.py (读取) -->
+  <line x1="160" y1="186" x2="127" y2="186" stroke="#545B64" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="143" y="180" text-anchor="middle" font-size="10" fill="#545B64">GET</text>
+  <path d="M70,150 L70,113 L171,113" fill="none" stroke="#545B64" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="74" y="106" font-size="10" fill="#545B64">增量下载</text>
+  <line x1="225" y1="136" x2="225" y2="150" stroke="#545B64" stroke-width="1.3" marker-end="url(#a)"/>
+
+  <!-- ============ Center: runner steps ============ -->
+  <text x="480" y="24" text-anchor="middle" font-size="13" fill="#232F3E" font-weight="700">fbs.live rebalance（runner.py）</text>
+
+  <g font-size="12" fill="#232F3E">
+    <rect x="340" y="40" width="280" height="44" rx="6" fill="#F2F3F3" stroke="#AAB7B8"/>
+    <text x="354" y="67">1  加载策略、校验配置</text>
+    <text x="606" y="67" text-anchor="end" fill="#545B64">loader.py</text>
+
+    <rect x="340" y="110" width="280" height="44" rx="6" fill="#F2F3F3" stroke="#AAB7B8"/>
+    <text x="354" y="137">2  是否调仓日（否：结束）</text>
+    <text x="606" y="137" text-anchor="end" fill="#545B64">execution.py</text>
+
+    <rect x="340" y="166" width="280" height="100" rx="6" fill="#F2F3F3" stroke="#AAB7B8"/>
+    <text x="354" y="214">3  取数据、算权重</text>
+    <text x="354" y="232" font-size="11" fill="#545B64">risk_input_data、risk_weights</text>
+    <text x="606" y="214" text-anchor="end" fill="#545B64">runner.py</text>
+
+    <rect x="340" y="286" width="280" height="44" rx="6" fill="#F2F3F3" stroke="#AAB7B8"/>
+    <text x="354" y="313">4  检查账户</text>
+    <text x="606" y="313" text-anchor="end" fill="#545B64">risk.py</text>
+
+    <rect x="340" y="356" width="280" height="44" rx="6" fill="#F2F3F3" stroke="#AAB7B8"/>
+    <text x="354" y="383">5  算出全部订单、检查订单</text>
+    <text x="606" y="383" text-anchor="end" fill="#545B64">execution.py</text>
+
+    <rect x="340" y="426" width="280" height="44" rx="6" fill="#FFF7E6" stroke="#E0A030"/>
+    <text x="354" y="453">6  加了 --submit？</text>
+    <text x="606" y="453" text-anchor="end" fill="#545B64">runner.py</text>
+
+    <!-- branch row -->
+    <rect x="340" y="506" width="130" height="44" rx="6" fill="#fff" stroke="#545B64"/>
+    <text x="405" y="526" text-anchor="middle">dry run</text>
+    <text x="405" y="542" text-anchor="middle" font-size="11" fill="#545B64">不下单</text>
+
+    <rect x="490" y="506" width="130" height="44" rx="6" fill="#FFF7E6" stroke="#E0A030"/>
+    <text x="555" y="524" text-anchor="middle">可以提交？</text>
+    <text x="555" y="541" text-anchor="middle" font-size="10" fill="#545B64">enabled、开盘、收盘前</text>
+
+    <rect x="490" y="586" width="130" height="44" rx="6" fill="#fff" stroke="#545B64"/>
+    <text x="555" y="605" text-anchor="middle">paper trading</text>
+    <text x="555" y="622" text-anchor="middle" font-size="11" fill="#545B64">broker.py</text>
+
+    <!-- live (not implemented) -->
+    <rect x="160" y="506" width="140" height="44" rx="6" fill="#fff" stroke="#9AA0A6" stroke-dasharray="4 3"/>
+    <text x="230" y="526" text-anchor="middle" fill="#9AA0A6">live trading</text>
+    <text x="230" y="542" text-anchor="middle" font-size="11" fill="#9AA0A6">暂不实现</text>
+    <rect x="160" y="586" width="140" height="44" rx="22" fill="#fff" stroke="#9AA0A6" stroke-dasharray="4 3"/>
+    <text x="230" y="613" text-anchor="middle" font-size="11" fill="#9AA0A6">Alpaca Live</text>
+
+    <!-- write record -->
+    <rect x="300" y="676" width="414" height="66" rx="6" fill="#EAF3FB" stroke="#7DA9D6"/>
+    <text x="314" y="694" font-weight="700">写记录</text>
+    <text x="314" y="712" font-size="11" fill="#232F3E">runner.py _write_record → JSON（状态、检查结果、目标权重、订单、提交结果）</text>
+    <text x="314" y="730" font-size="11" fill="#232F3E">report.py → PDF（第 1 页 运行本身，第 2 页 回测）</text>
+  </g>
+
+  <!-- records/ cylinder -->
+  <path d="M420,792 L420,838 A60,8 0 0 0 540,838 L540,792" fill="#fff" stroke="#7DA9D6"/>
+  <ellipse cx="480" cy="792" rx="60" ry="8" fill="#fff" stroke="#7DA9D6"/>
+  <text x="480" y="820" text-anchor="middle" font-size="12" fill="#232F3E" font-weight="600">records/</text>
+
+  <!-- records/ → S3 -->
+  <rect x="640" y="790" width="150" height="50" rx="8" fill="#7AA116"/>
+  <text x="715" y="811" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">Amazon S3</text>
+  <text x="715" y="829" text-anchor="middle" font-size="10" fill="#fff">strategy/策略名/records/</text>
+  <line x1="542" y1="815" x2="638" y2="815" stroke="#545B64" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="590" y="808" text-anchor="middle" font-size="11" fill="#232F3E" font-weight="600">③ 上传</text>
+
+  <!-- main chain -->
+  <g stroke="#545B64" stroke-width="1.3" fill="none">
+    <line x1="480" y1="84" x2="480" y2="108" marker-end="url(#a)"/>
+    <line x1="480" y1="154" x2="480" y2="164" marker-end="url(#a)"/>
+    <line x1="480" y1="266" x2="480" y2="284" marker-end="url(#a)"/>
+    <line x1="480" y1="330" x2="480" y2="354" marker-end="url(#a)"/>
+    <line x1="480" y1="400" x2="480" y2="424" marker-end="url(#a)"/>
+    <line x1="405" y1="470" x2="405" y2="504" marker-end="url(#a)"/>
+    <line x1="555" y1="470" x2="555" y2="504" marker-end="url(#a)"/>
+    <line x1="555" y1="550" x2="555" y2="584" marker-end="url(#a)"/>
+    <line x1="405" y1="550" x2="405" y2="674" marker-end="url(#a)"/>
+    <line x1="555" y1="630" x2="555" y2="674" marker-end="url(#a)"/>
+    <line x1="480" y1="742" x2="480" y2="781" marker-end="url(#a)"/>
+  </g>
+  <text x="411" y="492" font-size="11" fill="#545B64">否</text>
+  <text x="561" y="492" font-size="11" fill="#545B64">是</text>
+  <text x="561" y="572" font-size="11" fill="#545B64">是</text>
+
+  <!-- gate 否 → write record -->
+  <path d="M490,540 L480,540 L480,674" fill="none" stroke="#C0392B" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#r)"/>
+  <text x="474" y="612" text-anchor="end" font-size="11" fill="#C0392B">否</text>
+
+  <!-- checks fail bus (steps 3–5) → write record -->
+  <path d="M340,250 L326,250 L326,674" fill="none" stroke="#C0392B" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#r)"/>
+  <line x1="340" y1="308" x2="326" y2="308" stroke="#C0392B" stroke-width="1.3" stroke-dasharray="4 3"/>
+  <line x1="340" y1="378" x2="326" y2="378" stroke="#C0392B" stroke-width="1.3" stroke-dasharray="4 3"/>
+  <text x="318" y="660" text-anchor="end" font-size="11" fill="#C0392B">3~5 检查不通过：</text>
+  <text x="318" y="675" text-anchor="end" font-size="11" fill="#C0392B">不下单，直接写记录</text>
+
+  <!-- step 6 → live (dashed) -->
+  <path d="M340,460 L230,460 L230,504" fill="none" stroke="#9AA0A6" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#g)"/>
+  <line x1="230" y1="550" x2="230" y2="584" stroke="#9AA0A6" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#g)"/>
+
+  <!-- step 1 → config, step 3 ↔ data.py / weights.py -->
+  <line x1="340" y1="60" x2="292" y2="60" stroke="#545B64" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="316" y="54" text-anchor="middle" font-size="10" fill="#545B64">读取</text>
+
+  <line x1="340" y1="174" x2="292" y2="174" stroke="#545B64" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="316" y="169" text-anchor="middle" font-size="10" fill="#545B64">调用</text>
+  <line x1="290" y1="200" x2="338" y2="200" stroke="#545B64" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="314" y="214" text-anchor="middle" font-size="10" fill="#545B64">价格表</text>
+
+  <line x1="340" y1="234" x2="292" y2="234" stroke="#545B64" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="316" y="229" text-anchor="middle" font-size="10" fill="#545B64">调用</text>
+  <line x1="290" y1="262" x2="338" y2="262" stroke="#545B64" stroke-width="1.3" marker-end="url(#a)"/>
+  <text x="314" y="280" text-anchor="middle" font-size="10" fill="#545B64">权重</text>
+
+  <!-- ============ Right: Alpaca Paper API ============ -->
+  <text x="852" y="24" text-anchor="middle" font-size="12" fill="#545B64" font-weight="600">第三方 API</text>
+  <rect x="720" y="100" width="265" height="545" rx="10" fill="#F7F8F8" stroke="#5A6B86" stroke-width="1.5"/>
+  <text x="852" y="124" text-anchor="middle" font-size="13" fill="#232F3E" font-weight="700">Alpaca Paper API</text>
+
+  <g font-size="11" fill="#232F3E">
+    <text x="732" y="146">/v2/clock、/v2/calendar</text>
+    <text x="732" y="161" fill="#545B64">市场时钟、交易日历</text>
+
+    <text x="732" y="312">/v2/account</text>
+    <text x="732" y="327" fill="#545B64">净值、购买力、账户状态</text>
+
+    <text x="732" y="374">/v2/positions、/v2/assets/{代码}</text>
+    <text x="732" y="389">/v2/stocks/trades/latest</text>
+    <text x="732" y="404" fill="#545B64">持仓、能否交易、最新成交价</text>
+
+    <text x="732" y="602">/v2/orders</text>
+    <text x="732" y="617" fill="#545B64">GET：今天已发的订单（去重）</text>
+    <text x="732" y="632" fill="#545B64">POST：提交全部 MOC 订单</text>
+  </g>
+
+  <!-- request arrows (our side → Alpaca), one per step, no overlap -->
+  <g stroke="#545B64" stroke-width="1.3">
+    <line x1="718" y1="142" x2="620" y2="142" marker-end="url(#a)"/>
+    <line x1="718" y1="308" x2="620" y2="308" marker-end="url(#a)"/>
+    <line x1="718" y1="378" x2="620" y2="378" marker-end="url(#a)"/>
+    <line x1="718" y1="598" x2="620" y2="598" marker-end="url(#a)"/>
+    <line x1="620" y1="618" x2="718" y2="618" marker-end="url(#a)"/>
+  </g>
+  <g font-size="11" font-weight="700" fill="#2E7D32" text-anchor="middle">
+    <text x="669" y="136">GET</text>
+    <text x="669" y="302">GET</text>
+    <text x="669" y="372">GET</text>
+    <text x="669" y="592">GET</text>
+  </g>
+  <text x="669" y="634" text-anchor="middle" font-size="11" font-weight="700" fill="#C05621">POST</text>
+</svg>

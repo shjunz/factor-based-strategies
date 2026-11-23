@@ -1,0 +1,148 @@
+{
+  "strategy": "strategy_example",
+  "mode": "submit",
+  "signal_session": "2026-11-13",
+  "exec_session": "2026-11-16",
+  "run_at": "2026-11-16T15:00:00-05:00",
+  "status": "submitted",
+  "failures": [],
+  "notes": [],
+  "targets": {
+    "ABBV": 0.095,
+    "COST": 0.095,
+    "HD": 0.095,
+    "KO": 0.095,
+    "LLY": 0.095,
+    "MA": 0.095,
+    "PEP": 0.095,
+    "PG": 0.095,
+    "V": 0.095,
+    "WMT": 0.095
+  },
+  "orders": [
+    {
+      "symbol": "ABBV",
+      "side": "buy",
+      "qty": 32,
+      "client_order_id": "strategy_example-2026-11-16-ABBV-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "COST",
+      "side": "buy",
+      "qty": 9,
+      "client_order_id": "strategy_example-2026-11-16-COST-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "HD",
+      "side": "buy",
+      "qty": 27,
+      "client_order_id": "strategy_example-2026-11-16-HD-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "KO",
+      "side": "buy",
+      "qty": 95,
+      "client_order_id": "strategy_example-2026-11-16-KO-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "LLY",
+      "side": "buy",
+      "qty": 7,
+      "client_order_id": "strategy_example-2026-11-16-LLY-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "MA",
+      "side": "buy",
+      "qty": 14,
+      "client_order_id": "strategy_example-2026-11-16-MA-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "PEP",
+      "side": "buy",
+      "qty": 65,
+      "client_order_id": "strategy_example-2026-11-16-PEP-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "PG",
+      "side": "buy",
+      "qty": 55,
+      "client_order_id": "strategy_example-2026-11-16-PG-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "V",
+      "side": "buy",
+      "qty": 22,
+      "client_order_id": "strategy_example-2026-11-16-V-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    },
+    {
+      "symbol": "WMT",
+      "side": "buy",
+      "qty": 74,
+      "client_order_id": "strategy_example-2026-11-16-WMT-adjust",
+      "target_weight": 0.095,
+      "reason": "adjust"
+    }
+  ],
+  "submitted": [
+    {
+      "client_order_id": "strategy_example-2026-11-16-ABBV-adjust",
+      "status": "accepted"
+    },
+    {
+      "client_order_id": "strategy_example-2026-11-16-COST-adjust",
+      "status": "accepted"
+    },
+    {
+      "client_order_id": "strategy_example-2026-11-16-HD-adjust",
+      "status": "accepted"
+    },
+    {
+      "client_order_id": "strategy_example-2026-11-16-KO-adjust",
+      "status": "accepted"
+    },
+    {
+      "client_order_id": "strategy_example-2026-11-16-LLY-adjust",
+      "status": "accepted"
+    },
+    {
+      "client_order_id": "strategy_example-2026-11-16-MA-adjust",
+      "status": "accepted"
+    },
+    {
+      "client_order_id": "strategy_example-2026-11-16-PEP-adjust",
+      "status": "accepted"
+    },
+    {
+      "client_order_id": "strategy_example-2026-11-16-PG-adjust",
+      "status": "accepted"
+    },
+    {
+      "client_order_id": "strategy_example-2026-11-16-V-adjust",
+      "status": "accepted"
+    },
+    {
+      "client_order_id": "strategy_example-2026-11-16-WMT-adjust",
+      "status": "accepted"
+    }
+  ],
+  "backtest_report": "2026-11-16-backtest_IS-20260902-20260930_OOS-20261008-20261113.pdf",
+  "turnover": 0.4774
+}

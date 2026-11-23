@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fbs:schema:download-record:1",
+  "title": "DownloadRecord 下载记录",
+  "description": "bronze 原始文件旁的同名 .json，由 fbs.etl.provider.{provider}.extract.download_table 写入（现在只有 sharadar）。S3 key: strategy/{name}/data/bronze/{source}_{product}/{dataset}/{download_date}_{filters}.json，或供应商共享层 providers/{provider}/bronze/{dataset}/{download_date}_{filters}.json（计划）",
+  "type": "object",
+  "required": ["table", "filters", "columns", "downloaded_at"],
+  "properties": {
+    "provider": {
+      "type": "string",
+      "description": "数据供应商，小写；计划在接第二个供应商前开始写入",
+      "examples": ["sharadar"]
+    },
+    "table": {
+      "type": "string",
+      "description": "供应商表名（= dataset）",
+      "examples": ["SEP", "SFP", "TICKERS"]
+    },
+    "filters": {
+      "type": "object",
+      "description": "下载时的行过滤条件，原样记录。值可以是单个值、列表，或 {gte, lte} 范围",
+      "additionalProperties": {
+        "anyOf": [
+          {"type": ["string", "number", "boolean"]},
+          {"type": "array", "items": {"type": ["string", "number"]}},
+          {
+            "type": "object",
+            "properties": {
+              "gte": {"type": "string"},
+              "lte": {"type": "string"}
+            },
+            "additionalProperties": {"type": ["string", "number"]}
+          }
+        ]
+      }
+    },
+    "columns": {
+      "type": ["array", "null"],
+      "items": {"type": "string"},
+      "description": "选取的列；null = 全部列"
+    },
+    "downloaded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "下载完成时间，UTC，ISO 8601 精确到秒",
+      "examples": ["2026-01-02T03:04:05+00:00"]
+    }
+  },
+  "additionalProperties": true,
+  "$comment": "早期文件还带 method、limit 两个字段，所以允许额外字段"
+}

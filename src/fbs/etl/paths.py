@@ -22,25 +22,52 @@ GOLD_DIR = DATA_DIR / "gold"
 # %%
 # Bronze Path
 
-# File-name text of a single filter value: dates as YYYYMMDD
-def _scalar(value):
+# File-name text of a filter: a range as start-end, a list joined by commas,
+# dates as YYYYMMDD
+def _filter_token(value):
+    """
+    File-name text of one filter: a {"gte", "lte"} range as start-end (either
+    side may be empty), other operators as {op}{value} joined by commas, a list
+    sorted and joined by commas, and a single value with dates as YYYYMMDD and
+    path separators and whitespace replaced by "-".
+
+    Parameters
+    ----------
+    value : dict, list, tuple, datetime.date, str or scalar
+        Filter value of one column.
+
+    Returns
+    -------
+    token : str
+        File-name text of `value`.
+
+    Examples
+    --------
+    >>> _filter_token({"gte": "2024-01-01", "lte": date(2024, 12, 31)})
+    '20240101-20241231'
+    >>> _filter_token({"gte": "2024-01-01"}), _filter_token(["SPY", "QQQ"])
+    ('20240101-', 'QQQ,SPY')
+    >>> _filter_token("BRK/B")
+    'BRK-B'
+    """
+
+    # Range or other operators: each value as a single value
+    if isinstance(value, dict):
+        if set(value) <= {"gte", "lte"}:
+            return f"{_filter_token(value.get('gte', ''))}-{_filter_token(value.get('lte', ''))}"
+        return ",".join(f"{op}{_filter_token(v)}" for op, v in sorted(value.items()))
+
+    # List: each value as a single value, sorted
+    if isinstance(value, (list, tuple)):
+        return ",".join(sorted(_filter_token(v) for v in value))
+
+    # Single value: dates as YYYYMMDD, no path separators or whitespace
     if isinstance(value, date):
         return f"{value:%Y%m%d}"
     text = str(value)
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
         return text.replace("-", "")
     return re.sub(r"[/\\\s]+", "-", text)
-
-# File-name text of a filter: a range as start-end, a list joined by commas
-def _filter_token(value):
-    if isinstance(value, dict):
-        if set(value) <= {"gte", "lte"}:
-            return f"{_scalar(value.get('gte', ''))}-{_scalar(value.get('lte', ''))}"
-        return ",".join(f"{op}{_scalar(v)}" for op, v in sorted(value.items()))
-    if isinstance(value, (list, tuple)):
-        values = sorted(_scalar(v) for v in value)
-        return ",".join(values)
-    return _scalar(value)
 
 # Bronze file path
 def bronze_path(source, product, dataset, download_date, filters, suffix,

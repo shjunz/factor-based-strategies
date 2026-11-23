@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fbs:schema:sync-state:1",
+  "title": "SyncState 同步状态",
+  "description": "策略本地数据的增量同步状态，由 strategy/{name}/data.py 最后写入。删掉它，下次运行就全量重新下载。S3 key: strategy/{name}/data/sync_state.json",
+  "type": "object",
+  "required": [
+    "synced",
+    "coverage"
+  ],
+  "properties": {
+    "strategy": {
+      "type": "string",
+      "description": "策略文件夹名（= Strategy 主键）；data.py 每次都写，早期文件没有",
+      "examples": [
+        "strategy_example"
+      ]
+    },
+    "synced": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "上次同步日期 YYYY-MM-DD；null = 从未同步"
+    },
+    "coverage": {
+      "type": "object",
+      "description": "ticker → 本地从哪天开始有数据（YYYY-MM-DD）",
+      "additionalProperties": {
+        "type": "string",
+        "format": "date"
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -13,6 +13,26 @@ import pandas as pd
 
 # Float array of a wide table
 def _array(x):
+    """
+    Values of `x` as a float64 NumPy array, for the numba kernels.
+
+    Parameters
+    ----------
+    x : pd.DataFrame or array-like
+        Wide table. Index = timestamp, Columns = instrument_id.
+
+    Returns
+    -------
+    values : np.ndarray
+        Float64 values with the shape of `x`.
+
+    Examples
+    --------
+    >>> _array(pd.DataFrame({"A": [1, 2]}))
+    array([[1.],
+           [2.]])
+    """
+
     return np.asarray(x, dtype=np.float64)
 
 # Float array of window lengths
@@ -39,6 +59,17 @@ def _window_array(d, x):
     ValueError
         If `d` is a DataFrame with a different index or columns than `x`.
         If `d` has values that are not whole numbers or NaN.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0, 4.0, 1.0, 5.0],
+    ...                   "B": [2.0, 7.0, 1.0, 8.0, 2.0]})
+    >>> _window_array(2, x).shape
+    (5, 2)
+    >>> _window_array(1.5, x)
+    Traceback (most recent call last):
+    ...
+    ValueError: d must be whole numbers
     """
 
     # If `d` is a DataFrame
@@ -60,6 +91,31 @@ def _window_array(d, x):
 
 # Convert a wide arrary to a wide table
 def _wide(values, x):
+    """
+    Array `values` as a wide table with the index and columns of `x`.
+
+    Parameters
+    ----------
+    values : np.ndarray
+        Values with the shape of `x`.
+    x : pd.DataFrame
+        Wide table whose index and columns the result takes. Index = timestamp,
+        Columns = instrument_id.
+
+    Returns
+    -------
+    out : pd.DataFrame
+        `values` as a table. Index = timestamp, Columns = instrument_id.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0], "B": [2.0, 7.0]})
+    >>> _wide(np.zeros((2, 2)), x)
+         A    B
+    0  0.0  0.0
+    1  0.0  0.0
+    """
+
     return pd.DataFrame(values, index=x.index, columns=x.columns)
 
 # %%
@@ -68,6 +124,29 @@ def _wide(values, x):
 # Delay Kernel: value of x from d bars earlier cell by cell
 @numba.njit(parallel=True, cache=True)
 def _delay_kernel(x, d):
+    """
+    Value of `x` d bars before each cell, column by column in parallel.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Float values, shape (bars, instruments).
+    d : np.ndarray
+        Bars back per cell, same shape as `x`.
+
+    Returns
+    -------
+    out : np.ndarray
+        Delayed values. NaN where d is NaN or negative, or the bar is before
+        the first row.
+
+    Examples
+    --------
+    >>> _delay_kernel(np.array([[1.0], [2.0], [3.0]]), np.full((3, 1), 1.0))
+    array([[nan],
+           [ 1.],
+           [ 2.]])
+    """
     m, n = x.shape
     out = np.full((m, n), np.nan)
     for i in numba.prange(n):
@@ -82,6 +161,32 @@ def _delay_kernel(x, d):
 # past d bars, chosen by stat = 0, 1, 2 or 3, cell by cell
 @numba.njit(parallel=True, cache=True)
 def _window_kernel(x, d, stat):
+    """
+    One statistic of `x` over the past d bars of each cell, column by column
+    in parallel.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Float values, shape (bars, instruments).
+    d : np.ndarray
+        Window length per cell, same shape as `x`.
+    stat : {0, 1, 2, 3}
+        0 minimum, 1 mean, 2 bars since the maximum, 3 bars since the minimum.
+
+    Returns
+    -------
+    out : np.ndarray
+        Window statistic. NaN where d is NaN or below 1, the window has fewer
+        than d bars, or the window has a NaN.
+
+    Examples
+    --------
+    >>> _window_kernel(np.array([[1.0], [2.0], [3.0]]), np.full((3, 1), 2.0), 1)
+    array([[nan],
+           [1.5],
+           [2.5]])
+    """
     m, n = x.shape
     out = np.full((m, n), np.nan)
     for i in numba.prange(n):
@@ -120,6 +225,24 @@ def _window_kernel(x, d, stat):
 # Average ranks of the values, with ties sharing their mean rank
 @numba.njit(cache=True)
 def _ranks(v):
+    """
+    Ranks of `v` from 1, with tied values sharing their mean rank.
+
+    Parameters
+    ----------
+    v : np.ndarray
+        1-D float values without NaN.
+
+    Returns
+    -------
+    ranks : np.ndarray
+        Rank of each value, in the order of `v`.
+
+    Examples
+    --------
+    >>> _ranks(np.array([10.0, 30.0, 20.0, 30.0]))
+    array([1. , 3.5, 2. , 3.5])
+    """
     order = np.argsort(v, kind="mergesort")
     ranks = np.empty(v.size)
     k = 0
@@ -135,6 +258,34 @@ def _ranks(v):
 # Spearman rank correlation of x and y over each window
 @numba.njit(parallel=True, cache=True)
 def _spearman_kernel(x, y, d):
+    """
+    Spearman rank correlation of `x` and `y` over the past d bars of each
+    cell, column by column in parallel.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        First float values, shape (bars, instruments).
+    y : np.ndarray
+        Second float values, same shape as `x`.
+    d : np.ndarray
+        Window length per cell, same shape as `x`.
+
+    Returns
+    -------
+    out : np.ndarray
+        Window Spearman correlation. NaN where d is NaN or below 1, the window
+        has fewer than d bars, the window has a NaN, or `x` or `y` is constant
+        in the window.
+
+    Examples
+    --------
+    >>> _spearman_kernel(np.array([[1.0], [2.0], [3.0]]),
+    ...                  np.array([[3.0], [2.0], [1.0]]), np.full((3, 1), 3.0))
+    array([[nan],
+           [nan],
+           [-1.]])
+    """
     m, n = x.shape
     out = np.full((m, n), np.nan)
     for i in numba.prange(n):
@@ -182,6 +333,20 @@ def delay(x, d):
     ValueError
         If d is a DataFrame with a different index or columns than `x`.
         If d has values that are not whole numbers.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0, 4.0, 1.0, 5.0],
+    ...                   "B": [2.0, 7.0, 1.0, 8.0, 2.0]})
+    >>> delay(x, 1)
+         A    B
+    0  NaN  NaN
+    1  3.0  2.0
+    2  1.0  7.0
+    3  4.0  1.0
+    4  1.0  8.0
+    >>> delay(x, 0).equals(x)
+    True
     """
 
     out = _delay_kernel(_array(x), _window_array(d, x))
@@ -213,6 +378,18 @@ def ts_min(x, d):
     ValueError
         If d is a DataFrame with a different index or columns than `x`.
         If d has values that are not whole numbers.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0, 4.0, 1.0, 5.0],
+    ...                   "B": [2.0, 7.0, 1.0, 8.0, 2.0]})
+    >>> ts_min(x, 3)
+         A    B
+    0  NaN  NaN
+    1  NaN  NaN
+    2  1.0  1.0
+    3  1.0  1.0
+    4  1.0  1.0
     """
 
     out = _window_kernel(_array(x), _window_array(d, x), 0)
@@ -244,6 +421,18 @@ def ts_mean(x, d):
     ValueError
         If d is a DataFrame with a different index or columns than `x`.
         If d has values that are not whole numbers.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0, 4.0, 1.0, 5.0],
+    ...                   "B": [2.0, 7.0, 1.0, 8.0, 2.0]})
+    >>> ts_mean(x, 2)
+         A    B
+    0  NaN  NaN
+    1  2.0  4.5
+    2  2.5  4.0
+    3  2.5  4.5
+    4  3.0  5.0
     """
 
     out = _window_kernel(_array(x), _window_array(d, x), 1)
@@ -276,6 +465,18 @@ def ts_argmax(x, d):
     ValueError
         If d is a DataFrame with a different index or columns than `x`.
         If d has values that are not whole numbers.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0, 4.0, 1.0, 5.0],
+    ...                   "B": [2.0, 7.0, 1.0, 8.0, 2.0]})
+    >>> ts_argmax(x, 3)
+         A    B
+    0  NaN  NaN
+    1  NaN  NaN
+    2  0.0  1.0
+    3  1.0  0.0
+    4  0.0  1.0
     """
 
     out = _window_kernel(_array(x), _window_array(d, x), 2)
@@ -308,6 +509,18 @@ def ts_argmin(x, d):
     ValueError
         If d is a DataFrame with a different index or columns than `x`.
         If d has values that are not whole numbers.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0, 4.0, 1.0, 5.0],
+    ...                   "B": [2.0, 7.0, 1.0, 8.0, 2.0]})
+    >>> ts_argmin(x, 3)
+         A    B
+    0  NaN  NaN
+    1  NaN  NaN
+    2  1.0  0.0
+    3  0.0  1.0
+    4  1.0  2.0
     """
 
     out = _window_kernel(_array(x), _window_array(d, x), 3)
@@ -343,6 +556,20 @@ def ts_spearman(x, y, d):
         If `y` has a different index or columns than `x`.
         If d is a DataFrame with a different index or columns than `x`.
         If d has values that are not whole numbers.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0, 4.0, 1.0, 5.0],
+    ...                   "B": [2.0, 7.0, 1.0, 8.0, 2.0]})
+    >>> y = pd.DataFrame({"A": [1.0, 2.0, 3.0, 4.0, 5.0],
+    ...                   "B": [5.0, 4.0, 3.0, 2.0, 1.0]})
+    >>> ts_spearman(x, y, 3)
+         A    B
+    0  NaN  NaN
+    1  NaN  NaN
+    2  0.5  0.5
+    3  0.0 -0.5
+    4  0.5 -0.5
     """
 
     # Check that y lines up with x
@@ -371,6 +598,20 @@ def ts_step(c, x):
     -------
     out : pd.DataFrame
         Bar count times c. Index = timestamp, Columns = instrument_id.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0, 4.0], "B": [2.0, 7.0, 1.0]})
+    >>> ts_step(1, x)
+         A    B
+    0  1.0  1.0
+    1  2.0  2.0
+    2  3.0  3.0
+    >>> ts_step(0.5, x)
+         A    B
+    0  0.5  0.5
+    1  1.0  1.0
+    2  1.5  1.5
     """
 
     # Count the rows from the first row, repeated in every column
@@ -398,6 +639,15 @@ def log(x):
     out : pd.DataFrame
         Natural logarithm. NaN where `x` is 0 or below. Index = timestamp,
         Columns = instrument_id.
+
+    Examples
+    --------
+    >>> log(pd.DataFrame({"A": [1.0, np.e, 0.0, -1.0]}))
+         A
+    0  0.0
+    1  1.0
+    2  NaN
+    3  NaN
     """
 
     out = np.log(x.where(x > 0))
@@ -422,6 +672,18 @@ def max(x, y):
     out : pd.DataFrame
         Larger value. NaN where `x` or `y` is NaN. Index = timestamp,
         Columns = instrument_id.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0, 4.0, 1.0, 5.0],
+    ...                   "B": [2.0, 7.0, 1.0, 8.0, 2.0]})
+    >>> max(x, 2.0)
+         A    B
+    0  3.0  2.0
+    1  2.0  7.0
+    2  4.0  2.0
+    3  2.0  8.0
+    4  5.0  2.0
     """
 
     out = np.maximum(x, y)
@@ -448,6 +710,25 @@ def where(c, x, y):
     -------
     out : pd.DataFrame
         Chosen values. Index = timestamp, Columns = instrument_id.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0, 4.0, 1.0, 5.0],
+    ...                   "B": [2.0, 7.0, 1.0, 8.0, 2.0]})
+    >>> where(x > 2, 1.0, -1.0)
+         A    B
+    0  1.0 -1.0
+    1 -1.0  1.0
+    2  1.0 -1.0
+    3 -1.0  1.0
+    4  1.0 -1.0
+    >>> where(x > 2, x, 0.0)
+         A    B
+    0  3.0  0.0
+    1  0.0  7.0
+    2  4.0  0.0
+    3  0.0  8.0
+    4  5.0  0.0
     """
 
     # Pick from x or y cell by cell
@@ -474,6 +755,18 @@ def and_(a, b):
     -------
     out : pd.DataFrame
         True where both hold. Index = timestamp, Columns = instrument_id.
+
+    Examples
+    --------
+    >>> x = pd.DataFrame({"A": [3.0, 1.0, 4.0, 1.0, 5.0],
+    ...                   "B": [2.0, 7.0, 1.0, 8.0, 2.0]})
+    >>> and_(x > 1, x < 5)
+           A      B
+    0   True   True
+    1  False  False
+    2   True  False
+    3  False  False
+    4  False   True
     """
 
     out = a & b

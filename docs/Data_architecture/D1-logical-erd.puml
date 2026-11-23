@@ -1,0 +1,226 @@
+@startuml D1-logical-erd
+' D1 Logical ERD - 逻辑实体关系图（crow's foot 表示法）
+' 13 个实体，三大块：
+'   P 数据供应商层 providers/{provider}/：每个供应商一份，所有策略共享（Sharadar 是第一个例子）。
+'   A 策略数据 strategy/{name}/data/：引擎的输入，引擎只读 gold。
+'   B 运行记录 strategy/{name}/records/：引擎的输出。
+' 文件内部的细节（DD 里的字段和代码表、sync_state 的 coverage、RunRecord 里的 orders 等）不单独画框，见 D2。
+' 每个框：上格 = 主键（PK），下格 = 其他字段；* = 必填；灰色小字 = 示例值。UK = 表内唯一（可以被外键指向）。
+' 示例值：DD、配置、下载记录来自仓库里的真实文件；价格、订单等数字是示意。
+' 每条线都是外键，线上括号里是外键列：实线 = 已有；虚线 = 计划中。
+' 所有键都是文件里真实的一列（gold 的 strategy / provider / dataset / clean_date 也写进 parquet），可以直接用 SQL join。
+' 唯一例外：BronzeFile 是供应商原样的 zip，不改内容，它的 strategy 从 filename（路径）解析。
+' 灰色框 = 计划中（代码里还没有），见 README.md「现状与计划」。
+' 阅读顺序：框标题的「步骤N.x」和线上的 [N] 对应图例里的步骤 1-5（数据流顺序）。
+
+title <size:24>D1 逻辑 ERD：P 供应商层（共享） → A 策略数据（输入） → B 运行记录（输出）</size>
+
+set separator none
+hide circle
+hide empty members
+top to bottom direction
+skinparam shadowing false
+skinparam defaultFontName sans-serif
+skinparam ArrowColor #444444
+skinparam nodesep 50
+skinparam ranksep 70
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #444444
+}
+skinparam entity<<planned>> {
+  BackgroundColor #EEEEEE
+  BorderColor #999999
+  FontColor #666666
+}
+skinparam entity<<contract>> {
+  BorderColor #1F5FA8
+  BorderThickness 2.5
+}
+
+legend top left
+  <b>阅读顺序（按数据流）</b>
+  <b>步骤1</b>  供应商有什么：Provider → ProviderDataset
+  <b>步骤2</b>  策略要什么：Strategy（universe、data.field）
+  <b>步骤3</b>  下载原始数据：RawFile（计划）→ BronzeFile，每个文件旁一份 DownloadRecord
+  <b>步骤4</b>  清洗成 gold：FieldMap 改列名 + InstrumentMap 换 FIGI → GoldTable（每张供应商表一张）；SyncState 记进度
+  <b>步骤5</b>  运行并留痕：RunRecord → Report；AuditLog 记上传
+  框标题里的「步骤N.x」= 第 N 步里的第 x 个框；线上的 [N] = 这条关系属于第 N 步
+endlegend
+
+package "P 数据供应商层  providers/{provider}/  —  每个供应商一份，所有策略共享（例：sharadar）" #EEF7EE {
+
+  entity "<b>步骤1.1</b>  Provider 数据供应商\nmetadata/provider.yaml（不放密钥）" as Provider {
+    * provider : string <<PK>>  <color:#888888><size:10>例 sharadar</size></color>
+    --
+    * vendor : string  <color:#888888><size:10>例 Nasdaq Data Link</size></color>
+    * api : string  <color:#888888><size:10>例 datatables SHARADAR/{dataset}</size></color>
+    * api_key_env : string（变量名；值在 .env / Secrets Manager）  <color:#888888><size:10>例 NASDAQ_DATA_LINK_API_KEY</size></color>
+    * extractor : string  <color:#888888><size:10>例 fbs.etl.provider.sharadar.extract</size></color>
+  }
+
+  entity "<b>步骤1.2</b>  ProviderDataset 数据表\n来源：metadata/DD_{as_of}_ALL.csv（以最新一版为准）" as ProviderDataset {
+    * provider : string <<PK,FK>>  <color:#888888><size:10>例 sharadar</size></color>
+    * dataset : string <<PK>>  <color:#888888><size:10>例 SEP</size></color>
+    --
+    * title : string  <color:#888888><size:10>例 Sharadar Equity Prices Table (SEP)</size></color>
+    * primary_key : string[]  <color:#888888><size:10>例 [ticker, date]</size></color>
+    date_filter : string  <color:#888888><size:10>例 date；SF1 是 lastupdated；TICKERS 为空 = 全量</size></color>
+    asset_class / category / frequency : string  <color:#888888><size:10>例 EQ / spot / daily</size></color>
+    字段、代码表的细节见 D2
+  }
+
+  entity "<b>步骤4.1</b>  FieldMap 字段映射\nmetadata/field_map.csv" as FieldMap <<contract>> {
+    * provider : string <<PK,FK>>  <color:#888888><size:10>例 sharadar</size></color>
+    * dataset : string <<PK,FK>>  <color:#888888><size:10>例 SEP</size></color>
+    * source_field : string <<PK>>（DD 里该表的字段）  <color:#888888><size:10>例 closeadj</size></color>
+    --
+    * field : string（标准字段名 = GoldTable 的列）  <color:#888888><size:10>例 close_adj</size></color>
+  }
+
+  entity "<b>步骤3.1</b>  RawFile 共享原始下载\nbronze/{dataset}/{download_date}_{filters}.zip" as RawFile <<planned>> {
+    * filename : string <<PK>>（完整路径 = S3 key）  <color:#888888><size:10>例 providers/sharadar/bronze/SEP/20261121_date=20260621-.zip</size></color>
+    --
+    * provider : string <<FK>>  <color:#888888><size:10>例 sharadar</size></color>
+    * dataset : string <<FK>>  <color:#888888><size:10>例 SEP</size></color>
+    * download_date : date  <color:#888888><size:10>例 2026-11-21</size></color>
+    * filters_token : string  <color:#888888><size:10>例 date=20260621-</size></color>
+    内容 = 供应商原样 CSV（zip），全市场，只增不改
+  }
+}
+
+package "A 策略数据  strategy/{name}/data/  —  data.py 写，backtest / live 只读 gold" #EAF3FB {
+
+  entity "<b>步骤2</b>  Strategy 策略\nconfig.yaml" as Strategy {
+    * strategy : string <<PK>>（= 文件夹名 {name}）  <color:#888888><size:10>例 strategy_example</size></color>
+    --
+    * universe : string[]  <color:#888888><size:10>例 [AAPL, MSFT, NVDA, ...] 共 30 只</size></color>
+    * rebalance : D | W | M  <color:#888888><size:10>例 M</size></color>
+    * lookback_sessions : int  <color:#888888><size:10>例 300</size></color>
+    backtest_start : date  <color:#888888><size:10>例 2018-01-01</size></color>
+    split : object  <color:#888888><size:10>例 {is_end, embargo_sessions}</size></color>
+    params : object  <color:#888888><size:10>例 策略自己的参数，weights.py 读</size></color>
+    * data.field : open | high | ... | volume  <color:#888888><size:10>例 close_adj</size></color>
+    paper : object  <color:#888888><size:10>例 {enabled, mode, account, capital, ...}</size></color>
+  }
+
+  entity "<b>步骤3.2</b>  BronzeFile 策略原始下载\nbronze/{provider}_{product}/{dataset}/{download_date}_{filters}.zip" as BronzeFile {
+    * filename : string <<PK>>（完整路径 = S3 key）  <color:#888888><size:10>例 strategy/strategy_example/data/bronze/sharadar_equity_prices/SEP/20261121_lastupdated=20261117-_ticker=AAPL,MSFT.zip</size></color>
+    --
+    * strategy : string <<FK>>（从 filename 解析：原始 zip 不改）  <color:#888888><size:10>例 strategy_example</size></color>
+    * provider : string <<FK>>  <color:#888888><size:10>例 sharadar</size></color>
+    * dataset : string <<FK>>  <color:#888888><size:10>例 SEP</size></color>
+    source_raw : RawFile filename[] <<FK>>（计划）  <color:#888888><size:10>例 [providers/sharadar/bronze/SEP/20261121_date=20260621-.zip]</size></color>
+    内容 = 供应商原样，只含本策略 universe 的股票，只增不改
+  }
+
+  entity "<b>步骤3.3</b>  DownloadRecord 下载记录\n数据文件旁边的同名 .json（RawFile、BronzeFile 共用）" as DownloadRecord {
+    * filename : string <<PK,FK>>（数据文件的 filename，扩展名换成 .json）  <color:#888888><size:10>例 .../SEP/20261121_date=20260621-.json</size></color>
+    --
+    provider : string（计划）  <color:#888888><size:10>例 sharadar</size></color>
+    * table : string（= dataset）  <color:#888888><size:10>例 SEP</size></color>
+    * filters : object  <color:#888888><size:10>例 {"date": {"gte": "2026-06-21"}}</size></color>
+    * columns : string[] | null  <color:#888888><size:10>例 null = 全部列</size></color>
+    * downloaded_at : datetime  <color:#888888><size:10>例 2026-11-21T22:44:27+00:00</size></color>
+  }
+
+  entity "<b>步骤4.2</b>  InstrumentMap 代码映射\ngold/instrument_map.csv" as InstrumentMap <<contract>> {
+    * strategy : string <<PK,FK>>  <color:#888888><size:10>例 strategy_example</size></color>
+    * source : string <<PK>>（= provider）  <color:#888888><size:10>例 sharadar</size></color>
+    * source_id : string <<PK>>（ticker）  <color:#888888><size:10>例 AAPL</size></color>
+    --
+    * instrument_id : string <<UK>>（FIGI，表内唯一）  <color:#888888><size:10>例 BBG000B9XRY4</size></color>
+  }
+
+  entity "<b>步骤4.3</b>  GoldTable 清洗表（通用）\ngold/{asset_class}/{category}/{frequency}/{provider}_{dataset}_{clean_date}.parquet\n（每张供应商表清洗成一个 GoldTable；同一张同时只存在一个文件）" as GoldTable <<contract>> {
+    * strategy : string <<PK,FK>>  <color:#888888><size:10>例 strategy_example</size></color>
+    * provider : string <<PK,FK>>  <color:#888888><size:10>例 sharadar</size></color>
+    * dataset : string <<PK,FK>>  <color:#888888><size:10>例 SEP</size></color>
+    * instrument_id : string <<PK,FK>>（FIGI）  <color:#888888><size:10>例 BBG000B9XRY4（AAPL）</size></color>
+    * timestamp : datetime <<PK>>（UTC，按 frequency 对齐）  <color:#888888><size:10>例 日线 = 2026-11-20 21:00:00+00:00（收盘 16:00 New York）</size></color>
+    --
+    * clean_date : date（= 文件名里的日期）  <color:#888888><size:10>例 2026-11-21</size></color>
+    * 数据列：FieldMap 里该 (provider, dataset) 的 field  <color:#888888><size:10>例 SEP → open, high, low, close, close_raw, close_adj, volume</size></color>
+    --
+    路径里的 asset_class / category / frequency 取自 ProviderDataset（例 EQ / spot / daily）；
+    每张表的具体列见 D2（第一张：日线 GoldPrices）；个别表要多一列主键（例 SF1 的 dimension），也写在 D2；
+    来源 = 本策略 bronze，按 FieldMap 改列名、按 InstrumentMap 换成 FIGI；
+    主键重复时留新行，写新文件后删旧文件
+  }
+
+  entity "<b>步骤4.4</b>  SyncState 同步状态\nsync_state.json" as SyncState {
+    * strategy : string <<PK,FK>>  <color:#888888><size:10>例 strategy_example</size></color>
+    --
+    synced : date | null（null = 从未同步）  <color:#888888><size:10>例 2026-11-20</size></color>
+    * coverage : {ticker: 起始日}  <color:#888888><size:10>例 {"AAPL": "2018-01-01", ...}</size></color>
+  }
+}
+
+package "B 运行记录  strategy/{name}/records/  —  fbs.live 写" #FDF1E6 {
+  entity "<b>步骤5.1</b>  RunRecord 运行记录\nrecords/{exec_session}-rebalance.json" as RunRecord {
+    * strategy : string <<PK,FK>>  <color:#888888><size:10>例 strategy_example</size></color>
+    * exec_session : date <<PK>>  <color:#888888><size:10>例 2026-11-21</size></color>
+    --
+    * mode : dry_run | submit  <color:#888888><size:10>例 submit</size></color>
+    * signal_session : date  <color:#888888><size:10>例 2026-11-20</size></color>
+    * run_at : datetime  <color:#888888><size:10>例 2026-11-21T15:00:12-05:00</size></color>
+    * status : dry_run | blocked | submitted | partial  <color:#888888><size:10>例 submitted</size></color>
+    * targets : {symbol: weight}  <color:#888888><size:10>例 {"AAPL": 0.095, ...}</size></color>
+    * orders : 计划订单[]  <color:#888888><size:10>例 [{client_order_id: strategy_example-2026-11-21-AAPL-adjust, side: buy, qty: 27, ...}]</size></color>
+    * submitted : 提交结果[]  <color:#888888><size:10>例 [{client_order_id: ..., status: accepted}]</size></color>
+    turnover : float  <color:#888888><size:10>例 0.4766</size></color>
+    * failures : string[]  <color:#888888><size:10>例 [] = 没有失败</size></color>
+    * notes : string[]  <color:#888888><size:10>例 []</size></color>
+    --
+    输入 = gold 的 data.field 列，透视成 date × ticker → weights.py（不是外键）
+  }
+  entity "<b>步骤5.2</b>  Report 报告\nrecords/*.pdf" as Report {
+    * filename : string <<PK>>（完整路径 = S3 key）  <color:#888888><size:10>例 strategy/strategy_example/records/2026-11-20-backtest_IS-20260901-20260930_OOS-20261008-20261119.pdf</size></color>
+    --
+    * kind : run | performance  <color:#888888><size:10>例 run</size></color>
+    run : RunRecord <<FK>>（只有 run 类型有）  <color:#888888><size:10>例 strategy_example / 2026-11-21 / rebalance</size></color>
+  }
+  entity "<b>步骤5.3</b>  AuditLog 审计日志\n_meta/audit/{run_id}.json（策略任务或共享下载任务写）" as AuditLog <<planned>> {
+    * run_id : string <<PK>>  <color:#888888><size:10>例 20261121T200012Z</size></color>
+    --
+    strategy | provider : string <<FK>>（二选一）  <color:#888888><size:10>例 strategy_example</size></color>
+    * started_at, finished_at : datetime  <color:#888888><size:10>例 2026-11-21T20:00:12Z, 2026-11-21T20:03:40Z</size></color>
+    * exit_code : int  <color:#888888><size:10>例 0</size></color>
+    * git_sha : string  <color:#888888><size:10>例 3eaab8d</size></color>
+    * objects : {key, sha256, size, version_id}[]  <color:#888888><size:10>例 本次上传的每个文件</size></color>
+  }
+}
+
+' ---- P 供应商层 ----
+Provider ||--|{ ProviderDataset : [1] 提供（provider）
+ProviderDataset ||--o{ FieldMap : [4] 字段映射（provider, dataset）
+ProviderDataset ||..o{ RawFile : [3] 共享增量下载（provider, dataset，计划）
+RawFile ||--|| DownloadRecord : [3] 同名 .json（filename）
+
+' ---- P → A ----
+ProviderDataset ||--o{ BronzeFile : [3] 下载哪张表（provider, dataset）
+RawFile }|..o{ BronzeFile : [3] 取子集（source_raw，计划）
+BronzeFile ||--|| DownloadRecord : [3] 同名 .json（filename）
+
+' ---- A 策略数据 ----
+Strategy ||--o{ BronzeFile : [3] 下载（strategy，从 filename 解析）
+Strategy ||--o{ GoldTable : [4] 本策略的 gold（strategy）
+Strategy ||--o| SyncState : [4] 增量同步（strategy）
+Strategy ||--o{ InstrumentMap : [4] 本策略的代码映射（strategy）
+InstrumentMap ||--o{ GoldTable : [4] instrument_id
+ProviderDataset ||--o{ GoldTable : [4] 清洗自哪张表（provider, dataset）
+
+' ---- B 运行记录 ----
+Strategy ||--o{ RunRecord : [5] 每次 rebalance 一条（strategy）
+RunRecord ||--o| Report : [5] 回测报告（backtest）
+Strategy |o--o{ AuditLog : [5] 每个 ECS 任务一份（strategy）
+Provider |o..o{ AuditLog : [5] 共享下载任务一份（provider，计划）
+
+' ---- 布局提示（不画出来）：让 P → A → B 从上到下排 ----
+RawFile -[hidden]-> Strategy
+FieldMap -[hidden]-> InstrumentMap
+DownloadRecord -[hidden]-> RunRecord
+GoldTable -[hidden]-> RunRecord
+SyncState -[hidden]-> AuditLog
+
+@enduml

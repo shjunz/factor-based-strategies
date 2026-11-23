@@ -1,0 +1,114 @@
+@startuml D5-data-lifecycle
+' D5 Data Lifecycle - 数据生命周期
+' 一次 ECS 定时任务里数据怎么产生、改写、上传；以及上传后在 S3 里怎么保留。
+' 灰色备注 = 计划中（代码里还没有）。编号和 L2-deployment-alpaca / -ibkr 的 ⑧-㉕ 对应（㉓-㉕ 是 16:30 收盘后的 performance 任务）。
+
+title <size:24>D5 数据生命周期：一次定时任务 + S3 保留规则</size>
+
+skinparam shadowing false
+skinparam defaultFontName sans-serif
+skinparam ArrowColor #444444
+skinparam activity {
+  BackgroundColor #FFFFFF
+  BorderColor #444444
+}
+skinparam swimlane {
+  BorderColor #999999
+  TitleFontStyle bold
+}
+skinparam note {
+  BackgroundColor #EEEEEE
+  BorderColor #999999
+}
+
+|#FFFFFF|EventBridge / ECS|
+start
+:每个工作日 15:00 America/New_York
+启动 ECS Fargate 任务;
+note right
+  计划：另有一个<b>共享下载任务</b>（每个供应商一个），
+  在供应商更新后运行（Sharadar：交易日晚上），
+  按 DD 里每张表的 date_filter 增量下载全市场数据，
+  写 providers/{provider}/bronze/{dataset}/ + 同名 .json，
+  最后写 providers/{provider}/_meta/audit/{run_id}.json。
+  策略任务之后从这里取子集，不再直接调 API
+end note
+
+|#F5F5F5|Amazon S3|
+:下载 strategy/{name}/ 全部对象
+到容器本地磁盘;
+note right
+  计划：先读最新的 _meta/audit/{run_id}.json，
+  用 sha256 核对下载内容
+end note
+
+|#FFFFFF|容器本地磁盘 strategy/{name}/|
+:⑧ 启动策略包，读 config.yaml;
+:⑨ 读 data/sync_state.json，
+算出本地缺的数据;
+note right
+  缺的 = 新股票、更早的日期、
+  synced 之后 Sharadar 更新过的行
+  （lastupdated ≥ synced - 3 天）
+end note
+
+|#FFFFFF|Nasdaq Data Link|
+:⑩ GET SEP / TICKERS 增量;
+note right
+  例：Sharadar。计划：改成从 S3 共享层
+  providers/{provider}/bronze/ 取子集，
+  由单独的共享下载任务按表增量更新
+end note
+
+|#FFFFFF|容器本地磁盘 strategy/{name}/|
+:写 bronze：{download_date}_{filters}.zip
++ 同名 .json（DownloadRecord）;
+note right
+  bronze 只增不改：每次下载一个新文件，
+  作为原始记录永久保留
+end note
+:⑪ 合并进 gold：下载行覆盖同一
+(instrument_id, timestamp) 的旧行;
+:写新的 sharadar_SEP_{today}.parquet，
+删掉旧的 gold 文件;
+:最后写 sync_state.json
+（写失败 = 下次重新下载，不会丢数据）;
+:⑫ 读 gold → ⑬ 每日权重 → ⑮ 回测;
+:⑯ 写 records/{exec_session}-backtest_IS-{起止}_OOS-{起止}.pdf（回测报告；
+回测算不出来就 blocked，跳到写 JSON）;
+:⑰-⑳ Pre-trade 风控与订单执行;
+if (--submit 且通过所有检查?) then (是)
+  |#FFFFFF|Alpaca|
+  :㉑ POST 收盘市价单;
+  |#FFFFFF|容器本地磁盘 strategy/{name}/|
+  :㉒ 写 records/{exec_session}-rebalance.json;
+else (否：dry run 或 blocked)
+  :㉒ 写 records/{exec_session}-rebalance.json（mode = dry_run；不覆盖已提交的）;
+endif
+
+|#F5F5F5|Amazon S3|
+:上传 strategy/{name}/（成功和失败都上传）
+· 跳过 *.part、*.tmp
+· 本地删掉的 key 在 S3 上也删（版本控制下只是删除标记）;
+note right
+  计划：每个对象带 x-amz-meta-*（sha256、producer、
+  run-id、git-sha），最后写
+  _meta/audit/{run_id}.json
+end note
+
+|#FFFFFF|EventBridge / ECS|
+:任务结束，容器磁盘清空;
+stop
+
+legend right
+  **S3 生命周期规则（建议，桶开启版本控制）**
+  |= 前缀 |= 存储类别 |= 过期 |
+  | */bronze/、providers/*/bronze/ | 30 天 → Standard-IA；180 天 → Glacier Instant Retrieval | 永不过期（原始记录） |
+  | providers/*/metadata/ | Standard | 永不过期（数据字典按 as_of 另存） |
+  | */gold/、sync_state.json、instrument_map.csv | Standard | 旧版本 90 天后删除 |
+  | */records/ | 90 天 → Standard-IA | 永不过期（审计） |
+  | */_meta/audit/、providers/*/_meta/audit/ | Standard | 永不过期（体积很小） |
+  | 全桶 | — | 未完成的分段上传 7 天后清理 |
+endlegend
+
+@enduml

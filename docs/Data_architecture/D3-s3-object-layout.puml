@@ -1,0 +1,62 @@
+@startwbs D3-s3-object-layout
+' D3 S3 Object Layout - S3 对象布局
+' 两个顶层前缀：
+'   providers/{provider}/  数据供应商层，所有策略共享（Sharadar 是第一个例子）。
+'     本地镜像在 src/fbs/etl/provider/{provider}/：metadata/ 进 git；Raw_Data_Sample/ 是 bronze 的本地小样本，不 commit。
+'   strategy/{name}/       每个策略一份。规则：S3 key = 文件在仓库里的相对路径，同步不需要改名。
+' 仓库根目录 data/ 只留在研究员本机、永远不 commit，也不上 S3。
+' 每个数据文件旁边放同名 .json 元数据；每个对象上传时带 x-amz-meta-* 头（D4）。
+' 灰色 = 计划中（代码里还没有）；蓝色 = 元数据文件。
+
+title <size:24>D3 S3 对象布局：s3://{FBS_S3_BUCKET}/</size>
+
+<style>
+wbsDiagram {
+  FontName sans-serif
+  LineColor #444444
+  node {
+    BackgroundColor #FFFFFF
+    LineColor #444444
+    RoundCorner 4
+  }
+  .planned {
+    BackgroundColor #EEEEEE
+    LineColor #999999
+    FontColor #666666
+  }
+  .meta {
+    BackgroundColor #E8F1FB
+  }
+}
+</style>
+
+* s3://{FBS_S3_BUCKET}/\n版本控制开启，SSE-S3 加密，禁止公开访问
+** providers/{provider}/\n数据供应商层，所有策略共享；例 providers/sharadar/\n本地镜像 src/fbs/etl/provider/{provider}/ <<planned>>
+*** metadata/\n供应商说明（git 为准，S3 留副本） <<planned>>
+**** DD_{as_of}_ALL.csv\n数据字典快照 DataDictionary：表、字段、主键、过滤列、代码表 <<meta>>
+**** field_map.csv\n字段映射 FieldMap：供应商字段 → 标准字段 <<meta>>
+**** provider.yaml\n供应商信息 Provider：api、key 的环境变量名（不放密钥；值在 Secrets Manager） <<meta>>
+*** bronze/{dataset}/\n每张表一个文件夹，例 SEP/、SF1/、TICKERS/ <<planned>>
+**** {download_date}_{filters}.zip\n供应商原样，只增不改；例 20261121_date=20260621-.zip <<planned>>
+**** {download_date}_{filters}.json\n下载记录 DownloadRecord <<meta>>
+*** _meta/audit/{run_id}.json\n共享下载任务的审计日志 AuditLog <<planned>>
+** strategy/{name}/\nECS 任务开始时整个下载、结束时整个上传
+*** config.yaml\n策略配置（git 为准，S3 留副本）
+*** data/
+**** bronze/{provider}_{product}/{dataset}/\n例 bronze/sharadar_equity_prices/SEP/
+***** {download_date}_{filters}.zip\n每次增量下载一份（只含本策略 universe）
+***** {download_date}_{filters}.json\n下载记录 DownloadRecord <<meta>>
+**** silver/\n中间产物，格式随数据源（现在只在 data.py 内存里，不落盘） <<planned>>
+**** gold/\n固定格式 = 引擎读的唯一接口（列定义见 D1 / D2）
+***** EQ/spot/daily/{provider}_{dataset}_{clean_date}.parquet\n只保留最新一份，旧的删掉；例 sharadar_SEP_20261121.parquet
+***** EQ/spot/daily/{provider}_{dataset}_{clean_date}.json\n清洗记录 CleanRecord（计划） <<planned>>
+***** instrument_map.csv\n代码 → composite FIGI
+**** sync_state.json\n同步状态 SyncState <<meta>>
+*** records/
+**** {exec_session}-rebalance.json\n运行记录 RunRecord（dry run 和 --submit 同名，mode 区分） <<meta>>
+**** {exec_session}-backtest_IS-{起止}_OOS-{起止}.pdf\n回测报告（历史回测）
+**** {last_session}-live-trading.pdf\n实盘报告（实盘 vs 同期回测、成交质量）
+*** _meta/ <<planned>>
+**** audit/{run_id}.json\n审计日志 AuditLog：每个对象的 sha256、size、version_id <<planned>>
+
+@endwbs

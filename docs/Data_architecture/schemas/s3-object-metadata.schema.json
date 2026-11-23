@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fbs:schema:s3-object-metadata:1",
+  "title": "S3 对象元数据（计划）",
+  "description": "每个对象上传时附带的 S3 用户元数据（x-amz-meta-* 头，键名不带前缀、全小写）。S3 规定用户元数据总共不超过 2 KB，所以这里只放定位和校验用的短字段，详细内容放在同名 .json 里。",
+  "type": "object",
+  "required": ["sha256", "producer", "run-id", "git-sha"],
+  "properties": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "文件内容的 SHA-256"},
+    "schema": {"type": "string", "description": "JSON 文件对应的 schema $id；非 JSON 文件不写"},
+    "producer": {"type": "string", "description": "写出这个文件的模块，例如 fbs.etl.provider.sharadar.extract"},
+    "run-id": {"type": "string", "pattern": "^[0-9]{8}T[0-9]{6}Z$", "description": "对应 AuditLog.run_id"},
+    "git-sha": {"type": "string", "pattern": "^[0-9a-f]{7,40}$"},
+    "layer": {"enum": ["bronze", "gold", "state", "records", "meta", "config", "metadata"], "description": "metadata = 供应商层 providers/{provider}/metadata/（数据字典、字段映射）"},
+    "sidecar": {"type": "string", "description": "同名 .json 元数据文件的 key（如有）"}
+  },
+  "additionalProperties": false
+}

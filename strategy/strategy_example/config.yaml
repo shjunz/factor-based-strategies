@@ -1,0 +1,55 @@
+# 策略的唯一配置文件：data.py、weights.py 和 paper trading 运行器都从这里读参数。
+
+# 资产集：30 只流动性好的美股大盘股，策略只在这些股票里选股
+# 注意：这是当前名单，拿来回测过去有幸存者偏差，只适合演示流程，不能用于真实研究
+universe: [AAPL, MSFT, NVDA, AMZN, GOOGL, META, AVGO, TSLA, JPM, V,
+           MA, UNH, XOM, JNJ, PG, HD, COST, LLY, ABBV, MRK,
+           PEP, KO, WMT, BAC, CVX, ADBE, CRM, NFLX, ORCL, AMD]
+
+# 调仓频率：M = 每月最后一个交易日收盘后算一次权重，下一个交易日收盘时调仓
+# 其他可选值：D = 每个交易日调仓；W = 每周最后一个交易日调仓
+rebalance: M
+
+# 回看长度：每次往前下载 300 个交易日 = 动量要用的 252 个交易日 + 余量
+lookback_sessions: 300
+
+# 回测起始日：每次 dry run 的 PDF 报告从 2018-01-01 回测到信号日
+backtest_start: 2018-01-01
+
+# 样本划分：IS 到 2022-12-30 用来选参数；之后 21 个交易日（一个月调仓周期）是 Embargo，不评价；
+# 再往后到信号日是 OOS，只做报告
+split:
+  is_end: 2022-12-30      # IS 最后一天
+  embargo_sessions: 21    # Embargo 长度（交易日），M 调仓至少 21
+
+# 策略参数（12-1 动量，等权持有最强的 10 只）
+params:
+  lookback: 252      # 动量起点：从 252 个交易日前（约一年）开始算涨幅
+  skip: 21           # 动量终点：跳过最近 21 个交易日（约一个月），避开短期反转
+  top_n: 10          # 持有动量排名前 10 的股票
+  gross: 0.95        # 总共投入 95% 的资金，10 只等权即每只 9.5%；剩下 5% 现金用来吸收整股取整的误差
+
+# 数据：universe 中股票的 Sharadar SEP 日线保存在 ./data/（不提交到 git）。第一次运行下载全部历史，
+# 之后每次只增量下载新的交易日和被修订（拆股、分红调整）的历史行；删掉 data/sync_state.json 可重新全量下载
+data:
+  field: close_adj   # 传给 weights.py 的价格：拆股和分红都调整过的收盘价，算动量用这个
+
+# Paper trading：dry run 也会用到（读账户持仓、做风控检查）。
+paper:
+  enabled: false              # 开关：dry run 核对无误后才改为 true
+  broker: alpaca              # 券商：alpaca 或 ibkr
+  mode: paper                 # 只接受 paper，不支持真金白银交易
+  account: STRATEGY_EXAMPLE   # alpaca：API key 从 ALPACA_STRATEGY_EXAMPLE_KEY / _SECRET 读取；ibkr：账户号从 IBKR_STRATEGY_EXAMPLE_ACCOUNT_ID 读取
+  capital: 100000             # 策略资金（美元），不超过 paper 账户净值
+  moc_cutoff_minutes: 15      # 距收盘不足 15 分钟就不再提交收盘市价单
+
+  # 风控上限：任何一项超限，整次运行不下单
+  limits:
+    max_gross: 1.0            # 权重绝对值之和
+    max_net: 1.0              # 权重之和的绝对值
+    max_weight: 0.10          # 单只股票最大权重（本策略每只 9.5%）
+    max_turnover: 1.0         # 每次调仓单边成交额 / capital
+    max_order_notional: 15000 # 单笔订单金额上限（美元）
+    max_orders: 40            # 每次调仓订单数上限
+    min_order_notional: 50    # 小于 50 美元的调整直接跳过
+    allow_shorts: false       # 不做空

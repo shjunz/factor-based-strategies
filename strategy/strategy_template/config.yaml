@@ -1,0 +1,74 @@
+# 资产集：策略可以交易的股票代码列表，用 Alpaca 的写法（例如 BRK.B）
+# 取值范围：非空列表，每个代码在 Sharadar SEP 有日线、在 Alpaca 可交易
+# 读取文件：data.py（只下载这些股票）；weights.py 只能给这些股票分配权重
+universe: []
+
+# 调仓频率：
+#   D = 每个交易日收盘后都重新计算权重并调仓
+#   W = 每周最后一个交易日收盘后调仓一次（这周五休市就用周四）
+#   M = 每月最后一个交易日收盘后调仓一次（例如 10 月 31 日是周六，就在 10 月 30 日）
+# 订单在下一个交易日收盘时成交；其余日子运行器直接结束，不下单
+# 取值范围：D / W / M 三选一
+# 读取文件：loader.py（校验）、runner.py 和 fbs/execution（判断是否调仓日）、report.py（回测按同一频率调仓）
+rebalance:
+
+# 回看长度：每次计算信号要往前下载多少个交易日的数据
+# 取值范围：正整数，= weights.py 用到的最长窗口 + 余量
+# 读取文件：runner.py（决定 data.py 的下载起点）
+lookback_sessions:
+
+# 回测起始日：每次 dry run 生成 PDF 报告时，从这天回测到信号日
+# 取值范围：日期 YYYY-MM-DD，早于 split.is_end；删掉这一行则只用最近 lookback_sessions 天回测，区间很短
+# 读取文件：runner.py（Dry-run 报告的回测区间）、loader.py（校验早于 split.is_end）
+backtest_start:
+
+# 样本划分：dry run 报告按这里把回测分成 IS / Embargo / OOS 三段，分别列指标
+#   IS      = backtest_start 到 is_end，用来选 params
+#   Embargo = is_end 之后的 embargo_sessions 个交易日，不参与评价，隔开 IS 和 OOS
+#   OOS     = Embargo 之后到信号日，只做报告，不能拿来改 params
+# 删掉这个块则只按全区间回测，不分段
+# 读取文件：loader.py（校验）、report.py（分段列指标）
+split:
+  is_end:                 # IS 最后一天；取值范围：日期 YYYY-MM-DD，晚于 backtest_start、早于信号日
+  embargo_sessions:       # Embargo 长度（交易日）；取值范围：整数，D ≥ 1 / W ≥ 5 / M ≥ 21
+
+# 策略参数：weights.py 里用到的每一个参数都写在这里，每个参数一行，注释写清含义、单位和取值范围
+# 只按 IS 的结果选，不按 OOS 改
+# 读取文件：weights.py（compute 的 params 参数，由 runner.py 传入）
+params:
+  # 参数名:               # 含义（单位）；取值范围
+
+# 数据：universe 中股票的 Sharadar SEP 日线保存在 ./data/（不提交到 git）。第一次运行下载全部历史，
+# 之后每次只增量下载新的交易日和被修订（拆股、分红调整）的历史行；删掉 data/sync_state.json 可重新全量下载
+data:
+  # 传给 weights.py 的价格列：
+  #   close_adj = 拆股和分红都调整过的收盘价，算收益率、动量时用这个
+  #   close     = 只按拆股调整的收盘价
+  #   close_raw = 未调整的原始收盘价，按价格门槛筛股时用这个
+  #   open / high / low = 拆股调整后的开盘价 / 最高价 / 最低价
+  #   volume    = 拆股调整后的成交量
+  # 取值范围：close_adj / close / close_raw / open / high / low / volume 七选一
+  # 读取文件：data.py
+  field:
+
+# Paper trading：dry run 也会用到（读账户持仓、按资金算订单、做风控检查），干跑前就要填好
+# 改动这个块需要一位 QD 和一位 QR review
+paper:
+  enabled: false              # 开关；取值范围：true / false，提交订单前的安全开关，只在加了 --submit 的时候才会被检查, 只有为true时才能实盘下单；读取文件：runner.py
+  broker: alpaca              # 券商；取值范围：alpaca / ibkr（不填即 alpaca）；读取文件：loader.py（校验）、fbs/live/brokers（make_broker）
+  mode: paper                 # 交易模式；取值范围：只接受 paper，后期增加Live 真钱交易；读取文件：loader.py（校验）、fbs/live/brokers
+  account:                    # paper 账户名，一个策略一个账户；取值范围：字母、数字、下划线；.env 中要有 alpaca：ALPACA_<账户名大写>_KEY / _SECRET，ibkr：IBKR_<账户名大写>_ACCOUNT_ID（DU 开头，另可选 _HOST / _PORT / _CLIENT_ID / _MARKET_DATA_TYPE）；读取文件：fbs/live/brokers
+  capital:                    # 策略资金（美元）；取值范围：> 0 且不超过 paper 账户净值；读取文件：runner.py、fbs/risk（risk_account）、fbs/execution（算整股数量和换手率）
+  moc_cutoff_minutes:         # 距收盘不足这么多分钟就不再提交收盘市价单；取值范围：正数（分钟）；读取文件：runner.py（--submit 前检查）
+
+  # 风控上限：先按策略设计填初值，dry run 后参考 Dry-run 报告里的换手率和持仓集中度收紧并留余量；任何一项超限，整次运行不下单
+  # 读取文件：loader.py（校验齐全）、fbs/risk（risk_weights、risk_orders）、fbs/execution（allow_shorts、min_order_notional）
+  limits:
+    max_gross:                # 权重绝对值之和上限；取值范围：> 0，不低于策略设计的总杠杆；读取文件：fbs/risk（risk_weights）
+    max_net:                  # 权重之和的绝对值上限；取值范围：0 到 max_gross；读取文件：fbs/risk（risk_weights）
+    max_weight:               # 单只股票权重绝对值上限；取值范围：> 0 且不超过 max_gross；读取文件：fbs/risk（risk_weights）
+    max_turnover:             # 每次调仓单边成交额 / capital 上限；取值范围：> 0，全部换仓时约为 2 × max_gross；读取文件：fbs/risk（risk_orders）
+    max_order_notional:       # 单笔订单金额上限（美元）；取值范围：> min_order_notional 且不超过 capital；读取文件：fbs/risk（risk_orders）
+    max_orders:               # 每次调仓订单数上限；取值范围：正整数，一般不少于会持有的股票数；读取文件：fbs/risk（risk_orders）
+    min_order_notional:       # 小于这个金额（美元）的调整直接跳过；取值范围：≥ 0 且小于 max_order_notional；读取文件：fbs/execution（execution_plan_orders）
+    allow_shorts:             # 是否允许做空；取值范围：true / false；读取文件：fbs/risk（risk_weights）、fbs/execution（execution_remove_invalid_assets）

@@ -153,6 +153,8 @@ activemq-data/
 .env
 .envrc
 .venv
+# Real venv dir when .venv is a symlink to it; the .nosync suffix keeps iCloud Drive out
+.venv.nosync/
 env/
 venv/
 ENV/
@@ -219,11 +221,17 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Data files are never committed (research_spec.md M1). Everything under
-# data/ is ignored except the docs and mapping tables, so new layers stay out
-data/*
-!data/*.md
-!data/dictionary/
+# The repo-root data/ folder stays on the researcher's machine only and is
+# never committed; engine data lives under strategy/{name}/ and on S3
+/data/
+
+# Each strategy's own data files stay on the researcher's machine;
+# only the README that reserves the data folder is committed
+strategy/*/data/*
+!strategy/*/data/README.md
+
+# Sharadar raw data samples for local testing stay on the researcher's machine
+/src/fbs/etl/provider/sharadar/Raw_Data_Sample/
 
 # macOS Finder metadata, anywhere in the repo
 .DS_Store

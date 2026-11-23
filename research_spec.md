@@ -378,7 +378,7 @@ M 代表研究模块（module）。
   </table>
   </div>
 
-原始列名按映射表 `data/dictionary/field_map.csv` 转换成标准列名。
+原始列名按映射表 `src/fbs/etl/provider/sharadar/metadata/field_map.csv` 转换成标准列名。
 
 #### M1.2.3 存储结构
 
