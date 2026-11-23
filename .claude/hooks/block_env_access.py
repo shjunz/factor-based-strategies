@@ -5,26 +5,42 @@ Blocks any tool call whose path or shell command mentions .env, .env.local, .env
 .env.example (placeholders only, committed to git) stays allowed.
 """
 
+# %%
+# Imports
 import json
 import re
 import sys
 
+# %%
+# Constants
+
+# File names that stay allowed
 ALLOWED = {".env.example"}
-ENV_TOKEN = re.compile(r"(?<![\w])\.env[\w.-]*")   # .env, .env.local; not .venv, not dotenv
+
+# Pattern of .env file names: .env, .env.local; not .venv, not dotenv
+ENV_TOKEN = re.compile(r"(?<![\w])\.env[\w.-]*")
 
 
+# %%
+# .env file names in a text, except the allowed ones
 def env_mentions(text: str) -> list[str]:
     return [t for t in ENV_TOKEN.findall(text or "") if t.rstrip(".") not in ALLOWED]
 
 
+# %%
+# Hook entry point
 def main() -> None:
+    # Read the tool call from stdin
     event = json.load(sys.stdin)
     tool_input = event.get("tool_input") or {}
+
+    # Collect the Bash command, or the paths and patterns of the other tools
     if event.get("tool_name") == "Bash":
         texts = [tool_input.get("command", "")]
     else:  # Read, Edit, Write, NotebookEdit, Grep
         texts = [str(tool_input.get(k, "")) for k in ("file_path", "notebook_path", "path", "glob", "pattern")]
 
+    # Print a deny decision when any text mentions a .env file
     hits = sorted({h for t in texts for h in env_mentions(t)})
     if hits:
         print(json.dumps({"hookSpecificOutput": {
@@ -36,5 +52,7 @@ def main() -> None:
         }}))
 
 
+# %%
+# Run
 if __name__ == "__main__":
     main()
