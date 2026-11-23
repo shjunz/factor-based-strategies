@@ -39,7 +39,7 @@ import pandas as pd
 from dotenv import load_dotenv
 
 from fbs.etl.paths import BRONZE_DIR, bronze_path
-from fbs.etl.sharadar.extract import download_table, read_table
+from fbs.etl.provider.sharadar.extract import download_table, read_table
 from fbs.etl.unify import rename_fields
 
 # %%

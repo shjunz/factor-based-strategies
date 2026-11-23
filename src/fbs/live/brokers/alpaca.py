@@ -1,17 +1,17 @@
 '''
-broker.py - Alpaca paper trading adapter, the only code in the repo that talks
-to the Alpaca trading API.
+alpaca.py - Alpaca paper trading adapter, the only code in the repo that talks
+to the Alpaca trading API. Returns the records in base.py.
 '''
 
 # %%
 # Imports
 
 import os
-from dataclasses import dataclass
 from datetime import datetime, time
-from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
+
+from fbs.live.brokers.base import NY, AccountState, AssetInfo, MarketClock, OrderRecord
 
 # %%
 # Constants
@@ -19,87 +19,67 @@ from dotenv import load_dotenv
 # Every request must go to this host, never to the live-money endpoint
 PAPER_URL_FRAGMENT = "paper-api.alpaca.markets"
 
-# Exchange time zone: sessions are New York dates
-NY = ZoneInfo("America/New_York")
-
 # %%
-# Records
+# Helpers
 
-# One planned order
-@dataclass(frozen=True)
-class OrderIntent:
+# Enum value as plain text
+def _text(value):
     """
-    One planned whole-share order.
+    alpaca-py enum value as lower-case text; plain strings pass through.
 
-    Attributes
+    Parameters
     ----------
-    symbol : str
-        Alpaca symbol.
-    side : {"buy", "sell"}
-        Order side.
-    qty : int
-        Whole shares, > 0.
-    client_order_id : str
-        {strategy}-{exec_session}-{symbol}-{reason}, the same on every re-run
-        for the same session, so an order is never sent twice.
-    target_weight : float
-        Target fraction of capital for the symbol.
-    reason : {"open", "close", "adjust"}
-        Why the order exists.
+    value : Enum or str or None
+        e.g. OrderStatus.FILLED.
+
+    Returns
+    -------
+    text : str
+        e.g. "filled".
+
+    Examples
+    --------
+    >>> from enum import Enum
+    >>> _text(Enum("OrderStatus", {"FILLED": "filled"}).FILLED), _text("ACTIVE"), _text(None)
+    ('filled', 'active', '')
     """
 
-    symbol: str
-    side: str
-    qty: int
-    client_order_id: str
-    target_weight: float
-    reason: str
+    text = str(getattr(value, "value", value) or "").lower()
 
-# Account summary
-@dataclass(frozen=True)
-class AccountState:
+    return text
+
+# Neutral record of one Alpaca order
+def _order_record(o):
     """
-    Summary of the paper account.
+    OrderRecord of one alpaca-py Order.
 
-    Attributes
+    Parameters
     ----------
-    equity : float
-        Account equity in USD.
-    buying_power : float
-        Buying power in USD.
-    status : str
-        Alpaca account status, e.g. "AccountStatus.ACTIVE".
-    trading_blocked : bool
-        True if Alpaca blocks trading.
-    account_blocked : bool
-        True if Alpaca blocks the account.
+    o : alpaca Order
+        Order as returned by get_orders.
+
+    Returns
+    -------
+    record : OrderRecord
+        Same order in the broker-neutral record.
+
+    Examples
+    --------
+    >>> from types import SimpleNamespace as Order
+    >>> _order_record(Order(client_order_id="demo-2024-12-31-SPY-open", symbol="SPY", side="buy",
+    ...                     qty="10", filled_qty="10", filled_avg_price="586.37", status="filled",
+    ...                     submitted_at=None))
+    OrderRecord(client_order_id='demo-2024-12-31-SPY-open', symbol='SPY', side='buy', qty=10.0, filled_qty=10.0, filled_avg_price=586.37, status='filled', submitted_at=None)
     """
 
-    equity: float
-    buying_power: float
-    status: str
-    trading_blocked: bool
-    account_blocked: bool
+    record = OrderRecord(
+        client_order_id=o.client_order_id or "", symbol=o.symbol, side=_text(o.side),
+        qty=float(o.qty or 0), filled_qty=float(o.filled_qty or 0),
+        filled_avg_price=float(o.filled_avg_price) if o.filled_avg_price else None,
+        status=_text(o.status), submitted_at=o.submitted_at,
+    )
 
-# Trading permissions of one symbol
-@dataclass(frozen=True)
-class AssetInfo:
-    """
-    What Alpaca allows for one symbol.
-
-    Attributes
-    ----------
-    tradable : bool
-        Active and tradable on Alpaca.
-    shortable : bool
-        Alpaca allows short sales.
-    easy_to_borrow : bool
-        Shares are easy to borrow for a short.
-    """
-
-    tradable: bool
-    shortable: bool
-    easy_to_borrow: bool
+    return record
 
 # %%
 # Credentials
@@ -151,9 +131,9 @@ def credentials(account):
 # Alpaca paper trading client
 class AlpacaBroker:
     """
-    Alpaca paper trading client. Construction fails for anything that is not
-    a paper account. alpaca-py is imported inside the methods, so the rest of
-    fbs.live works without it.
+    Alpaca paper trading client, implementing base.Broker. Construction fails
+    for anything that is not a paper account. alpaca-py is imported inside the
+    methods, so the rest of fbs.live works without it.
 
     Parameters
     ----------
@@ -224,7 +204,7 @@ class AlpacaBroker:
 
         Returns
         -------
-        clock : alpaca Clock
+        clock : MarketClock
             .timestamp, .is_open, .next_open, .next_close.
 
         Examples
@@ -234,7 +214,8 @@ class AlpacaBroker:
         False
         """
 
-        clock = self._trading.get_clock()
+        c = self._trading.get_clock()
+        clock = MarketClock(c.timestamp, bool(c.is_open), c.next_open, c.next_close)
 
         return clock
 
@@ -280,18 +261,19 @@ class AlpacaBroker:
         Returns
         -------
         state : AccountState
-            Equity, buying power, status and block flags.
+            Equity, buying power, active flag, block flags and Alpaca status.
 
         Examples
         --------
         >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
         >>> broker.account()  # doctest: +SKIP
-        AccountState(equity=100000.0, buying_power=200000.0, status='AccountStatus.ACTIVE', trading_blocked=False, account_blocked=False)
+        AccountState(equity=100000.0, buying_power=200000.0, active=True, trading_blocked=False, account_blocked=False, status='ACTIVE')
         """
 
         a = self._trading.get_account()
-        state = AccountState(float(a.equity), float(a.buying_power), str(a.status),
-                             bool(a.trading_blocked), bool(a.account_blocked))
+        status = _text(a.status).upper()
+        state = AccountState(float(a.equity), float(a.buying_power), status == "ACTIVE",
+                             bool(a.trading_blocked), bool(a.account_blocked), status)
 
         return state
 
@@ -320,41 +302,43 @@ class AlpacaBroker:
 
         return positions
 
-    # Trading permissions of one symbol
-    def asset(self, symbol):
+    # Trading permissions of each symbol
+    def assets(self, symbols):
         """
-        What Alpaca allows for one symbol.
+        What Alpaca allows for each symbol.
 
         Parameters
         ----------
-        symbol : str
-            Alpaca symbol.
+        symbols : list of str
+            Alpaca symbols.
 
         Returns
         -------
-        info : AssetInfo
-            All False if Alpaca does not know the symbol.
+        assets : dict of str to AssetInfo
+            All False for a symbol Alpaca does not know.
 
         Examples
         --------
         >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
-        >>> broker.asset("SPY")  # doctest: +SKIP
-        AssetInfo(tradable=True, shortable=True, easy_to_borrow=True)
-        >>> broker.asset("NOT_A_SYMBOL")  # doctest: +SKIP
-        AssetInfo(tradable=False, shortable=False, easy_to_borrow=False)
+        >>> broker.assets(["SPY", "NOT_A_SYMBOL"])  # doctest: +SKIP
+        {'SPY': AssetInfo(tradable=True, shortable=True, easy_to_borrow=True), 'NOT_A_SYMBOL': AssetInfo(tradable=False, shortable=False, easy_to_borrow=False)}
         """
 
-        # Unknown symbols are not tradable
-        try:
-            a = self._trading.get_asset(symbol)
-        except Exception:
-            return AssetInfo(False, False, False)
+        assets = {}
+        for symbol in symbols:
 
-        # Tradable only while active
-        active = str(a.status).lower().endswith("active")
-        info = AssetInfo(bool(a.tradable) and active, bool(a.shortable), bool(a.easy_to_borrow))
+            # Unknown symbols are not tradable
+            try:
+                a = self._trading.get_asset(symbol)
+            except Exception:
+                assets[symbol] = AssetInfo(False, False, False)
+                continue
 
-        return info
+            # Tradable only while active
+            active = _text(a.status).endswith("active")
+            assets[symbol] = AssetInfo(bool(a.tradable) and active, bool(a.shortable), bool(a.easy_to_borrow))
+
+        return assets
 
     # Latest trade prices
     def latest_prices(self, symbols):
@@ -403,7 +387,7 @@ class AlpacaBroker:
 
         Returns
         -------
-        orders : list of alpaca Order
+        orders : list of OrderRecord
             Matching orders, any status, oldest first.
 
         Examples
@@ -426,7 +410,7 @@ class AlpacaBroker:
                 status=QueryOrderStatus.ALL, after=after, limit=500, direction=Sort.ASC))
             new = [o for o in page if o.id not in seen]
             seen.update(o.id for o in new)
-            orders += [o for o in new if (o.client_order_id or "").startswith(prefix)]
+            orders += [_order_record(o) for o in new if (o.client_order_id or "").startswith(prefix)]
             if len(page) < 500 or not new:
                 break
             after = page[-1].submitted_at
@@ -533,15 +517,16 @@ class AlpacaBroker:
         Returns
         -------
         status : str
-            Alpaca order status after submission.
+            Alpaca order status after submission, e.g. "accepted".
 
         Examples
         --------
+        >>> from fbs.live.brokers.base import OrderIntent
         >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
         >>> intent = OrderIntent("SPY", "buy", 10,
         ...                      "strategy_example-2024-12-31-SPY-open", 0.06, "open")
         >>> broker.submit_moc(intent)  # doctest: +SKIP
-        'OrderStatus.ACCEPTED'
+        'accepted'
         """
 
         from alpaca.trading.enums import OrderSide, TimeInForce
@@ -554,7 +539,7 @@ class AlpacaBroker:
             time_in_force=TimeInForce.CLS,
             client_order_id=intent.client_order_id,
         ))
-        status = str(order.status)
+        status = _text(order.status)
 
         return status
 
@@ -599,3 +584,22 @@ class AlpacaBroker:
         """
 
         self._trading.close_all_positions(cancel_orders=True)
+
+    # Release the connection
+    def close(self):
+        """
+        Nothing to release: Alpaca is stateless REST.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> broker = AlpacaBroker("STRATEGY_EXAMPLE")  # doctest: +SKIP
+        >>> broker.close()  # doctest: +SKIP
+        """

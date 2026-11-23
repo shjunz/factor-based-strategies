@@ -1,0 +1,157 @@
+@startuml D4-json-schema
+' D4 JSON Schema - 元数据 JSON 的结构
+' 权威定义在 schemas/*.schema.json（JSON Schema 2020-12），本图只是概览；改字段先改 schema。
+' 灰色 = 计划中（代码里还没有）。
+
+title <size:24>D4 JSON Schema：S3 上每类元数据的结构（schemas/*.schema.json）</size>
+
+set separator none
+hide circle
+hide methods
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName sans-serif
+skinparam ArrowColor #444444
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #444444
+}
+skinparam class<<planned>> {
+  BackgroundColor #EEEEEE
+  BorderColor #999999
+  FontColor #666666
+}
+skinparam note {
+  BackgroundColor #E8F1FB
+  BorderColor #999999
+}
+
+package "已有（代码写出）" {
+  class "DownloadRecord\nurn:fbs:schema:download-record:1" as DR {
+    provider : string（计划）
+    + table : string
+    + filters : object
+    + columns : string[] | null
+    + downloaded_at : date-time, UTC
+  }
+  note bottom of DR
+    strategy/{name}/data/bronze/~**/{download_date}_{filters}.json
+    providers/{provider}/bronze/{dataset}/{download_date}_{filters}.json（计划）
+    写入：fbs.etl.provider.{provider}.extract.download_table
+  end note
+
+  class "CleanRecord\nurn:fbs:schema:clean-record:1" as CR {
+    + start : date
+    + end : date
+    + sources : string[], 相对 data/，以 bronze/ 开头
+  }
+  note bottom of CR
+    ~**/gold/~**/{source}_{dataset}_{clean_date}.json
+    写入：fbs.etl.loading.save_clean
+  end note
+
+  class "SyncState\nurn:fbs:schema:sync-state:1" as SS {
+    + synced : date | null
+    + coverage : { ticker: date }
+  }
+  note bottom of SS
+    strategy/{name}/data/sync_state.json
+    写入：strategy/{name}/data.py（最后写）
+  end note
+
+  class "RunRecord\nurn:fbs:schema:run-record:1" as RR {
+    + strategy : string
+    + mode : dry_run | submit
+    + signal_session : date
+    + exec_session : date
+    + run_at : date-time, New York
+    + status : dry_run | blocked | submitted | partial
+    + failures : string[]
+    + notes : string[]
+    + targets : { symbol: number }
+    + orders : OrderIntent[]
+    + submitted : Submission[]
+    turnover : number
+  }
+  note bottom of RR
+    strategy/{name}/records/{exec_session}-rebalance.json
+    写入：fbs.live.runner._write_record
+  end note
+
+  class "OrderIntent" as OI {
+    + symbol : string
+    + side : buy | sell
+    + qty : integer ≥ 1
+    + client_order_id : string
+    + target_weight : number
+    + reason : open | close | adjust
+  }
+  class "Submission" as SU {
+    + client_order_id : string
+    + status : string
+  }
+}
+
+package "计划（S3 元数据）" {
+  class "AuditLog\nurn:fbs:schema:audit-log:1" as UM <<planned>> {
+    + schema : const
+    + run_id : YYYYMMDDTHHMMSSZ
+    strategy : string（策略任务）
+    provider : string（共享下载任务）
+    + started_at / finished_at : date-time
+    + exit_code : integer
+    + git_sha : string
+    image_digest : string
+    command : string
+    run_record : string | null
+    + objects : ObjectEntry[]
+    + deleted : string[]
+  }
+  note bottom of UM
+    strategy/{name}/_meta/audit/{run_id}.json
+    providers/{provider}/_meta/audit/{run_id}.json
+    strategy、provider 二选一
+    写入：ECS 任务结束时的上传步骤
+  end note
+
+  class "ObjectEntry" as OE <<planned>> {
+    + key : string
+    + sha256 : hex64
+    + size : integer
+    + version_id : string
+    content_type : string
+  }
+
+  class "S3ObjectMetadata (x-amz-meta-*)\nurn:fbs:schema:s3-object-metadata:1" as OM <<planned>> {
+    + sha256 : hex64
+    + producer : string
+    + run-id : string
+    + git-sha : string
+    schema : string
+    layer : bronze | gold | state | records | meta | config | metadata
+    sidecar : string
+  }
+  note bottom of OM
+    每个对象上传时带的 S3 用户元数据头
+    总共 ≤ 2 KB，只放定位和校验字段
+  end note
+}
+
+legend right
+  + 必填    无前缀 = 可选
+  date = YYYY-MM-DD    date-time = ISO 8601 带时区
+endlegend
+
+RR *-- "0..*" OI : orders
+RR *-- "0..*" SU : submitted
+OI .. SU : client_order_id
+UM *-- "1..*" OE : objects
+OE ..> DR : key 指向
+OE ..> CR : key 指向
+OE ..> SS : key 指向
+OE ..> RR : key 指向
+UM ..> RR : run_record
+OM ..> UM : run-id
+CR ..> DR : sources（同名 .zip）
+
+@enduml

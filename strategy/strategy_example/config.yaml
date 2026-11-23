@@ -37,8 +37,9 @@ data:
 # Paper trading：dry run 也会用到（读账户持仓、做风控检查）。
 paper:
   enabled: false              # 开关：dry run 核对无误后才改为 true
+  broker: alpaca              # 券商：alpaca 或 ibkr
   mode: paper                 # 只接受 paper，不支持真金白银交易
-  account: STRATEGY_EXAMPLE   # API key 从环境变量 ALPACA_STRATEGY_EXAMPLE_KEY / _SECRET 读取
+  account: STRATEGY_EXAMPLE   # alpaca：API key 从 ALPACA_STRATEGY_EXAMPLE_KEY / _SECRET 读取；ibkr：账户号从 IBKR_STRATEGY_EXAMPLE_ACCOUNT_ID 读取
   capital: 100000             # 策略资金（美元），不超过 paper 账户净值
   moc_cutoff_minutes: 15      # 距收盘不足 15 分钟就不再提交收盘市价单
 

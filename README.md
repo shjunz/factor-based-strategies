@@ -16,7 +16,7 @@ Quant Researcher 在本系统里研究因子，并把自研的通用函数移植
 
 ![L2 容器](docs/C4_Architecture/L2-containers.svg)
 
-箭头表示数据流向，编号是先后顺序：① 在本系统研究、评价因子 → ② 把自研的通用函数移植到 QuantConnect → ③ QuantConnect 取 QC Data → ④ 在 QuantConnect 做因子挖掘、策略回测 → ⑤ 表现好的策略购买数据 → ⑥ 移植策略 → ⑦ Quant Developer 做回测与实盘交易 → ⑧ 启动策略包 → ⑨–⑫ 缺数据时增量下载、写入、读取 → ⑬ 返回调仓权重 → ⑭ GET 账户和持仓 → ⑮ Pre-trade 风控检查数据、调仓权重、账户 → ⑯ 通过检查的调仓权重进入订单执行 → ⑰ 整股订单进入 Post-trade 风控 → ⑱ 调仓权重与计划订单进入回测 → ⑲ 回测运行记录（计划订单 + 历史模拟绩效，不下单）→ ⑳ 整股订单回到实盘交易 → ㉑ POST 订单 → ㉒ 实盘运行记录（已提交订单 + 实盘与回测的绩效对比）。L1 图上的编号和这里一致。API 箭头：GET 从 API 指向读取方，POST 从发送方指向 API。
+箭头表示数据流向，编号是先后顺序：① 在本系统研究、评价因子 → ② 把自研的通用函数移植到 QuantConnect → ③ QuantConnect 取 QC Data → ④ 在 QuantConnect 做因子挖掘、策略回测 → ⑤ 表现好的策略购买数据 → ⑥ 移植策略 → ⑦ Quant Developer 做回测与实盘交易 → ⑧ 启动策略包 → ⑨–⑫ 缺数据时增量下载、写入、读取 → ⑬ 返回每日权重 → ⑭ GET 账户、持仓和时钟 → ⑮ 先回测（rebalance 的第一道门槛）→ ⑯ 回测报告 PDF 写入运行记录（回测算不出来就整次停下）→ ⑰ 回测通过，Pre-trade 风控检查数据、调仓权重、账户 → ⑱ 通过检查的调仓权重进入订单执行 → ⑲ 整股订单回到 Pre-trade 检查订单数、金额、换手 → ⑳ 通过检查的订单 → ㉑ 订单执行 POST 收盘市价单（干跑跳过）→ ㉒ 写运行记录 JSON；收盘后定时运行 performance：㉓ Post-trade 风控 GET 成交、收盘价、净值 → ㉔ 实盘报告 PDF 写入运行记录 → ㉕ 运行记录回到实盘交易（performance 找上线日；IBKR 的订单和净值账本供下次调仓去重）。L1 图上的编号和这里一致。API 箭头：GET 从 API 指向读取方，POST 从发送方指向 API。
 
 ### 各容器的 README
 
@@ -97,7 +97,7 @@ AWS 上不用 `.env`，key 存在 Secrets Manager，作为环境变量注入。�
 | `make upgrade` | 把所有包升级到允许范围内的最新版，重写 `uv.lock` 并同步 `.venv` |
 | `make env` | 生成只含 `NASDAQ_DATA_LINK_API_KEY=` 一行的 `.env`，已存在时不覆盖 |
 | `python -m fbs.live 命令 策略名` | 实盘交易：`rebalance`、`status`、`performance`、`halt`、`flatten`，见 [src/fbs/live/README.md](src/fbs/live/README.md) |
-| `python -m fbs.etl.sharadar.pipeline` | 把 `data/bronze/` 下的 SEP 清洗成 `data/gold/`，见 [src/fbs/etl/README.md](src/fbs/etl/README.md) |
+| `python -m fbs.etl.provider.sharadar.pipeline` | 把 `data/bronze/` 下的 SEP 清洗成 `data/gold/`，见 [src/fbs/etl/README.md](src/fbs/etl/README.md) |
 | `make diagram-tools` | 下载画 C4 图的工具（Structurizr CLI、PlantUML），每台机器一次，需要 Java |
 | `make diagrams` | 由 `docs/C4_Architecture/workspace.dsl` 重新生成 C4 图 SVG |
 | `make data-diagrams` | 由 `docs/Data_architecture/*.puml` 重新生成数据架构图 SVG |

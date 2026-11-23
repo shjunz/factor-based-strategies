@@ -55,8 +55,9 @@ data:
 # 改动这个块需要一位 QD 和一位 QR review
 paper:
   enabled: false              # 开关；取值范围：true / false，提交订单前的安全开关，只在加了 --submit 的时候才会被检查, 只有为true时才能实盘下单；读取文件：runner.py
-  mode: paper                 # 交易模式；取值范围：只接受 paper，后期增加Live 真钱交易；读取文件：loader.py（校验）、runner.py → broker.py
-  account:                    # Alpaca paper 账户名，一个策略一个账户；取值范围：字母、数字、下划线，.env 中要有 ALPACA_<账户名大写>_KEY / _SECRET；读取文件：runner.py → broker.py
+  broker: alpaca              # 券商；取值范围：alpaca / ibkr（不填即 alpaca）；读取文件：loader.py（校验）、fbs/live/brokers（make_broker）
+  mode: paper                 # 交易模式；取值范围：只接受 paper，后期增加Live 真钱交易；读取文件：loader.py（校验）、fbs/live/brokers
+  account:                    # paper 账户名，一个策略一个账户；取值范围：字母、数字、下划线；.env 中要有 alpaca：ALPACA_<账户名大写>_KEY / _SECRET，ibkr：IBKR_<账户名大写>_ACCOUNT_ID（DU 开头，另可选 _HOST / _PORT / _CLIENT_ID / _MARKET_DATA_TYPE）；读取文件：fbs/live/brokers
   capital:                    # 策略资金（美元）；取值范围：> 0 且不超过 paper 账户净值；读取文件：runner.py、fbs/risk（risk_account）、fbs/execution（算整股数量和换手率）
   moc_cutoff_minutes:         # 距收盘不足这么多分钟就不再提交收盘市价单；取值范围：正数（分钟）；读取文件：runner.py（--submit 前检查）
 

@@ -14,6 +14,8 @@ from types import ModuleType
 
 import yaml
 
+from fbs.live.brokers import BROKERS
+
 # %%
 # Constants
 
@@ -55,7 +57,7 @@ class Strategy:
     config : dict
         config.yaml.
     paper : dict
-        config.yaml paper block (account, capital, limits, enabled).
+        config.yaml paper block (broker, account, capital, limits, enabled).
     data : module
         data.py, defines fetch(config, start, end).
     weights : module
@@ -293,6 +295,8 @@ def load_strategy(name):
     _require(paper["limits"], REQUIRED_LIMITS, "config.yaml paper.limits")
     if paper.get("mode", "paper") != "paper":
         raise ValueError("config.yaml paper.mode must be 'paper'; real-money trading is not supported")
+    if paper.get("broker", "alpaca") not in BROKERS:
+        raise ValueError(f"config.yaml paper.broker must be one of {BROKERS}")
 
     # data.py and weights.py
     data = _import(folder / "data.py", f"fbs_strategy_{name}_data")

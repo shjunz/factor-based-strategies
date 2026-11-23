@@ -11,7 +11,8 @@ APP  := fbs.api.main:app
 
 # C4 diagrams: Structurizr DSL -> PlantUML -> SVG. Tools are plain Java jars (no brew needed);
 # `make diagram-tools` downloads pinned versions once into TOOLS.
-ARCH  := docs/architecture
+ARCH  := docs/C4_Architecture
+DATA  := docs/Data_architecture
 PUML  := build/diagrams
 TOOLS ?= $(HOME)/.local/share/fbs-diagram-tools
 JAVA  ?= $(firstword $(wildcard /opt/homebrew/opt/openjdk/bin/java) java)
@@ -22,7 +23,7 @@ LAYOUT := $(if $(DOT),-graphvizdot $(DOT),-Playout=smetana)
 STRUCTURIZR_VERSION := 2025.11.09
 PLANTUML_VERSION    := 1.2025.10
 
-.PHONY: help install lock upgrade env clean clean-bronze api api-prod diagram-tools diagrams diagrams-preview
+.PHONY: help install lock upgrade env clean clean-bronze api api-prod diagram-tools diagrams diagrams-preview data-diagrams
 
 help:  ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-13s %s\n", $$1, $$2}'
@@ -57,7 +58,7 @@ diagram-tools:  ## Download Structurizr CLI and PlantUML (pinned versions) into 
 	unzip -qo $(TOOLS)/structurizr-cli.zip -d $(TOOLS)/structurizr-cli
 	curl -fsSL -o $(TOOLS)/plantuml.jar https://github.com/plantuml/plantuml/releases/download/v$(PLANTUML_VERSION)/plantuml-$(PLANTUML_VERSION).jar
 
-diagrams:  ## Render docs/architecture/workspace.dsl to the SVGs in docs/architecture/
+diagrams:  ## Render docs/C4_Architecture/workspace.dsl to the SVGs in docs/C4_Architecture/
 	mkdir -p $(PUML)
 	rm -f $(PUML)/structurizr-*.puml $(PUML)/structurizr-*.svg
 	PATH="$(dir $(JAVA)):$$PATH" bash $(TOOLS)/structurizr-cli/structurizr.sh export \
@@ -72,6 +73,10 @@ diagrams:  ## Render docs/architecture/workspace.dsl to the SVGs in docs/archite
 diagrams-preview: diagrams  ## Also render PNGs into build/diagrams/ for reviewing layouts
 	$(JAVA) -Djava.awt.headless=true -jar $(TOOLS)/plantuml.jar -tpng -charset UTF-8 $(LAYOUT) \
 		$$(ls $(PUML)/structurizr-*.puml | grep -v -- '-key.puml')
+
+data-diagrams:  ## Render the PlantUML data diagrams in docs/Data_architecture/ to SVG
+	$(JAVA) -Djava.awt.headless=true -jar $(TOOLS)/plantuml.jar -tsvg -charset UTF-8 $(LAYOUT) \
+		$(DATA)/*.puml
 
 clean-bronze:  ## Delete all downloaded data in data/bronze
 	@read -p "Delete everything in data/bronze? [y/N] " ans && [ "$$ans" = y ]

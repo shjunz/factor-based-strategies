@@ -6,4 +6,4 @@ provider: sharadar                       # 小写，用于目录名和文件名
 vendor: Nasdaq Data Link                 # 数据从哪个平台来
 api: SHARADAR/{dataset}                  # datatables 代码，{dataset} 换成表名，例 SHARADAR/SEP
 api_key_env: NASDAQ_DATA_LINK_API_KEY    # 环境变量的名字，不是 key 本身
-extractor: fbs.etl.sharadar.extract      # 下载和读取代码
+extractor: fbs.etl.provider.sharadar.extract      # 下载和读取代码

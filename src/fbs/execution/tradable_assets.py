@@ -23,7 +23,7 @@ def execution_remove_invalid_assets(weights, assets, allow_shorts):
     weights : pd.Series
         Target weight per symbol.
     assets : dict of str to AssetInfo
-        Alpaca permissions per symbol.
+        Broker permissions per symbol.
     allow_shorts : bool
         config.yaml paper.limits allow_shorts.
 
@@ -37,7 +37,7 @@ def execution_remove_invalid_assets(weights, assets, allow_shorts):
     Examples
     --------
     >>> import pandas as pd
-    >>> from fbs.live.broker import AssetInfo
+    >>> from fbs.live.brokers import AssetInfo
     >>> assets = {"SPY": AssetInfo(tradable=True, shortable=True, easy_to_borrow=True),
     ...           "XYZ": AssetInfo(tradable=False, shortable=False, easy_to_borrow=False),
     ...           "GME": AssetInfo(tradable=True, shortable=True, easy_to_borrow=False)}
@@ -46,7 +46,7 @@ def execution_remove_invalid_assets(weights, assets, allow_shorts):
     >>> targets
     {'SPY': 0.6}
     >>> notes
-    ['XYZ: not tradable on Alpaca, target set to 0', 'GME: short not allowed or not borrowable, target set to 0']
+    ['XYZ: not tradable at the broker, target set to 0', 'GME: short not allowed or not borrowable, target set to 0']
     """
 
     targets, notes = {}, []
@@ -57,10 +57,10 @@ def execution_remove_invalid_assets(weights, assets, allow_shorts):
         if abs(w) < DUST_WEIGHT:
             continue
 
-        # Not tradable on Alpaca
+        # Not tradable at the broker
         info = assets.get(symbol)
         if info is None or not info.tradable:
-            notes.append(f"{symbol}: not tradable on Alpaca, target set to 0")
+            notes.append(f"{symbol}: not tradable at the broker, target set to 0")
             continue
 
         # Short not allowed or not borrowable

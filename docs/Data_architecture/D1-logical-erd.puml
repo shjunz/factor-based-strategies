@@ -56,7 +56,7 @@ package "P 数据供应商层  providers/{provider}/  —  每个供应商一份
     * vendor : string  <color:#888888><size:10>例 Nasdaq Data Link</size></color>
     * api : string  <color:#888888><size:10>例 datatables SHARADAR/{dataset}</size></color>
     * api_key_env : string（变量名；值在 .env / Secrets Manager）  <color:#888888><size:10>例 NASDAQ_DATA_LINK_API_KEY</size></color>
-    * extractor : string  <color:#888888><size:10>例 fbs.etl.sharadar.extract</size></color>
+    * extractor : string  <color:#888888><size:10>例 fbs.etl.provider.sharadar.extract</size></color>
   }
 
   entity "<b>步骤1.2</b>  ProviderDataset 数据表\n来源：metadata/DD_{as_of}_ALL.csv（以最新一版为准）" as ProviderDataset {
@@ -157,10 +157,9 @@ package "A 策略数据  strategy/{name}/data/  —  data.py 写，backtest / li
 }
 
 package "B 运行记录  strategy/{name}/records/  —  fbs.live 写" #FDF1E6 {
-  entity "<b>步骤5.1</b>  RunRecord 运行记录\nrecords/{exec_session}-{dryrun|rebalance}.json" as RunRecord {
+  entity "<b>步骤5.1</b>  RunRecord 运行记录\nrecords/{exec_session}-rebalance.json" as RunRecord {
     * strategy : string <<PK,FK>>  <color:#888888><size:10>例 strategy_example</size></color>
     * exec_session : date <<PK>>  <color:#888888><size:10>例 2026-11-21</size></color>
-    * kind : dryrun | rebalance <<PK>>  <color:#888888><size:10>例 rebalance</size></color>
     --
     * mode : dry_run | submit  <color:#888888><size:10>例 submit</size></color>
     * signal_session : date  <color:#888888><size:10>例 2026-11-20</size></color>
@@ -176,7 +175,7 @@ package "B 运行记录  strategy/{name}/records/  —  fbs.live 写" #FDF1E6 {
     输入 = gold 的 data.field 列，透视成 date × ticker → weights.py（不是外键）
   }
   entity "<b>步骤5.2</b>  Report 报告\nrecords/*.pdf" as Report {
-    * filename : string <<PK>>（完整路径 = S3 key）  <color:#888888><size:10>例 strategy/strategy_example/records/2026-11-21-rebalance.pdf</size></color>
+    * filename : string <<PK>>（完整路径 = S3 key）  <color:#888888><size:10>例 strategy/strategy_example/records/2026-11-20-backtest_IS-20260901-20260930_OOS-20261008-20261119.pdf</size></color>
     --
     * kind : run | performance  <color:#888888><size:10>例 run</size></color>
     run : RunRecord <<FK>>（只有 run 类型有）  <color:#888888><size:10>例 strategy_example / 2026-11-21 / rebalance</size></color>
@@ -213,7 +212,7 @@ ProviderDataset ||--o{ GoldTable : [4] 清洗自哪张表（provider, dataset）
 
 ' ---- B 运行记录 ----
 Strategy ||--o{ RunRecord : [5] 每次 rebalance 一条（strategy）
-RunRecord ||--o| Report : [5] 运行报告（run）
+RunRecord ||--o| Report : [5] 回测报告（backtest）
 Strategy |o--o{ AuditLog : [5] 每个 ECS 任务一份（strategy）
 Provider |o..o{ AuditLog : [5] 共享下载任务一份（provider，计划）
 

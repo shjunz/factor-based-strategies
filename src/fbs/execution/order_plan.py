@@ -8,7 +8,7 @@ execution_turnover: one-way turnover of those orders.
 
 from dataclasses import replace
 
-from fbs.live.broker import OrderIntent
+from fbs.live.brokers import OrderIntent
 
 # %%
 # Orders

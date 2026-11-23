@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fbs:schema:clean-record:1",
+  "title": "CleanRecord 清洗记录",
+  "description": "gold 清洗文件旁的同名 .json，由 fbs.etl.loading.save_clean 写入。S3 key: **/gold/{asset_class}/{category}/{frequency}/{source}_{dataset}_{clean_date}.json",
+  "type": "object",
+  "required": ["start", "end", "sources"],
+  "properties": {
+    "start": {
+      "type": "string",
+      "format": "date",
+      "description": "最早一行 timestamp 的日期，YYYY-MM-DD"
+    },
+    "end": {
+      "type": "string",
+      "format": "date",
+      "description": "最晚一行 timestamp 的日期，YYYY-MM-DD"
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^bronze/",
+        "description": "用到的原始文件，相对 data/ 的路径"
+      }
+    }
+  },
+  "additionalProperties": false
+}

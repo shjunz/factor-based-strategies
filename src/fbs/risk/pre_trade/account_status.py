@@ -1,5 +1,5 @@
 '''
-account_status.py - risk_account: the Alpaca account is active, not blocked
+account_status.py - risk_account: the broker account is active, not blocked
 and holds the strategy's capital.
 '''
 
@@ -25,21 +25,19 @@ def risk_account(account, capital):
 
     Examples
     --------
-    >>> from fbs.live.broker import AccountState
-    >>> ok = AccountState(equity=100_000, buying_power=200_000,
-    ...                   status="AccountStatus.ACTIVE",
-    ...                   trading_blocked=False, account_blocked=False)
+    >>> from fbs.live.brokers import AccountState
+    >>> ok = AccountState(equity=100_000, buying_power=200_000, active=True,
+    ...                   trading_blocked=False, account_blocked=False, status="ACTIVE")
     >>> risk_account(ok, capital=50_000)
     []
-    >>> closed = AccountState(equity=40_000, buying_power=80_000,
-    ...                       status="AccountStatus.ACCOUNT_CLOSED",
-    ...                       trading_blocked=True, account_blocked=False)
+    >>> closed = AccountState(equity=40_000, buying_power=80_000, active=False,
+    ...                       trading_blocked=True, account_blocked=False, status="ACCOUNT_CLOSED")
     >>> risk_account(closed, capital=50_000)
-    ['account status AccountStatus.ACCOUNT_CLOSED', 'account is blocked', 'capital 50,000 > account equity 40,000']
+    ['account status ACCOUNT_CLOSED', 'account is blocked', 'capital 50,000 > account equity 40,000']
     """
 
     failures = []
-    if not account.status.upper().endswith("ACTIVE"):
+    if not account.active:
         failures.append(f"account status {account.status}")
     if account.trading_blocked or account.account_blocked:
         failures.append("account is blocked")

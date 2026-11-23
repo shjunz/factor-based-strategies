@@ -21,13 +21,14 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "python-dotenv",
-    "pyyaml",       # src/fbs/etl/{provider}/metadata/provider.yaml, strategy config.yaml
+    "pyyaml",       # src/fbs/etl/provider/{provider}/metadata/provider.yaml, strategy config.yaml
 ]
 
 [project.optional-dependencies]
 dev = ["pytest"]
 live = [            # paper trading runner (src/fbs/live): uv sync --extra live
     "alpaca-py",
+    "ib_async",     # IBKR via TWS / IB Gateway (src/fbs/live/brokers/ibkr.py)
     "matplotlib",   # dry-run PDF report (src/fbs/live/report.py)
 ]
 

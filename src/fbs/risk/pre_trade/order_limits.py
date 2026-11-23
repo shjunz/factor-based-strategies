@@ -1,5 +1,5 @@
 '''
-order_limits.py - risk_orders: planned orders within config.yaml paper.limits
+order_limits.py - risk_orders (pre-trade, after fbs.execution plans the orders): planned orders within config.yaml paper.limits
 (number of orders, size of each order, one-way turnover).
 '''
 
@@ -29,7 +29,7 @@ def risk_orders(orders, prices, turnover, limits):
 
     Examples
     --------
-    >>> from fbs.live.broker import OrderIntent
+    >>> from fbs.live.brokers import OrderIntent
     >>> orders = [OrderIntent("IWM", "sell", 10, "demo-2024-01-03-IWM-close", 0.0, "close"),
     ...           OrderIntent("QQQ", "buy", 125, "demo-2024-01-03-QQQ-adjust", 0.5, "adjust")]
     >>> prices = {"IWM": 200.0, "QQQ": 400.0}
